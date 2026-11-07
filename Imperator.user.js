@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.21
-// @version        2.21
+// @name           Imperator v2.22
+// @version        2.22
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -16,6 +16,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.22 Console propre et securite : les deux erreurs connues du jeu (page HTML recue a la place du script view=city, puis "reading 'create'") sont masquees sans dependre du domaine du CDN, avec un message unique en console. Noms de villes, joueurs et alliances echappes avant insertion dans le HTML (Ressources, Batiments, Armee, Espionnage, Tableau de bord).
 // @history        2.21 Allegement : langues francais + anglais uniquement (ba, de, es, hu, pl, ro, tr retirees), langue par defaut anglais hors fr. Traductions francaises corrigees (Options du script, Reglages, Enregistrer, Langue, Soufre, Marche noir, navires) et completees (Espionnage, Sanctuaire divin, Port de marchandises, actions, reglages). Code mort retire (style probablysafealert, regex inutilisee, blocs commentes).
 // @history        2.20 Correctifs : niveau max detecte (maxlevel), case verte seulement si un cout est connu. Tableau de bord en unites par heure (production, autonomie vin). Alertes de bureau via GM_notification + son integre ; alerte d'attaque une seule fois, l'icone rouge du conseiller n'est plus masquee. Niveau de vin servi lu sur 70 niveaux. En-tete : jQuery en https, grants GM_notification/unsafeWindow.
 // @history        2.19 Correctif sur le rafraichissement de la map 3D
@@ -230,17 +231,31 @@
 // Portée volontairement étroite : on ne masque QUE le message exact "reading 'create'"
 // ET seulement s'il provient d'un script du CDN jeu (jamais d'Imperator/userscript),
 // pour ne dissimuler aucune autre erreur.
+// v2.22 : ne dépend plus du domaine du CDN (qui a changé). Deux erreurs connues,
+// et elles seules, sont masquées : jamais une erreur venant d'Imperator.
 (function installGameCreateErrorSilencer() {
-    if (window.__imp_create_error_silencer) return;
-    window.__imp_create_error_silencer = true;
-    window.addEventListener('error', function (e) {
+    var w;
+    try { w = unsafeWindow; } catch (e) { w = window; }
+    if (!w || w.__imp_create_error_silencer) return;
+    w.__imp_create_error_silencer = true;
+    var masked = 0;
+    function isKnownGameNoise(msg, src) {
+        if (src.indexOf('userscript') >= 0 || src.indexOf('Imperator') >= 0) return false;
+        // 1) le jeu charge ?view=city comme un script et reçoit une page HTML
+        if (/Unexpected token '<'/.test(msg) && /[?&]view=city(?:&|$)/.test(src)) return true;
+        // 2) conséquence directe dans le code du jeu
+        if (msg.indexOf("reading 'create'") >= 0 && /\.js(?:\?|#|$)/.test(src)) return true;
+        return false;
+    }
+    w.addEventListener('error', function (e) {
         try {
             var msg = (e && e.message) ? String(e.message) : '';
             var src = (e && e.filename) ? String(e.filename) : '';
-            if (msg.indexOf("reading 'create'") >= 0 &&
-                /gfsrv\.net|\.geo\.gf/.test(src) &&
-                src.indexOf('userscript') < 0 &&
-                src.indexOf('Imperator') < 0) {
+            if (isKnownGameNoise(msg, src)) {
+                masked++;
+                if (masked === 1) {
+                    console.info('[Imperator] Erreurs connues du jeu masquées (view=city reçue en HTML) : sans effet sur le jeu.');
+                }
                 e.preventDefault();
                 if (e.stopImmediatePropagation) e.stopImmediatePropagation();
                 return false;
@@ -338,6 +353,13 @@
 })();
 
 // fin patch 1 & 2
+
+// v2.22 : échappement de tout texte venu du jeu avant insertion dans du HTML
+function __impH(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
 
 
 // Ici Tools
@@ -10044,7 +10066,7 @@ min-width: 851px !important; \
                                           '<img src="/cdn/all/both/resources/icon_%s.png">' +
                                           '</td>').format(city.getTradeGoodType())),
                 cityLink.getId(),
-                city.getName());
+                __impH(city.getName()));
         }
 
         function makeCityNameColGroup(extraCols, excludeTradeGood) {
@@ -11304,7 +11326,7 @@ min-width: 851px !important; \
                         godCell = '<span style="font-size:11px;color:#bbb">&mdash;</span>';
                     }
                     return '<tr style="border-bottom:0.5px solid rgba(0,0,0,0.07)">' +
-                        '<td style="padding:4px 6px;font-size:11px;font-weight:500">' + city.getName() + '</td>' +
+                        '<td style="padding:4px 6px;font-size:11px;font-weight:500">' + __impH(city.getName()) + '</td>' +
                         '<td style="padding:4px 6px;font-size:11px;text-align:right">' + fmtNum(pop) + '</td>' +
                         '<td style="padding:4px 6px;font-size:11px;text-align:right">' + res + '</td>' +
                         '<td style="padding:4px 6px;text-align:center">' +
@@ -11317,7 +11339,7 @@ min-width: 851px !important; \
 
                 function queueRow(q) {
                     return '<tr style="border-bottom:0.5px solid rgba(0,0,0,0.07)">' +
-                        '<td style="padding:4px 6px;font-size:11px;color:#888">' + q.city + '</td>' +
+                        '<td style="padding:4px 6px;font-size:11px;color:#888">' + __impH(q.city) + '</td>' +
                         '<td style="padding:4px 6px;font-size:11px">' + (localizer.localize('buildings', q.building) || q.building) + ' niv ' + q.level + '</td>' +
                         '<td style="padding:4px 6px;font-size:11px;text-align:right;color:#888">' + fmtTime(q.remaining) + '</td>' +
                     '</tr>';
@@ -11411,7 +11433,7 @@ min-width: 851px !important; \
                         out += '<div style="flex:1 1 30%;min-width:120px;background:' + bg + ';border:0.5px solid ' + col + '55;border-radius:6px;padding:7px 9px">' +
                             '<div style="font-size:11px;font-weight:600;color:' + col + ';margin-bottom:3px">' + g +
                                 ' <span style="font-weight:400;color:#999">(' + citiesList.length + ')</span></div>' +
-                            '<div style="font-size:10px;color:#777;line-height:1.5">' + citiesList.join('<br>') + '</div>' +
+                            '<div style="font-size:10px;color:#777;line-height:1.5">' + $.map(citiesList, __impH).join('<br>') + '</div>' +
                         '</div>';
                     });
                     out += '</div>';
@@ -12397,7 +12419,7 @@ min-width: 851px !important; \
                     var player = target.getPlayer();
                     if (!player) {
                         return ('<tr><td colspan="9" class="imperator_espionage_row">' +
-                                '<span class="imperator_link">' + (target.getName() || target.getId()) + '</span>' +
+                                '<span class="imperator_link">' + __impH(target.getName() || target.getId()) + '</span>' +
                                 ' <span style="color:#888;font-size:0.85em;">(données en attente)</span>' +
                                 '</td></tr>');
                     }
@@ -12409,9 +12431,9 @@ min-width: 851px !important; \
                     var cityLinkHtml = ('<a id="%s" class="imperator_link espionage_to_city_view player_state_%s" ' +
                                         'title="%s" href="javascript:void(0);">%s</a>').format(
                         cityLink.getId(),
-                        player.getState(),
+                        __impH(player.getState()),
                         localizer.localize('actions','to_city_view'),
-                        target.getName());
+                        __impH(target.getName()));
                     var occupierHtml = '';
                     if (target.getOccupier()) {
                         occupierHtml = ('<img id="EspionageOccupier_%s" ' +
@@ -12420,7 +12442,7 @@ min-width: 851px !important; \
                             target.getId());
                         toolTips.registerSimple('EspionageOccupier_%s'.format(target.getId()),
                                                 '<div class="nowrap">%s %s</div>'.format(
-                            localizer.localize('espionage','occupied_by'), target.getOccupier().getName()));
+                            localizer.localize('espionage','occupied_by'), __impH(target.getOccupier().getName())));
                     }
 
                     var blockaderHtml = '';
@@ -12431,7 +12453,7 @@ min-width: 851px !important; \
                             target.getId());
                         toolTips.registerSimple('EspionageBlockader_%s'.format(target.getId()),
                                                 '<div class="nowrap">%s %s</div>'.format(
-                            localizer.localize('espionage','blockaded_by'), target.getBlockader().getName()));
+                            localizer.localize('espionage','blockaded_by'), __impH(target.getBlockader().getName())));
                     }
 
                     var allianceLinkHtml = '';
@@ -12442,16 +12464,16 @@ min-width: 851px !important; \
                                             'title="%s" href="javascript:void(0);">%s</a>]').format(
                             allianceLink.getId(),
                             localizer.localize('actions','view_alliance_page'),
-                            alliance.getName());
+                            __impH(alliance.getName()));
                     }
                     var playerLink = new Link('EspionagePlayerLink_%s'.format(target.getId()))
                     .toLocalView(IkaTools.Constants.View.HIGH_SCORE, { searchUser: player.getName() });
                     var playerLinkHtml = ('<a id="%s" class="imperator_link player_state_%s" ' +
                                           'title="%s" href="javascript:void(0);">%s</a> %s').format(
                         playerLink.getId(),
-                        player.getState(),
+                        __impH(player.getState()),
                         localizer.localize('actions','view_high_score'),
-                        player.getName(),
+                        __impH(player.getName()),
                         allianceLinkHtml);
 
                     var islandLink = new Link('EspionageIslandLink_%s'.format(target.getId()))
@@ -12548,7 +12570,7 @@ min-width: 851px !important; \
                             $.map(cities, function(city) {
                                 if (city.isOwn()) {
                                     return '<tr><td>%s</td><td>%s</td></tr>'.format(
-                                        city.getName(),
+                                        __impH(city.getName()),
                                         renderTravelTime(city));
                                 } else {
                                     return '';
