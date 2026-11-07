@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.26
-// @version        2.26
+// @name           Imperator v2.27
+// @version        2.27
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -16,6 +16,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.27 Espionnage : joueur, alliance et score militaire des villes espionnees mis a jour a chaque passage sur leur ile (donnees du jeu), en plus de l'actualisation en arriere-plan. Score militaire (generaux) corrige : les espaces insecables du jeu le tronquaient. Les joueurs provisoires crees depuis les rapports sont remplaces par le vrai joueur.
 // @history        2.26 Spartiate (s319) reconnu : lu dans 'Troupes dans la ville', colonne dans l'onglet Armee (ligne de front). Capture des vues : les donnees de la vue ile (villes, joueurs, alliances) sont aussi retenues, pour corriger les alliances de l'Espionnage en v2.27.
 // @history        2.25 Mouvements : etape lue dans la ligne du Conseiller militaire (sans fleche = chargement, fleche droite = aller, fleche gauche = retour) au lieu de tout classer en route. Unites du mouvement lues dans la ligne (infobulle Flotte / Unites / Cargaison). Troupes recreditees a la ville d'origine au retour d'un pillage.
 // @history        2.24 Donnees vraies : Bilan corrige (or actuel exact lu dans l'infobulle, bonus des dieux et Augmentez lus dans la bonne colonne, revenu = somme des villes comme le modele du jeu, cout des scientifiques). Chantier naval : ordre Baliste/Catapulte du repli corrige. Capacite des entrepots lue dans le jeu (maxResources), formule seulement en repli ou si un entrepot a change depuis la lecture.
@@ -7005,38 +7006,24 @@ if (typeof IkaTools == 'undefined') {
                         }
                     },
                     _refreshIslandCallback: function refreshIslandCallback(callback, response, ajaxResponse) {
-                        var target = this;
-                        Utils.iterateIkariamAjaxResponse(ajaxResponse,
-                                                         function refreshTargetData(index, name, data) {
-                            if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
-                                $.each(data.cities, function findTarget(index, city) {
-                                    if (parseInt(city.id) == target.id) {
-                                        var playerId = parseInt(city.ownerId);
-                                        target.name = city.name;
-                                        target.playerId = parseInt(city.ownerId);
-                                        target.townLevel = parseInt(city.level);
-                                        target.islandId = parseInt(data.id);
-                                        target.coords = [parseInt(data.xCoord), parseInt(data.yCoord)];
-                                        target.tradeGoodType = TRADE_GOOD_LOOKUP[data.tradegood];
-                                        updateOrAddPlayer(playerId, city.ownerName, city.state, parseInt(city.ownerAllyId),
-                                                          city.ownerAllyTag,
-                                                          parseInt(((data.avatarScores && data.avatarScores[playerId] && data.avatarScores[playerId].army_score_main) || '0').split(',').join('')) / 100);
-                                        if (city.infos && city.infos['occupation']) {
-                                            target.occupierId = city.infos['occupation'].id;
-                                            updateOrAddPlayer(city.infos['occupation'].id, city.infos['occupation'].name);
-                                        } else {
-                                            target.occupierId = 0;
-                                        }
-                                        if (city.infos && city.infos['fleetAction']) {
-                                            target.blockaderId = city.infos['fleetAction'].id;
-                                            updateOrAddPlayer(city.infos['fleetAction'].id, city.infos['fleetAction'].name);
-                                        } else {
-                                            target.blockaderId = 0;
-                                        }
-                                    }
-                                });
-                            }
-                        });
+                        // v2.27 : lecture commune avec le passage sur l'île (applyIslandToTargets)
+                        var target = this, found = false;
+                        try {
+                            Utils.iterateIkariamAjaxResponse(ajaxResponse,
+                                                             function refreshTargetData(index, name, data) {
+                                if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA ||
+                                    (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA && data &&
+                                     (data = data['backgroundData'] || data[11]))) {
+                                    if (applyIslandToTargets(data, target).length) found = true;
+                                }
+                            });
+                        } catch (e) {
+                            console.warn('[Imperator] _refreshIslandCallback échoué:', e);
+                        }
+                        if (!found) {
+                            console.log('[Imperator] Espionnage : données de l\'île non trouvées pour la cible ' + target.id +
+                                        ' (elles seront lues au prochain passage sur son île)');
+                        }
                         callback(this);
                     },
                     _refreshCityCallback: function refreshCityCallback(callback, response, ajaxResponse) {
@@ -7151,6 +7138,53 @@ if (typeof IkaTools == 'undefined') {
                     }
                     player._update(name, state, allianceId, militaryScore);
                     updateOrAddAlliance(allianceId, allianceName);
+                }
+
+                // v2.27 : met à jour les cibles d'espionnage présentes dans les données d'une île
+                // (envoyées par le jeu à chaque affichage d'île). onlyTarget : limite à une cible.
+                function _impArmyScore(data, playerId) {
+                    var a = data.avatarScores && data.avatarScores[playerId];
+                    var n = parseInt(String((a && a.army_score_main) || '0').replace(/[^0-9]/g, ''), 10);
+                    return isFinite(n) ? n / 100 : 0;
+                }
+                function applyIslandToTargets(data, onlyTarget) {
+                    var changed = [];
+                    if (!data || !$.isArray(data.cities)) return changed;
+                    var targets = espionageData.get().targets;
+                    var players = espionageData.get().players;
+                    $.each(data.cities, function(index, city) {
+                        if (!city || (city.type && city.type !== 'city')) return;
+                        var cid = parseInt(city.id);
+                        var target = onlyTarget ? (onlyTarget.id == cid ? onlyTarget : null) : targets[cid];
+                        if (!target) return;
+                        var playerId = parseInt(city.ownerId);
+                        if (!playerId) return;
+                        if (target.playerId < 0 && target.playerId !== playerId) {
+                            delete players[target.playerId]; // joueur provisoire (rapports d'espionnage)
+                        }
+                        target.name = city.name;
+                        target.playerId = playerId;
+                        target.townLevel = parseInt(city.level);
+                        target.islandId = parseInt(data.islandId || data.id);
+                        target.coords = [parseInt(data.xCoord), parseInt(data.yCoord)];
+                        target.tradeGoodType = TRADE_GOOD_LOOKUP[data.tradegood];
+                        updateOrAddPlayer(playerId, city.ownerName, city.state || '', parseInt(city.ownerAllyId) || 0,
+                                          city.ownerAllyTag || '', _impArmyScore(data, playerId));
+                        if (city.infos && city.infos['occupation']) {
+                            target.occupierId = city.infos['occupation'].id;
+                            updateOrAddPlayer(city.infos['occupation'].id, city.infos['occupation'].name);
+                        } else {
+                            target.occupierId = 0;
+                        }
+                        if (city.infos && city.infos['fleetAction']) {
+                            target.blockaderId = city.infos['fleetAction'].id;
+                            updateOrAddPlayer(city.infos['fleetAction'].id, city.infos['fleetAction'].name);
+                        } else {
+                            target.blockaderId = 0;
+                        }
+                        changed.push(target);
+                    });
+                    return changed;
                 }
 
                 function Alliance(id) {
@@ -7270,6 +7304,35 @@ if (typeof IkaTools == 'undefined') {
                 function startTracking() {
                     var messageIdRegex = /message(\d+)/
                     espionageData.load();
+
+                    // v2.27 : à chaque île affichée, les cibles qui s'y trouvent sont mises à jour
+                    View.registerIkariamAjaxResponseCallback(
+                        function processIslandForTargets(response) {
+                            try {
+                                var bg = null;
+                                Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
+                                    if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
+                                        bg = data;
+                                    } else if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA &&
+                                               data && !bg) {
+                                        bg = data['backgroundData'] || data[11] || null;
+                                    }
+                                });
+                                var changed = applyIslandToTargets(bg);
+                                if (changed.length) {
+                                    espionageData.saveAsync();
+                                    raiseEspionageChanged({ type: 'targetsChanged', targets: changed });
+                                    console.log('[Imperator] Espionnage : ' + changed.length +
+                                                ' cible(s) mise(s) à jour depuis l\'île', $.map(changed, function(t) {
+                                                    var p = getPlayer(t.playerId), a = p && p.getAlliance();
+                                                    return t.name + ' (' + (p ? p.getName() : '?') +
+                                                           (a ? ', ' + a.getName() : '') + ')';
+                                                }).join(', '));
+                                }
+                            } catch (e) {
+                                console.warn('[Imperator] Lecture de l\'île pour l\'espionnage échouée', e);
+                            }
+                        }, true);
 
                     View.registerIkariamAjaxResponseCallback(
                         function processHideoutView(response) {
