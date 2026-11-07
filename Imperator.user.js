@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.29
-// @version        2.29
+// @name           Imperator v2.30
+// @version        2.30
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.30 Icone du Spartiate : image du jeu (ikipedia/319.png, relevee par Ghepito) au lieu d'un nom d'image suppose. Textes : entree parasite 'dashboard' retiree des noms de batiments en francais. Premiere version construite depuis src/.
 // @history        2.29 Espionnage sans requetes en arriere-plan : le Repaire ne recharge plus l'ile de chaque cible (donnees deja lues au passage sur l'ile). Mur et entrepot d'une ville espionnee lus a l'ouverture de sa vue : la colonne Pillable tient enfin compte de la protection de l'entrepot. Code mort retire (addTargetById, chargement de ville jamais appele). Capture : donnees de la derniere vue ville retenues.
 // @history        2.28 Mises a jour automatiques : Tampermonkey verifie le depot GitHub (Ghepito/imperator-Claude) et propose chaque nouvelle version publiee.
 // @history        2.27 Espionnage : joueur, alliance et score militaire des villes espionnees mis a jour a chaque passage sur leur ile (donnees du jeu), en plus de l'actualisation en arriere-plan. Score militaire (generaux) corrige : les espaces insecables du jeu le tronquaient. Les joueurs provisoires crees depuis les rapports sont remplaces par le vrai joueur.
@@ -8009,7 +8010,6 @@ var Imperator = function Imperator() {
             },
             buildings: {
                 townHall: 'Hôtel de Ville',
-                dashboard: 'Dashboard',
                 palace: 'Palais',
                 palaceColony: 'Résidence du Gouverneur',
                 tavern: 'Taverne',
@@ -8787,7 +8787,10 @@ background-image:url("/cdn/all/both/characters/military/x60_y60/y60_phalanx_face
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_steamgiant_faceright.png"); \
 } \
 .target_military_garrison th.military_spartan { \
-background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spartan_faceright.png"); \
+background-image:url("/cdn/all/both/ikipedia/319.png"); \
+background-size: contain; \
+background-repeat: no-repeat; \
+background-position: center; \
 } \
 .target_military_garrison th.military_spearman { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spearman_faceright.png"); \
@@ -9107,7 +9110,10 @@ background-image:url("/cdn/all/both/characters/military/x60_y60/y60_phalanx_face
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_steamgiant_faceright.png"); \
 } \
 #ImperatorOverviewMilitaryTable th.military_spartan { \
-background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spartan_faceright.png"); \
+background-image:url("/cdn/all/both/ikipedia/319.png"); \
+background-size: contain; \
+background-repeat: no-repeat; \
+background-position: center; \
 } \
 #ImperatorOverviewMilitaryTable th.military_spearman { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spearman_faceright.png"); \

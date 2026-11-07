@@ -632,7 +632,10 @@ background-image:url("/cdn/all/both/characters/military/x60_y60/y60_phalanx_face
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_steamgiant_faceright.png"); \
 } \
 .target_military_garrison th.military_spartan { \
-background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spartan_faceright.png"); \
+background-image:url("/cdn/all/both/ikipedia/319.png"); \
+background-size: contain; \
+background-repeat: no-repeat; \
+background-position: center; \
 } \
 .target_military_garrison th.military_spearman { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spearman_faceright.png"); \
@@ -952,7 +955,10 @@ background-image:url("/cdn/all/both/characters/military/x60_y60/y60_phalanx_face
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_steamgiant_faceright.png"); \
 } \
 #ImperatorOverviewMilitaryTable th.military_spartan { \
-background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spartan_faceright.png"); \
+background-image:url("/cdn/all/both/ikipedia/319.png"); \
+background-size: contain; \
+background-repeat: no-repeat; \
+background-position: center; \
 } \
 #ImperatorOverviewMilitaryTable th.military_spearman { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spearman_faceright.png"); \

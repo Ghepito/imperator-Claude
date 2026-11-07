@@ -348,7 +348,6 @@
             },
             buildings: {
                 townHall: 'Hôtel de Ville',
-                dashboard: 'Dashboard',
                 palace: 'Palais',
                 palaceColony: 'Résidence du Gouverneur',
                 tavern: 'Taverne',
