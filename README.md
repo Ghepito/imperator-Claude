@@ -11,11 +11,16 @@ Chrome + Tampermonkey 5.5.1).
 1. Ouvrir [`Imperator.user.js`](Imperator.user.js) puis cliquer sur **Raw**.
 2. Tampermonkey propose l'installation (ou la mise à jour) : accepter.
 
+Si seul le code s'affiche (Tampermonkey n'intercepte pas la page) : copier l'adresse
+du lien, puis dans Tampermonkey > **Tableau de bord** > **Utilitaires** >
+**Installer depuis une URL**, coller l'adresse et cliquer sur **Installer**.
+
 Avant chaque mise à jour, faire un export Tampermonkey (sauvegarde).
 
 ## Revenir à une version précédente
-Chaque version est un commit du dépôt. Le lien « installer » ouvre directement
-l'installation de cette version dans Tampermonkey.
+Chaque version est un commit du dépôt. Le lien « installer » pointe vers le fichier de
+cette version (clic droit > Copier l'adresse du lien, puis « Installer depuis une URL »
+comme ci-dessus si Tampermonkey ne l'intercepte pas).
 
 | Version | Installer | Code |
 |---|---|---|
@@ -32,7 +37,7 @@ l'installation de cette version dans Tampermonkey.
 ## Méthode de travail
 Une version à la fois : périmètre validé, patch, tests hors jeu
 (voir [`banc-de-test/`](banc-de-test/)), essai en jeu avec une liste de contrôle,
-puis commit et étiquette. Le détail de chaque version est dans
+puis un commit par version. Le détail de chaque version est dans
 [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Crédits
