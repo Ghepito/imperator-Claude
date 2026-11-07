@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.25
-// @version        2.25
+// @name           Imperator v2.26
+// @version        2.26
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -16,6 +16,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.26 Spartiate (s319) reconnu : lu dans 'Troupes dans la ville', colonne dans l'onglet Armee (ligne de front). Capture des vues : les donnees de la vue ile (villes, joueurs, alliances) sont aussi retenues, pour corriger les alliances de l'Espionnage en v2.27.
 // @history        2.25 Mouvements : etape lue dans la ligne du Conseiller militaire (sans fleche = chargement, fleche droite = aller, fleche gauche = retour) au lieu de tout classer en route. Unites du mouvement lues dans la ligne (infobulle Flotte / Unites / Cargaison). Troupes recreditees a la ville d'origine au retour d'un pillage.
 // @history        2.24 Donnees vraies : Bilan corrige (or actuel exact lu dans l'infobulle, bonus des dieux et Augmentez lus dans la bonne colonne, revenu = somme des villes comme le modele du jeu, cout des scientifiques). Chantier naval : ordre Baliste/Catapulte du repli corrige. Capacite des entrepots lue dans le jeu (maxResources), formule seulement en repli ou si un entrepot a change depuis la lecture.
 // @history        2.23 Capture des vues : chaque vue du jeu ouverte est retenue en memoire (HTML serveur, templateData, page rendue, 20 vues max, jetons actionRequest masques). Reglages > Debug > Captures de vues : telechargement d'un fichier HTML par vue, servant de page de reference pour les tests hors jeu.
@@ -2871,6 +2872,7 @@ if (typeof IkaTools == 'undefined') {
                 // Army
                 HOPLITE: 'phalanx',
                 STEAM_GIANT: 'steamgiant',
+                SPARTAN: 'spartan', // v2.26 (unité non recrutable, s319)
                 SPEARMAN: 'spearman',
                 SWORDSMAN: 'swordsman',
                 SLINGER: 'slinger',
@@ -3008,6 +3010,15 @@ if (typeof IkaTools == 'undefined') {
                     speed: 40,
                     cargoSize: 5,
                 },
+                // v2.26 : Spartiate (non recrutable). Vitesse et place en cale
+                // reprises de l'hoplite, faute de valeur publiée par le jeu.
+                spartan: {
+                    minimumBuildingLevelToBuild: 1,
+                    baseBuildTime: 1,
+                    isArmy: true,
+                    speed: 60,
+                    cargoSize: 5,
+                },
 
                 ship_ram: {
                     minimumBuildingLevelToBuild: 1,
@@ -3104,6 +3115,7 @@ if (typeof IkaTools == 'undefined') {
                 313: 'archer',
                 315: 'spearman',
                 316: 'barbarian',
+                319: 'spartan', // v2.26
 
                 210: 'ship_ram',
                 211: 'ship_flamethrower',
@@ -7771,6 +7783,7 @@ var Imperator = function Imperator() {
             units: {
                 phalanx: 'Hoplite',
                 steamgiant: 'Steam Giant',
+                spartan: 'Spartan',
                 spearman: 'Spearman',
                 swordsman: 'Swordsman',
                 slinger: 'Slinger',
@@ -8013,6 +8026,7 @@ var Imperator = function Imperator() {
             units: {
                 phalanx: 'Phalange',
                 steamgiant: 'Géant à vapeur',
+                spartan: 'Spartiate',
                 spearman: 'Lancier',
                 swordsman: 'Epéiste',
                 slinger: 'Lance-pierre',
@@ -8752,6 +8766,9 @@ background-image:url("/cdn/all/both/characters/military/x60_y60/y60_phalanx_face
 .target_military_garrison th.military_steamgiant { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_steamgiant_faceright.png"); \
 } \
+.target_military_garrison th.military_spartan { \
+background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spartan_faceright.png"); \
+} \
 .target_military_garrison th.military_spearman { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spearman_faceright.png"); \
 } \
@@ -9068,6 +9085,9 @@ background-image:url("/cdn/all/both/characters/military/x60_y60/y60_phalanx_face
 } \
 #ImperatorOverviewMilitaryTable th.military_steamgiant { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_steamgiant_faceright.png"); \
+} \
+#ImperatorOverviewMilitaryTable th.military_spartan { \
+background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spartan_faceright.png"); \
 } \
 #ImperatorOverviewMilitaryTable th.military_spearman { \
 background-image:url("/cdn/all/both/characters/military/x60_y60/y60_spearman_faceright.png"); \
@@ -12074,7 +12094,8 @@ min-width: 851px !important; \
         var UNIT_ORDER = [
             { name: 'army_front_line',
              units: [IkaTools.Constants.Military.HOPLITE,
-                     IkaTools.Constants.Military.STEAM_GIANT]},
+                     IkaTools.Constants.Military.STEAM_GIANT,
+                     IkaTools.Constants.Military.SPARTAN]}, // v2.26
             { name: 'army_flank',
              units: [IkaTools.Constants.Military.SPEARMAN,
                      IkaTools.Constants.Military.SWORDSMAN]},
@@ -14761,8 +14782,14 @@ min-width: 851px !important; \
   function onResponse(response) {
     try {
       var T = IkaTools.Constants.IkariamAjaxResponseType;
-      var items = [], templateData = null;
+      var items = [], templateData = null, background = null;
       IkaTools.Utils.iterateIkariamAjaxResponse(response, function (i, name, data) {
+        // v2.26 : données de la vue île (villes, joueurs, alliances)
+        if (name === T.UPDATE_BACKGROUND_DATA) {
+          background = data;
+        } else if (name === T.UPDATE_GLOBAL_DATA && data && !background) {
+          background = data['backgroundData'] || data[11] || null;
+        }
         if (name === T.CHANGE_VIEW && data && data[0]) {
           items.push({ view: String(data[0]), html: data[1] });
         } else if (name === T.UPDATE_TEMPLATE_DATA) {
@@ -14771,6 +14798,21 @@ min-width: 851px !important; \
           items.push({ view: String(data[0]), html: data[1] });
         }
       });
+      if (background && background.cities) {
+        var isle = {
+          view: 'island',
+          time: Date.now(),
+          game: gameVersion(),
+          imperator: imperatorVersion(),
+          raw: '',
+          templateData: null,
+          backgroundData: null,
+          rendered: null,
+        };
+        try { isle.backgroundData = scrub(JSON.stringify(background, null, 1)); } catch (e) {}
+        keep('island', isle);
+        setTimeout(function () { try { isle.rendered = renderedOf('island'); } catch (e) {} }, RENDER_DELAY_MS);
+      }
       items.forEach(function (it) {
         var entry = {
           view: it.view,
@@ -14810,6 +14852,7 @@ min-width: 851px !important; \
   function buildFile(entry) {
     var noTpl = function (x) { return String(x).replace(/<\/template/gi, '<\\/template'); };
     var json = String(entry.templateData || 'null').replace(/<\/script/gi, '<\\/script');
+    var bgJson = String(entry.backgroundData || 'null').replace(/<\/script/gi, '<\\/script'); // v2.26
     return '<!doctype html>\n<html lang="fr"><head><meta charset="utf-8">' +
       '<title>Capture ' + esc(entry.view) + '</title></head><body>\n' +
       '<h1>Capture Imperator : ' + esc(entry.view) + '</h1>\n' +
@@ -14823,6 +14866,7 @@ min-width: 851px !important; \
       '<template id="imp-capture-rendered">\n' + noTpl(entry.rendered || '') + '\n</template>\n' +
       '<template id="imp-capture-raw">\n' + noTpl(entry.raw || '') + '\n</template>\n' +
       '<script type="application/json" id="imp-capture-templateData">\n' + json + '\n</script>\n' +
+      '<script type="application/json" id="imp-capture-backgroundData">\n' + bgJson + '\n</script>\n' +
       '</body></html>\n';
   }
 
@@ -14852,7 +14896,8 @@ min-width: 851px !important; \
     }
     var rows = keys.map(function (k) {
       var e = store[k];
-      var kb = Math.round(((e.raw || '').length + (e.rendered || '').length + (e.templateData || '').length) / 1024);
+      var kb = Math.round(((e.raw || '').length + (e.rendered || '').length + (e.templateData || '').length +
+                           (e.backgroundData || '').length) / 1024);
       return '<tr><td style="text-align:left">' + esc(k) + '</td>' +
              '<td>' + esc(new Date(e.time).toLocaleTimeString('fr-FR')) + '</td>' +
              '<td>' + kb + ' ko</td>' +
