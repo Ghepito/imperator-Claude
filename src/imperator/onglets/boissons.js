@@ -111,3 +111,11 @@
                 makeContent);
             return tab.getTab();
         }
+        /* ===== FIN Service de boissons ===== */
+
+              //////////////////////////////////////
+        /* ===== FIN Onglet Chantiers ===== */
+        //////////////////////////////////////
+
+
+

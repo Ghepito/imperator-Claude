@@ -1,11 +1,3 @@
-        /* ===== FIN Service de boissons ===== */
-
-              //////////////////////////////////////
-        /* ===== FIN Onglet Chantiers ===== */
-        //////////////////////////////////////
-
-
-
         var makePopup = IkaTools.Utils.thunk(function makePopup() {
             var resourceTab = makeResourceTab();
             var buildingsTab = makeBuildingsTab();
