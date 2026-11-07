@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.28
-// @version        2.28
+// @name           Imperator v2.29
+// @version        2.29
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.29 Espionnage sans requetes en arriere-plan : le Repaire ne recharge plus l'ile de chaque cible (donnees deja lues au passage sur l'ile). Mur et entrepot d'une ville espionnee lus a l'ouverture de sa vue : la colonne Pillable tient enfin compte de la protection de l'entrepot. Code mort retire (addTargetById, chargement de ville jamais appele). Capture : donnees de la derniere vue ville retenues.
 // @history        2.28 Mises a jour automatiques : Tampermonkey verifie le depot GitHub (Ghepito/imperator-Claude) et propose chaque nouvelle version publiee.
 // @history        2.27 Espionnage : joueur, alliance et score militaire des villes espionnees mis a jour a chaque passage sur leur ile (donnees du jeu), en plus de l'actualisation en arriere-plan. Score militaire (generaux) corrige : les espaces insecables du jeu le tronquaient. Les joueurs provisoires crees depuis les rapports sont remplaces par le vrai joueur.
 // @history        2.26 Spartiate (s319) reconnu : lu dans 'Troupes dans la ville', colonne dans l'onglet Armee (ligne de front). Capture des vues : les donnees de la vue ile (villes, joueurs, alliances) sont aussi retenues, pour corriger les alliances de l'Espionnage en v2.27.
@@ -6984,71 +6985,11 @@ if (typeof IkaTools == 'undefined') {
                         });
                     },
 
+                    // v2.29 : plus de chargement de l'île en arrière-plan ; les données de la cible
+                    // sont lues au passage sur son île (applyIslandToTargets) et dans sa vue ville
+                    // (applyCityToTarget). Gardé pour les appels existants.
                     _refresh: function refresh(hasSpiesPresent, callback) {
-                        if (View.gameTimeNow() - this.lastRefreshTime < Constants.Time.MILLIS_PER_HOUR) {
-                            callback();
-                            return;
-                        }
-
-                        this.lastRefreshTime = new Date().getTime();
-
-                        var datasLoaded = hasSpiesPresent ? 2 : 1;
-                        function doneLoading() {
-                            if (--datasLoaded == 0) {
-                                callback();
-                            }
-                        }
-                        Utils.backgroundFetchIkariamFullPage(
-                            location.protocol + '//' + document.domain + '/index.php?view=island&cityId=' + this.id,
-                            this._refreshIslandCallback.bind(this, doneLoading)
-                        );
-                        if (hasSpiesPresent) {
-                            Utils.backgroundFetchIkariamFullPage(
-                                location.protocol + '//' + document.domain + '/index.php?view=city&cityId=' + this.id,
-                                this._refreshCityCallback.bind(this, doneLoading)
-                            );
-                        }
-                    },
-                    _refreshIslandCallback: function refreshIslandCallback(callback, response, ajaxResponse) {
-                        // v2.27 : lecture commune avec le passage sur l'île (applyIslandToTargets)
-                        var target = this, found = false;
-                        try {
-                            Utils.iterateIkariamAjaxResponse(ajaxResponse,
-                                                             function refreshTargetData(index, name, data) {
-                                if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA ||
-                                    (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA && data &&
-                                     (data = data['backgroundData'] || data[11]))) {
-                                    if (applyIslandToTargets(data, target).length) found = true;
-                                }
-                            });
-                        } catch (e) {
-                            console.warn('[Imperator] _refreshIslandCallback échoué:', e);
-                        }
-                        if (!found) {
-                            console.log('[Imperator] Espionnage : données de l\'île non trouvées pour la cible ' + target.id +
-                                        ' (elles seront lues au prochain passage sur son île)');
-                        }
-                        callback(this);
-                    },
-                    _refreshCityCallback: function refreshCityCallback(callback, response, ajaxResponse) {
-                        var target = this;
-                        try {
-                            Utils.iterateIkariamAjaxResponse(ajaxResponse,
-                                                             function refreshTargetData(index, name, data) {
-                                if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
-                                    target.wallLevel = (data.position && data.position[14] && parseInt(data.position[14].level)) || 0;
-                                    target.warehouseLevel = 0;
-                                    $.each(data.position, function(index, item) {
-                                        if (item.building == Constants.Buildings.WAREHOUSE) {
-                                            target.warehouseLevel += parseInt(item.level);
-                                        }
-                                    });
-                                }
-                            });
-                        } catch(e) {
-                            console.warn('[Imperator] _refreshCityCallback échoué:', e);
-                        }
-                        callback(this);
+                        callback();
                     },
                     _getOrAddCombat: function getOrAddCombat(id) {
                         var combat = this.combats[id];
@@ -7191,6 +7132,27 @@ if (typeof IkaTools == 'undefined') {
                     return changed;
                 }
 
+                // v2.29 : vue d'une ville espionnée (mêmes données que pour nos villes :
+                // data.id = ville, data.position[i] = { building: 'type …', level })
+                function applyCityToTarget(data) {
+                    if (!data || data.cities || !data.position) return null;
+                    var target = espionageData.get().targets[parseInt(data.id)];
+                    if (!target) return null;
+                    var wall = 0, warehouse = 0, seen = 0;
+                    $.each(data.position, function(index, item) {
+                        if (!item || typeof item.building !== 'string') return;
+                        seen++;
+                        var type = item.building.split(' ')[0];
+                        var level = parseInt(item.level) || 0;
+                        if (type == Constants.Buildings.WALL) wall = Math.max(wall, level);
+                        else if (type == Constants.Buildings.WAREHOUSE) warehouse += level;
+                    });
+                    if (!seen) return null;
+                    target.wallLevel = wall;
+                    target.warehouseLevel = warehouse;
+                    return target;
+                }
+
                 function Alliance(id) {
                     this._ikaToolsType = 'alliance';
 
@@ -7221,22 +7183,6 @@ if (typeof IkaTools == 'undefined') {
                             alliances[id] = alliance;
                         }
                         alliance._update(name);
-                    }
-                }
-
-                function addTargetById(id, hasSpiesPresent, callback) {
-                    var targets = espionageData.get().targets;
-                    var target = targets[id];
-                    if (!target) {
-                        target = new Target(id);
-                        target._refresh(hasSpiesPresent, function() {
-                            targets[id] = target;
-                            callback(target);
-                        });
-                    } else {
-                        target._refresh(hasSpiesPresent, function() {
-                            callback(target);
-                        });
                     }
                 }
 
@@ -7322,6 +7268,13 @@ if (typeof IkaTools == 'undefined') {
                                         bg = data['backgroundData'] || data[11] || null;
                                     }
                                 });
+                                var cityTarget = applyCityToTarget(bg);
+                                if (cityTarget) {
+                                    espionageData.saveAsync();
+                                    raiseEspionageChanged({ type: 'targetsChanged', targets: [cityTarget] });
+                                    console.log('[Imperator] Espionnage : ' + cityTarget.name + ' : mur ' +
+                                                cityTarget.wallLevel + ', entrepôt ' + cityTarget.warehouseLevel);
+                                }
                                 var changed = applyIslandToTargets(bg);
                                 if (changed.length) {
                                     espionageData.saveAsync();
@@ -14879,6 +14832,20 @@ min-width: 851px !important; \
         try { isle.backgroundData = scrub(JSON.stringify(background, null, 1)); } catch (e) {}
         keep('island', isle);
         setTimeout(function () { try { isle.rendered = renderedOf('island'); } catch (e) {} }, RENDER_DELAY_MS);
+      } else if (background && background.position) {
+        // v2.29 : dernière vue ville (une seule place, pour ne pas évincer les autres vues)
+        var town = {
+          view: 'cityData',
+          time: Date.now(),
+          game: gameVersion(),
+          imperator: imperatorVersion(),
+          raw: '',
+          templateData: null,
+          backgroundData: null,
+          rendered: null,
+        };
+        try { town.backgroundData = scrub(JSON.stringify(background, null, 1)); } catch (e) {}
+        keep('cityData', town);
       }
       items.forEach(function (it) {
         var entry = {

@@ -250,8 +250,8 @@ if (fs.readdirSync(dir).some(f => f.startsWith('island'))) {
     store.targets[8373] = T(8373, undefined);
     const TRADE_GOOD_LOOKUP = { 1: 'wine' };
     const src = slice('                function Player(id) {', '                function getPlayers() {');
-    const api = new Function('$', 'espionageData', 'TRADE_GOOD_LOOKUP', 'Target', src +
-      'return { applyIslandToTargets: applyIslandToTargets, getPlayer: getPlayer };')(page(''), espionageData, TRADE_GOOD_LOOKUP, function () {});
+    const api = new Function('$', 'espionageData', 'TRADE_GOOD_LOOKUP', 'Target', 'Constants', src +
+      'return { applyIslandToTargets: applyIslandToTargets, getPlayer: getPlayer };')(page(''), espionageData, TRADE_GOOD_LOOKUP, function () {}, Constants);
     const changed = api.applyIslandToTargets(bg);
     t('2 cibles de l\'île mises à jour (seulement les villes espionnées)', changed.length === 2, changed.map(c => c.id));
     const sc = store.targets[8373], ps = api.getPlayer(sc.playerId), as = ps && ps.getAlliance();
