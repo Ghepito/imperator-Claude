@@ -1,6 +1,6 @@
 # Journal des versions
 
-Tiré des lignes `@history` du script. Chaque version a son étiquette (tag) dans le dépôt.
+Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
 ## 2.27
 

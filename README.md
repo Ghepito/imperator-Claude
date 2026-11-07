@@ -14,8 +14,20 @@ Chrome + Tampermonkey 5.5.1).
 Avant chaque mise à jour, faire un export Tampermonkey (sauvegarde).
 
 ## Revenir à une version précédente
-Chaque version a son étiquette (`v2.19` à `v2.27`) : sur GitHub, menu des branches >
-**Tags** > choisir la version > `Imperator.user.js` > **Raw**.
+Chaque version est un commit du dépôt. Le lien « installer » ouvre directement
+l'installation de cette version dans Tampermonkey.
+
+| Version | Installer | Code |
+|---|---|---|
+| v2.27 | [installer](https://github.com/Ghepito/imperator-Claude/raw/b2bfb1e44e161e4518baf3813724edee9dbf44cc/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/b2bfb1e44e161e4518baf3813724edee9dbf44cc/Imperator.user.js) |
+| v2.26 | [installer](https://github.com/Ghepito/imperator-Claude/raw/e78d3c824179f522bf737e8895a8e1e537068a86/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/e78d3c824179f522bf737e8895a8e1e537068a86/Imperator.user.js) |
+| v2.25 | [installer](https://github.com/Ghepito/imperator-Claude/raw/bb97ae9768dca6e2be24e256e5549d0d50ae3b5a/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/bb97ae9768dca6e2be24e256e5549d0d50ae3b5a/Imperator.user.js) |
+| v2.24 | [installer](https://github.com/Ghepito/imperator-Claude/raw/fb70d1358574657986fa06ee32f1de3617a64762/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/fb70d1358574657986fa06ee32f1de3617a64762/Imperator.user.js) |
+| v2.23 | [installer](https://github.com/Ghepito/imperator-Claude/raw/cd370293b6806ced6fd415bd30ee6a7fd472821b/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/cd370293b6806ced6fd415bd30ee6a7fd472821b/Imperator.user.js) |
+| v2.22 | [installer](https://github.com/Ghepito/imperator-Claude/raw/16a94bb0d8aae1bc948b6af427c46cfa19179fd1/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/16a94bb0d8aae1bc948b6af427c46cfa19179fd1/Imperator.user.js) |
+| v2.21 | [installer](https://github.com/Ghepito/imperator-Claude/raw/758e47f2f7d7a5cbcf2a0a8e488730b76bfafc13/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/758e47f2f7d7a5cbcf2a0a8e488730b76bfafc13/Imperator.user.js) |
+| v2.20 | [installer](https://github.com/Ghepito/imperator-Claude/raw/342402da7159f688e9594f2bf64abc7e71cd1446/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/342402da7159f688e9594f2bf64abc7e71cd1446/Imperator.user.js) |
+| v2.19 | [installer](https://github.com/Ghepito/imperator-Claude/raw/3fb34d6cc43d079a13fb2e9847574f93c54e8f9e/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/3fb34d6cc43d079a13fb2e9847574f93c54e8f9e/Imperator.user.js) |
 
 ## Méthode de travail
 Une version à la fois : périmètre validé, patch, tests hors jeu
