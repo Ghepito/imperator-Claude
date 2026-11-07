@@ -362,8 +362,11 @@
                         IkaTools.Intl.formatInteger(target.getTownLevel()),
                         IkaTools.Intl.formatInteger(target.getWallLevel()),
                         target.getId(),
-                        IkaTools.Intl.formatInteger(Math.ceil(
-                            lootableResources / IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT)),
+                        // v2.31 : un joueur en vacances ne peut pas être pillé
+                        (player && player.getState() == IkaTools.Constants.PlayerState.VACATION ?
+                         localizer.localize('espionage', 'on_vacation') :
+                         IkaTools.Intl.formatInteger(Math.ceil(
+                            lootableResources / IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT))),
                         target.getId(), combats.length ? IkaTools.Intl.formatInteger(combats.length) : '-',
                         target.getId(), IkaTools.Intl.formatInteger(player.getMilitaryScore()));
                 }

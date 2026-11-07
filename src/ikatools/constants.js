@@ -592,7 +592,7 @@
                 HAPPINESS_PER_CULTURAL_GOOD: 50,
                 HAPPINESS_PER_WINE_SERVING_LEVEL: 60,
                 BASE_RESOURCE_PROTECTION: 100,
-                RESOURCES_PER_TRANSPORT: 500,
+                RESOURCES_PER_TRANSPORT: 580, // v2.31 : capacité d'un navire marchand (vérifiée en jeu)
                 RESOURCE_PROTECTION_WAREHOUSE: 480,
                 RESOURCE_PROTECTION_WAREHOUSE_INACTIVE: 80,
             },

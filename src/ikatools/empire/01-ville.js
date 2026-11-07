@@ -896,7 +896,14 @@
                     var level = this.getLevel() + (this.isUpgrading() ? 1 : 0);
 
                     var timeParams = buildingCostData.time;
-                    var costs = {
+                    // v2.31 : coûts exacts lus dans l'aide du jeu (niveau à construire = level + 1)
+                    var help = getHelpCost(this.getType(), level + 1);
+                    var costs = help ? {
+                        wood: help.wood, wine: help.wine, marble: help.marble,
+                        glass: help.glass, sulfur: help.sulfur,
+                        time: Math.round(timeParams.a / timeParams.b *
+                                         Math.pow(timeParams.c, level+1) - timeParams.d) * 1000,
+                    } : {
                         wood: buildingCostData.wood[level] || 0,
                         wine: buildingCostData.wine[level] || 0,
                         marble: buildingCostData.marble[level] || 0,
@@ -926,6 +933,7 @@
                         sulfur: costs.sulfur * Math.max(0, (multiplier - (fireworker ? fireworker.getLevel() / 100 : 0))),
                         time: costs.time,
                         _real: false,
+                        _help: !!help, // v2.31
                     };
                 },
 
@@ -945,6 +953,10 @@
                     // Le jeu a proposé un agrandissement pour ce niveau : ce n'est pas le max,
                     // même si notre table est en retard sur le jeu.
                     if (this.realUpgradeCost && this.realUpgradeCost.forLevel === this.getLevel() && !this.isUpgrading()) {
+                        return false;
+                    }
+                    // v2.31 : l'aide du jeu connaît le niveau suivant : ce n'est pas le max.
+                    if (getHelpCost(type, this.getLevel() + (this.isUpgrading() ? 1 : 0) + 1)) {
                         return false;
                     }
 

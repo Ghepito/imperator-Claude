@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.30
-// @version        2.30
+// @name           Imperator v2.31
+// @version        2.31
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.31 Couts des batiments : l'aide du jeu (encyclopedie, page d'un batiment) est lue et retenue ; ses couts exacts servent avant les anciennes tables (perimees, chiffres tronques), et elle indique les niveaux au-dela de l'ancien maximum. Espionnage : joueur en vacances affiche 'En vacances' au lieu d'un nombre de navires ; navires a piller comptes a 580 par navire (au lieu de 500).
 // @history        2.30 Icone du Spartiate : image du jeu (ikipedia/319.png, relevee par Ghepito) au lieu d'un nom d'image suppose. Textes : entree parasite 'dashboard' retiree des noms de batiments en francais. Premiere version construite depuis src/.
 // @history        2.29 Espionnage sans requetes en arriere-plan : le Repaire ne recharge plus l'ile de chaque cible (donnees deja lues au passage sur l'ile). Mur et entrepot d'une ville espionnee lus a l'ouverture de sa vue : la colonne Pillable tient enfin compte de la protection de l'entrepot. Code mort retire (addTargetById, chargement de ville jamais appele). Capture : donnees de la derniere vue ville retenues.
 // @history        2.28 Mises a jour automatiques : Tampermonkey verifie le depot GitHub (Ghepito/imperator-Claude) et propose chaque nouvelle version publiee.
@@ -2864,7 +2865,7 @@ if (typeof IkaTools == 'undefined') {
                 HAPPINESS_PER_CULTURAL_GOOD: 50,
                 HAPPINESS_PER_WINE_SERVING_LEVEL: 60,
                 BASE_RESOURCE_PROTECTION: 100,
-                RESOURCES_PER_TRANSPORT: 500,
+                RESOURCES_PER_TRANSPORT: 580, // v2.31 : capacité d'un navire marchand (vérifiée en jeu)
                 RESOURCE_PROTECTION_WAREHOUSE: 480,
                 RESOURCE_PROTECTION_WAREHOUSE_INACTIVE: 80,
             },
@@ -4278,7 +4279,14 @@ if (typeof IkaTools == 'undefined') {
                     var level = this.getLevel() + (this.isUpgrading() ? 1 : 0);
 
                     var timeParams = buildingCostData.time;
-                    var costs = {
+                    // v2.31 : coûts exacts lus dans l'aide du jeu (niveau à construire = level + 1)
+                    var help = getHelpCost(this.getType(), level + 1);
+                    var costs = help ? {
+                        wood: help.wood, wine: help.wine, marble: help.marble,
+                        glass: help.glass, sulfur: help.sulfur,
+                        time: Math.round(timeParams.a / timeParams.b *
+                                         Math.pow(timeParams.c, level+1) - timeParams.d) * 1000,
+                    } : {
                         wood: buildingCostData.wood[level] || 0,
                         wine: buildingCostData.wine[level] || 0,
                         marble: buildingCostData.marble[level] || 0,
@@ -4308,6 +4316,7 @@ if (typeof IkaTools == 'undefined') {
                         sulfur: costs.sulfur * Math.max(0, (multiplier - (fireworker ? fireworker.getLevel() / 100 : 0))),
                         time: costs.time,
                         _real: false,
+                        _help: !!help, // v2.31
                     };
                 },
 
@@ -4327,6 +4336,10 @@ if (typeof IkaTools == 'undefined') {
                     // Le jeu a proposé un agrandissement pour ce niveau : ce n'est pas le max,
                     // même si notre table est en retard sur le jeu.
                     if (this.realUpgradeCost && this.realUpgradeCost.forLevel === this.getLevel() && !this.isUpgrading()) {
+                        return false;
+                    }
+                    // v2.31 : l'aide du jeu connaît le niveau suivant : ce n'est pas le max.
+                    if (getHelpCost(type, this.getLevel() + (this.isUpgrading() ? 1 : 0) + 1)) {
                         return false;
                     }
 
@@ -6030,6 +6043,109 @@ if (typeof IkaTools == 'undefined') {
             }
 
             // ============================================================
+            // v2.31 : Aide des bâtiments (vue « buildingDetail » de l'encyclopédie).
+            // La page donne, niveau par niveau, les coûts EXACTS du jeu (dans l'infobulle
+            // de chaque case ; le texte visible est arrondi : « 1,50T »). On les garde
+            // par type de bâtiment : getUpgradeCosts s'en sert avant les anciennes tables.
+            // ============================================================
+
+            // Le jeu ne nomme pas les colonnes : il met une image. Noms de fichiers relevés
+            // le 7 nov. 2026 (jeu 17.6.1) sur l'aide de l'Académie et de la Résidence.
+            var _IMP_HELP_COLUMNS = {
+                'c3527b2f694fb882563c04df6d8972': 'wood',
+                '94ddfda045a8f5ced3397d791fd064': 'wine',
+                'fc258b990c1a2a36c5aeb9872fc08a': 'marble',
+                '417b4059940b2ae2680c070a197d8c': 'glass',
+                '5578a7dfa3e98124439cca4a387a61': 'sulfur',
+                '465f0358d2cb09c07cd0f5a53e38eb': 'time',
+            };
+            var _IMP_HELP_RESOURCES = ['wood', 'wine', 'marble', 'glass', 'sulfur'];
+
+            // { <type>: { levels: { <niveau>: { wood, wine, marble, glass, sulfur } }, updated } }
+            var buildingHelpData = new Data.Value('buildingHelpCosts', {}, { version: 1 });
+
+            function _impHelpInt(txt) {
+                var s = String(txt == null ? '' : txt).replace(/[^0-9]/g, '');
+                return s ? parseInt(s, 10) : null;
+            }
+
+            // Lit une page d'aide. Renvoie { type, levels, unknown } ou null si ce n'en est pas une.
+            function parseBuildingDetailHtml(html) {
+                if (!html) return null;
+                var $root = $('<div></div>').append($.parseHTML(String(html), document, false));
+                var $img = $root.find('div.buildingimg').first();
+                var type = $.trim(String($img.parent('td').attr('class') || '')).split(/\s+/)[0];
+                var known = false;
+                $.each(Constants.Buildings, function(k, v) { if (v === type) known = true; });
+                if (!type || !known) return null;
+
+                var $table = $root.find('table').filter(function() {
+                    return $(this).find('td.level').length > 0;
+                }).first();
+                if (!$table.length) return null;
+
+                var columns = [], unknown = [];
+                $table.find('tr').first().children('th').each(function(i) {
+                    var key = null;
+                    if (i > 0 && $(this).hasClass('costs')) {
+                        var m = String($(this).find('img').attr('src') || '').match(/([0-9a-f]{20,})\.png/);
+                        key = m ? (_IMP_HELP_COLUMNS[m[1]] || null) : null;
+                        if (!key) unknown.push(m ? m[1] : '?');
+                    }
+                    columns.push(key);
+                });
+
+                var levels = {}, count = 0;
+                $table.find('tr').each(function() {
+                    var $tds = $(this).children('td');
+                    if (!$tds.first().hasClass('level')) return;
+                    var level = _impHelpInt($tds.first().text());
+                    if (!level) return;
+                    var costs = { wood: 0, wine: 0, marble: 0, glass: 0, sulfur: 0 };
+                    $tds.each(function(i) {
+                        var key = columns[i];
+                        if (!key || key === 'time') return;
+                        var $tip = $(this).find('div.tooltip').first();
+                        var n = _impHelpInt($tip.length ? $tip.text() : $(this).text());
+                        if (n !== null) costs[key] = n;
+                    });
+                    levels[level] = costs;
+                    count++;
+                });
+                if (!count) return null;
+                return { type: type, levels: levels, unknown: unknown };
+            }
+
+            function processBuildingDetailView(html) {
+                try {
+                    var r = parseBuildingDetailHtml(html);
+                    if (!r) return;
+                    if (r.unknown.length) {
+                        // Une colonne non reconnue : on ne stocke rien plutôt qu'un coût faux.
+                        console.warn('[Imperator] Aide des bâtiments (' + r.type + ') : colonne non reconnue (' +
+                                     r.unknown.join(', ') + '), lecture ignorée');
+                        return;
+                    }
+                    var store = buildingHelpData.get();
+                    var entry = store[r.type] || (store[r.type] = { levels: {} });
+                    $.extend(entry.levels, r.levels);
+                    entry.updated = Date.now();
+                    buildingHelpData.saveAsync();
+                    var lv = $.map(r.levels, function(v, k) { return parseInt(k, 10); }).sort(function(a, b) { return a - b; });
+                    console.log('[Imperator] Aide des bâtiments (' + r.type + ') : niveaux ' + lv[0] + ' à ' +
+                                lv[lv.length - 1] + ' lus');
+                } catch (e) {
+                    console.warn('[Imperator] Lecture de l\'aide des bâtiments échouée', e);
+                }
+            }
+
+            // Coût de base (avant réductions) pour CONSTRUIRE le niveau donné, ou null si inconnu.
+            function getHelpCost(type, level) {
+                var entry = type && buildingHelpData.get()[type];
+                return (entry && entry.levels && entry.levels[level]) || null;
+            }
+
+            // ============================================================
             // v2.07 : Parser des mouvements de troupes/flottes (conseiller militaire).
             // Remplace la fonction manquante (qui provoquait un ReferenceError et
             // interrompait le dispatcher). Lit les VRAIS temps d'arrivée fournis par
@@ -6757,6 +6873,8 @@ if (typeof IkaTools == 'undefined') {
                             processMilitaryAdvisorView(templateData);
                         } else if (view == Constants.View.PREMIUM) {
                             processPremiumView(templateData);
+                        } else if (view == 'buildingDetail') {
+                            processBuildingDetailView(viewHtml); // v2.31 : aide des bâtiments
                         }
 
                         if (unsafeWindow.ikariam && unsafeWindow.ikariam.templateView) {
@@ -7851,6 +7969,7 @@ var Imperator = function Imperator() {
                 wall_level: 'Wall Level',
                 travel_time: 'Travel Time',
                 resources_lootable: 'Lootable',
+                on_vacation: 'On vacation',
                 resources_looted: 'Looted',
                 combats: 'Combats',
                 military_score: 'Military Score',
@@ -8093,6 +8212,7 @@ var Imperator = function Imperator() {
                 wall_level: 'Niveau du mur',
                 travel_time: 'Durée du trajet',
                 resources_lootable: 'Pillable',
+                on_vacation: 'En vacances',
                 resources_looted: 'Pillé',
                 combats: 'Combats',
                 military_score: 'Score militaire',
@@ -12950,8 +13070,11 @@ min-width: 851px !important; \
                         IkaTools.Intl.formatInteger(target.getTownLevel()),
                         IkaTools.Intl.formatInteger(target.getWallLevel()),
                         target.getId(),
-                        IkaTools.Intl.formatInteger(Math.ceil(
-                            lootableResources / IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT)),
+                        // v2.31 : un joueur en vacances ne peut pas être pillé
+                        (player && player.getState() == IkaTools.Constants.PlayerState.VACATION ?
+                         localizer.localize('espionage', 'on_vacation') :
+                         IkaTools.Intl.formatInteger(Math.ceil(
+                            lootableResources / IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT))),
                         target.getId(), combats.length ? IkaTools.Intl.formatInteger(combats.length) : '-',
                         target.getId(), IkaTools.Intl.formatInteger(player.getMilitaryScore()));
                 }

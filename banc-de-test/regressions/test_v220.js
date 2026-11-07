@@ -3,7 +3,8 @@ let ok=0, ko=0; const t=(n,c)=>{ if(c){ok++;console.log('PASS',n)} else {ko++;co
 // --- isMaxLevel ---
 const m=s.match(/\n {16}isMaxLevel: function isMaxLevel\(\) \{([\s\S]*?)\n                \},/);
 const BuildingData={ warehouse:{maxlevel:85}, foo:{} };
-const isMax=new Function('Constants','return function(){'+m[1]+'}')({BuildingData});
+// v2.31 : isMaxLevel consulte aussi l'aide du jeu (getHelpCost) ; ici, aide vide.
+const isMax=new Function('Constants','getHelpCost','return function(){'+m[1]+'}')({BuildingData},()=>null);
 const B=(type,level,upg,real)=>({getType:()=>type,getLevel:()=>level,isUpgrading:()=>upg,realUpgradeCost:real});
 t('niveau 85/85 = max', isMax.call(B('warehouse',85,false))===true);
 t('niveau 84 = pas max', isMax.call(B('warehouse',84,false))===false);

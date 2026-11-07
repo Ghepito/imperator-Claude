@@ -14,6 +14,7 @@ ikatools/empire/parseurs/ville.js
 ikatools/empire/parseurs/finances.js
 ikatools/empire/parseurs/sanctuaire.js
 ikatools/empire/parseurs/amelioration.js
+ikatools/empire/parseurs/aide-batiments.js
 ikatools/empire/parseurs/conseiller-militaire.js
 ikatools/empire/04-suivi.js
 ikatools/espionnage.js

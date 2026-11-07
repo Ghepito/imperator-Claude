@@ -510,6 +510,8 @@
                             processMilitaryAdvisorView(templateData);
                         } else if (view == Constants.View.PREMIUM) {
                             processPremiumView(templateData);
+                        } else if (view == 'buildingDetail') {
+                            processBuildingDetailView(viewHtml); // v2.31 : aide des bâtiments
                         }
 
                         if (unsafeWindow.ikariam && unsafeWindow.ikariam.templateView) {
