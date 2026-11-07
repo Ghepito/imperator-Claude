@@ -106,7 +106,8 @@ besoin de test en jeu pour ces étapes, et `npm test` reste vert.
 Ordre prévu :
 1. ✅ L'outil d'assemblage, plus l'en-tête et les trois modules ajoutés (identique octet pour octet,
    7 fichiers, fait le 7 nov. 2026).
-2. Les données : Constants, localisations, styles.
+2. ✅ Les données : Constants, localisations, styles (15 fichiers, identique octet pour octet,
+   chaque fichier de données vérifié lisible seul).
 3. Les blocs IkaTools, un par un.
 4. Les onglets d'Imperator, un fichier par onglet.
 5. Seulement ensuite, des améliorations dans les modules (et là, tests en jeu comme d'habitude).

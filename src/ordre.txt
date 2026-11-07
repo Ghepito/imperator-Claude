@@ -1,8 +1,16 @@
 # Ordre d'assemblage de Imperator.user.js (un fichier par ligne)
 00-entete.js
 01-popover-chantiers.js
-10-coeur.js
-30-modules/debit-envoi.js
-30-modules/capture-vues.js
-30-modules/surlignage-ameliorations.js
+02-garde-fous.js
+ikatools/00-outils.js
+ikatools/constants.js
+ikatools/10-empire-espionnage.js
+imperator/00-ouverture.js
+imperator/localisations.js
+imperator/01-traducteur.js
+imperator/styles.js
+imperator/10-reglages-onglets-init.js
+modules/debit-envoi.js
+modules/capture-vues.js
+modules/surlignage-ameliorations.js
 99-demarrage.js
