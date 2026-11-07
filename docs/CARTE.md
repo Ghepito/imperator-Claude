@@ -108,6 +108,7 @@ Ordre prévu :
    7 fichiers, fait le 7 nov. 2026).
 2. ✅ Les données : Constants, localisations, styles (15 fichiers, identique octet pour octet,
    chaque fichier de données vérifié lisible seul).
-3. Les blocs IkaTools, un par un.
-4. Les onglets d'Imperator, un fichier par onglet.
+3. ✅ Les blocs IkaTools, un par un (modèle, un parseur par vue, suivi, espionnage).
+4. ✅ Les onglets d'Imperator, un fichier par onglet (40 fichiers en tout, identique octet
+   pour octet).
 5. Seulement ensuite, des améliorations dans les modules (et là, tests en jeu comme d'habitude).
