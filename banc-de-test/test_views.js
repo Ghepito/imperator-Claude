@@ -267,5 +267,24 @@ if (fs.readdirSync(dir).some(f => f.startsWith('island'))) {
   }
 }
 
+// ---------------------------------------------------------------- Vue d'une ville espionnée (v2.29)
+if (fs.readdirSync(dir).some(f => f.startsWith('cityData'))) {
+  head('Vue d\'une ville espionnée (cityData)');
+  const file = fs.readFileSync(path.join(dir, fs.readdirSync(dir).filter(f => f.startsWith('cityData')).sort().pop()), 'utf8');
+  const bg = JSON.parse(new JSDOM(file).window.document.getElementById('imp-capture-backgroundData').textContent);
+  t('format du jeu : id de la ville + position[] avec building/level', bg.id && Array.isArray(bg.position) &&
+    bg.position.every(p => typeof p.building === 'string'));
+  if (script.indexOf('function applyCityToTarget(') < 0) {
+    t('[constat] mur et entrepôt des cibles jamais lus (v2.28 et avant)', true);
+  } else {
+    const src = slice('                function applyCityToTarget(data) {', '                function Alliance(id) {');
+    const store = { targets: { [bg.id]: { id: bg.id, name: bg.name, wallLevel: 9, warehouseLevel: 9 } } };
+    const apply = new Function('$', 'Constants', 'espionageData', src + 'return applyCityToTarget;')(page(''), Constants, { get: () => store });
+    const r = apply(bg);
+    t('Polis de Culot (Hôtel de Ville 1, ni mur ni entrepôt) : mur 0, entrepôt 0', r && r.wallLevel === 0 && r.warehouseLevel === 0, r);
+    t('emplacements vides (buildingGround) ignorés', bg.position.filter(p => !/^buildingGround/.test(p.building)).length === 1);
+  }
+}
+
 console.log(`\n${ok} réussis, ${ko} échoués`);
 process.exit(ko ? 1 : 0);

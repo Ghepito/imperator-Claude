@@ -33,5 +33,5 @@ est exclu du dépôt (`.gitignore`) et ne doit jamais être publié.
 - `[constat]` : comportement connu d'une ancienne version (souvent un bug). Quand le bug
   est corrigé, le constat est transformé en test normal.
 
-Référence (v2.27, captures du 7 nov. 2026, jeu 17.6.1) : vues 60/60, Sanctuaire 10/10,
+Référence (v2.29, captures du 7 nov. 2026, jeu 17.6.1) : vues 63/63, Sanctuaire 10/10,
 régressions toutes vertes.
