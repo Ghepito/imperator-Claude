@@ -234,10 +234,13 @@ if (script.indexOf('_formulaCapacity: function') >= 0) {
 }
 
 // ---------------------------------------------------------------- Vue île : cibles d'espionnage (v2.27)
-if (fs.readdirSync(dir).some(f => f.startsWith('island'))) {
-  head('Vue île, cibles d\'espionnage (island)');
-  const file = fs.readFileSync(path.join(dir, fs.readdirSync(dir).filter(f => f.startsWith('island')).sort().pop()), 'utf8');
-  const bg = JSON.parse(new JSDOM(file).window.document.getElementById('imp-capture-backgroundData').textContent);
+// Captures d'île : données de chaque fichier island*
+const islands = fs.readdirSync(dir).filter(f => f.startsWith('island')).sort().map(f =>
+  JSON.parse(new JSDOM(fs.readFileSync(path.join(dir, f), 'utf8')).window.document.getElementById('imp-capture-backgroundData').textContent));
+const iseos = islands.find(d => d.name === 'Iseos');
+if (iseos) {
+  head('Vue île, cibles d\'espionnage (island Iseos)');
+  const bg = iseos;
   t('données de l\'île présentes dans la capture (' + bg.cities.length + ' emplacements)', Array.isArray(bg.cities) && bg.cities.length > 0);
   if (script.indexOf('function applyIslandToTargets(') < 0) {
     t('[constat] pas de lecture des alliances au passage sur l\'île (v2.26 et avant)', true);
@@ -265,6 +268,19 @@ if (fs.readdirSync(dir).some(f => f.startsWith('island'))) {
     t('aucune cible -> rien de modifié', api.applyIslandToTargets({ cities: [] }).length === 0 && api.applyIslandToTargets(null).length === 0);
     t('ancien calcul du score (virgules) : 0,04 au lieu de 46 468', parseInt(('4 646 840').split(',').join('')) / 100 === 0.04);
   }
+}
+
+// ---------------------------------------------------------------- États des joueurs (île avec inactif)
+const avecInactif = islands.find(d => d.cities.some(c => c.state === 'inactive'));
+if (avecInactif) {
+  head('États des joueurs (island ' + avecInactif.name + ')');
+  const etats = [...new Set(avecInactif.cities.filter(c => c.type === 'city').map(c => c.state))].sort();
+  t('états lus dans le jeu : ' + JSON.stringify(etats) + ', tous connus du script',
+    etats.every(e => Object.values(Constants.PlayerState).includes(e)));
+  t('inactif reconnu par le mot du script (« ' + Constants.PlayerState.INACTIVE + ' »)',
+    avecInactif.cities.some(c => c.state === Constants.PlayerState.INACTIVE));
+  t('vacances reconnues par le mot du script (« ' + Constants.PlayerState.VACATION + ' »)',
+    !avecInactif.cities.some(c => c.state === 'vacation') || Constants.PlayerState.VACATION === 'vacation');
 }
 
 // ---------------------------------------------------------------- Vue d'une ville espionnée (v2.29)
