@@ -1,0 +1,12 @@
+{
+  "name": "imperator-banc-de-test",
+  "private": true,
+  "description": "Banc de test hors jeu du script Imperator (Ikariam)",
+  "scripts": {
+    "test": "node tout_tester.js"
+  },
+  "dependencies": {
+    "jquery": "^3.7.1",
+    "jsdom": "^24.1.3"
+  }
+}
