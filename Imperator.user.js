@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.24
-// @version        2.24
+// @name           Imperator v2.25
+// @version        2.25
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -16,6 +16,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.25 Mouvements : etape lue dans la ligne du Conseiller militaire (sans fleche = chargement, fleche droite = aller, fleche gauche = retour) au lieu de tout classer en route. Unites du mouvement lues dans la ligne (infobulle Flotte / Unites / Cargaison). Troupes recreditees a la ville d'origine au retour d'un pillage.
 // @history        2.24 Donnees vraies : Bilan corrige (or actuel exact lu dans l'infobulle, bonus des dieux et Augmentez lus dans la bonne colonne, revenu = somme des villes comme le modele du jeu, cout des scientifiques). Chantier naval : ordre Baliste/Catapulte du repli corrige. Capacite des entrepots lue dans le jeu (maxResources), formule seulement en repli ou si un entrepot a change depuis la lecture.
 // @history        2.23 Capture des vues : chaque vue du jeu ouverte est retenue en memoire (HTML serveur, templateData, page rendue, 20 vues max, jetons actionRequest masques). Reglages > Debug > Captures de vues : telechargement d'un fichier HTML par vue, servant de page de reference pour les tests hors jeu.
 // @history        2.22 Console propre et securite : les deux erreurs connues du jeu (page HTML recue a la place du script view=city, puis "reading 'create'") sont masquees sans dependre du domaine du CDN, avec un message unique en console. Noms de villes, joueurs et alliances echappes avant insertion dans le HTML (Ressources, Batiments, Armee, Espionnage, Tableau de bord).
@@ -4625,6 +4626,18 @@ if (typeof IkaTools == 'undefined') {
                                 city: city,
                                 type: 'deployment_arrived',
                             }]);
+                        } else if (this.mission == Constants.Movements.Mission.PLUNDER &&
+                                   this.stage == Constants.Movements.Stage.RETURNING &&
+                                   city.isOwn() && this.units) {
+                            // v2.25 : les troupes d'un pillage reviennent dans leur ville
+                            var plMilitary = city.getMilitary();
+                            plMilitary._increment(this.units);
+                            raiseMilitaryChanged([{
+                                military: plMilitary,
+                                city: city,
+                                type: 'plunder_returned',
+                            }]);
+                            console.log('[Imperator] Retour de pillage (' + city.getName() + ') : troupes recréditées', this.units.getCounts());
                         }
                     }
                 },
@@ -6094,9 +6107,34 @@ if (typeof IkaTools == 'undefined') {
                                     }
                                 });
 
+                                // v2.25 : étape du mouvement, lue à la flèche de la colonne centrale
+                                // (classes du jeu, indépendantes de la langue)
+                                var dirCls = String($tr.find('td.mission').first().attr('class') || '');
+                                var stage;
+                                if (/\barrow_left/.test(dirCls)) {
+                                    stage = Constants.Movements.Stage.RETURNING;
+                                } else if (/\barrow_right/.test(dirCls)) {
+                                    stage = Constants.Movements.Stage.EN_ROUTE;
+                                } else if ($tr.find('a.accLoading').length) {
+                                    stage = Constants.Movements.Stage.LOADING;   // fin de chargement = completion
+                                } else {
+                                    stage = Constants.Movements.Stage.EN_ROUTE;  // cas inconnu : ancien comportement
+                                }
+
+                                // v2.25 : unités du mouvement (infobulle « Flotte / Unités / Cargaison »)
+                                var rowUnits = {}, rowUnitsNb = 0;
+                                $tr.find('.unit_detail_icon').each(function() {
+                                    var uc = ($(this).attr('class') || '').split(/\s+/), utype = null;
+                                    for (var u = 0; u < uc.length; u++) { if (Constants.UnitData[uc[u]]) { utype = uc[u]; break; } }
+                                    if (!utype) return; // navires marchands, ressources
+                                    var n = parseInt(String($(this).attr('title') || $(this).text()).replace(/[^0-9]/g, ''), 10);
+                                    if (isFinite(n) && n > 0) { rowUnits[utype] = (rowUnits[utype] || 0) + n; rowUnitsNb++; }
+                                });
+
                                 parsed.push({
                                     eventId: eventId, mission: missionMap[missionKey], completion: completion,
-                                    originCityId: originCityId, targetCityId: targetCityId, resources: resources
+                                    originCityId: originCityId, targetCityId: targetCityId, resources: resources,
+                                    stage: stage, rowUnits: rowUnitsNb ? rowUnits : null
                                 });
                             } catch(erRow) {
                                 console.warn('[Imperator] processMilitaryAdvisorView : ligne ignorée', erRow);
@@ -6140,7 +6178,16 @@ if (typeof IkaTools == 'undefined') {
                             return new MilitaryUnits();
                         }
                         var unitsFor = {};
-                        $.each(parsed, function(i, p) { unitsFor[p.eventId] = takeUnits(p); });
+                        $.each(parsed, function(i, p) {
+                            var fromEstimate = takeUnits(p); // consomme l'estimation locale correspondante
+                            if (p.rowUnits) {                 // v2.25 : la ligne du jeu fait foi
+                                var mu = new MilitaryUnits();
+                                $.each(p.rowUnits, function(t, n) { mu._setCount(t, n); });
+                                unitsFor[p.eventId] = mu;
+                            } else {
+                                unitsFor[p.eventId] = fromEstimate;
+                            }
+                        });
 
                         // 3. Retirer sans effet de bord : estimations locales (doublons) et,
                         //    si la liste fait foi, les mouvements réels qui n'y sont plus.
@@ -6163,7 +6210,7 @@ if (typeof IkaTools == 'undefined') {
                         $.each(parsed, function(i, p) {
                             var mv = new Movement(
                                 p.eventId, 'own', p.completion, p.mission,
-                                Constants.Movements.Stage.EN_ROUTE,
+                                p.stage || Constants.Movements.Stage.EN_ROUTE, // v2.25
                                 p.originCityId, p.targetCityId,
                                 0, unitsFor[p.eventId] || new MilitaryUnits(), p.resources, 0
                             );
