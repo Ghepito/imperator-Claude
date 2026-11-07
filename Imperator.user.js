@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.23
-// @version        2.23
+// @name           Imperator v2.24
+// @version        2.24
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -16,6 +16,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.24 Donnees vraies : Bilan corrige (or actuel exact lu dans l'infobulle, bonus des dieux et Augmentez lus dans la bonne colonne, revenu = somme des villes comme le modele du jeu, cout des scientifiques). Chantier naval : ordre Baliste/Catapulte du repli corrige. Capacite des entrepots lue dans le jeu (maxResources), formule seulement en repli ou si un entrepot a change depuis la lecture.
 // @history        2.23 Capture des vues : chaque vue du jeu ouverte est retenue en memoire (HTML serveur, templateData, page rendue, 20 vues max, jetons actionRequest masques). Reglages > Debug > Captures de vues : telechargement d'un fichier HTML par vue, servant de page de reference pour les tests hors jeu.
 // @history        2.22 Console propre et securite : les deux erreurs connues du jeu (page HTML recue a la place du script view=city, puis "reading 'create'") sont masquees sans dependre du domaine du CDN, avec un message unique en console. Noms de villes, joueurs et alliances echappes avant insertion dans le HTML (Ressources, Batiments, Armee, Espionnage, Tableau de bord).
 // @history        2.21 Allegement : langues francais + anglais uniquement (ba, de, es, hu, pl, ro, tr retirees), langue par defaut anglais hors fr. Traductions francaises corrigees (Options du script, Reglages, Enregistrer, Langue, Soufre, Marche noir, navires) et completees (Espionnage, Sanctuaire divin, Port de marchandises, actions, reglages). Code mort retire (style probablysafealert, regex inutilisee, blocs commentes).
@@ -3360,6 +3361,16 @@ if (typeof IkaTools == 'undefined') {
                 },
             });
 
+            // v2.24 : signature des entrepôts/dépôts, pour savoir si la capacité lue est encore valable
+            function _impWarehouseSig(city) {
+                try {
+                    var lv = [];
+                    $.each(city.getBuildingsByType(Constants.Buildings.WAREHOUSE), function(i, b) { lv.push('w' + b.getLevel()); });
+                    $.each(city.getBuildingsByType(Constants.Buildings.DUMP), function(i, b) { lv.push('d' + b.getLevel()); });
+                    return lv.join(',');
+                } catch (e) { return '?'; }
+            }
+
             function City(id, type) {
                 this._ikaToolsType = 'city';
 
@@ -3458,7 +3469,7 @@ if (typeof IkaTools == 'undefined') {
                         }
 
                         this._updateResources(data.currentResources,
-                                              data.maxResources,
+                                              data.maxResources || (data.headerData && data.headerData.maxResources), // v2.24
                                               data.resourceProduction,
                                               data.tradegoodProduction,
                                               wineConsumption / Constants.Time.SECONDS_PER_HOUR,
@@ -3509,6 +3520,21 @@ if (typeof IkaTools == 'undefined') {
                         }
                         return undefined;
                     }
+
+                    // v2.24 : capacité réelle d'entrepôt envoyée par le jeu (même valeur pour toutes les ressources)
+                    try {
+                        var maxV = Number(pick(maxInfo, ["resource", "wood", "0", 0]));
+                        if (isFinite(maxV) && maxV > 0) {
+                            var firstRead = (this._realCapacity !== maxV);
+                            this._realCapacity = maxV;
+                            this._realCapacitySig = _impWarehouseSig(this);
+                            this._realCapacityUpdated = View.gameTimeNow();
+                            if (firstRead) {
+                                console.log('[Imperator] Capacité réelle lue (' + this.getName() + ') : ' + maxV +
+                                            ' (formule : ' + this._formulaCapacity().maximum + ')');
+                            }
+                        }
+                    } catch (eCap) {}
 
                     // Bois : certains serveurs/versions utilisent "resource", d'autres "wood" ou "0"
                     const woodCurrent = pick(currentInfo, ["resource", "wood", "0"]);
@@ -3893,7 +3919,21 @@ if (typeof IkaTools == 'undefined') {
                 getResource: function getResource(resourceName) {
                     return this.resources[resourceName];
                 },
-                getResourceCapacity: function getResourceMaximumCapacity() {
+                // v2.24 : capacité réelle lue dans le jeu si elle est encore valable
+                // (aucun entrepôt/dépôt n'a changé de niveau depuis la lecture), sinon formule.
+                getResourceCapacity: function getResourceCapacity() {
+                    var cap = this._formulaCapacity();
+                    var real = this._realCapacity;
+                    if (real != null && isFinite(real) && real > 0 &&
+                        this._realCapacitySig === _impWarehouseSig(this)) {
+                        cap.maximum = real;
+                        cap.real = true;
+                    } else {
+                        cap.real = false;
+                    }
+                    return cap;
+                },
+                _formulaCapacity: function getResourceMaximumCapacity() {
                     var total = 1500;
                     var safe = 100;
 
@@ -5195,7 +5235,7 @@ if (typeof IkaTools == 'undefined') {
                 Constants.Military.COOK, Constants.Military.DOCTOR ];
             var _IMP_SHIPYARD_ORDER = [
                 Constants.Military.FLAME_THROWER, Constants.Military.STEAM_RAM, Constants.Military.RAM_SHIP,
-                Constants.Military.CATAPULT_SHIP, Constants.Military.BALLISTA_SHIP, Constants.Military.MORTAR_SHIP,
+                Constants.Military.BALLISTA_SHIP, Constants.Military.CATAPULT_SHIP, Constants.Military.MORTAR_SHIP, // v2.24 : ordre du jeu
                 Constants.Military.ROCKET_SHIP, Constants.Military.SUBMARINE, Constants.Military.PADDLE_SPEED_SHIP,
                 Constants.Military.BALLOON_CARRIER, Constants.Military.TENDER ];
 
@@ -5572,7 +5612,17 @@ if (typeof IkaTools == 'undefined') {
                             $b.find('tr').each(function() {
                                 var lbl = $(this).find('td').first().text().toLowerCase();
                                 if (lbl.indexOf('montant') < 0) return;
-                                var raw = $(this).find('td').last().clone().find('div').remove().end().text();
+                                // v2.24 : la valeur est en 2e cellule (la dernière est l'offre premium) ;
+                                // son infobulle donne le montant exact ("600 205 849,78").
+                                var $val = $(this).find('td').eq(1);
+                                var exact = $val.find('div.tooltip').first().text()
+                                                .replace(/[\u00a0\u202f\s]/g,'').replace(',','.');
+                                if (/^\d+(\.\d+)?$/.test(exact)) {
+                                    goldUpd.current = Math.round(parseFloat(exact));
+                                    goldUpd.currentUpdated = Date.now(); found++;
+                                    return false;
+                                }
+                                var raw = $val.clone().find('div').remove().end().text();
                                 raw = raw.replace(/\u00a0/g,'').replace(/\s/g,'').replace(',','.');
                                 var g = 0;
                                 if (/[0-9.]+G/i.test(raw)) g = Math.round(parseFloat(raw)*1e9);
@@ -5623,12 +5673,31 @@ if (typeof IkaTools == 'undefined') {
                                 var label = $cells.first().clone().find('div').remove().end()
                                                   .text().replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
                                 var lc = label.toLowerCase();
-                                var num = cellVal($cells.last());
+                                // v2.24 : première cellule chiffrée après le libellé (la dernière peut être vide)
+                                var num = NaN;
+                                for (var ci = 1; ci < $cells.length && isNaN(num); ci++) num = cellVal($($cells[ci]));
                                 if (isNaN(num)) return;
                                 if (lc.indexOf('dieux') >= 0 || lc.indexOf('pluton') >= 0)   { goldUpd.gods    = num; found++; }
-                                else if (lc === 'revenu' || lc === 'revenue')                 { goldUpd.revenue = num; found++; }
                                 else if (lc.indexOf('entretien') >= 0)                       { goldUpd.upkeep  = -(Math.abs(num)); found++; }
-                                else if (lc.indexOf('premium') >= 0)                         { goldUpd.premium = num; found++; }
+                                else if (lc.indexOf('premium') >= 0 || lc.indexOf('augmentez') >= 0) { goldUpd.premium = num; found++; }
+                                // v2.24 : la ligne « Revenu » du total inclut Pluton et déduit les scientifiques :
+                                // le revenu est désormais la somme de la colonne Revenu des villes (comme ikariam.model).
+                            });
+
+                            // v2.24 : revenu des villes (colonne 2) et coût des scientifiques (ligne Somme, colonne 3)
+                            var cityRevenue = 0, cityRows = 0;
+                            $b.find('td.city').each(function() {
+                                var $c = $(this).closest('tr').find('td');
+                                var v = cellVal($($c[1]));
+                                if (!isNaN(v)) { cityRevenue += v; cityRows++; }
+                            });
+                            if (cityRows > 0) { goldUpd.revenue = cityRevenue; found++; }
+                            $b.find('tr.result').each(function() {
+                                var $c = $(this).find('td');
+                                if (!$c.first().hasClass('sigma') || $c.length < 4) return;
+                                var sci = cellVal($($c[2]));
+                                if (!isNaN(sci)) { goldUpd.scientists = -(Math.abs(sci)); found++; }
+                                return false;
                             });
 
                             // 4. Lignes sigma (tr.result) : dernière = net
