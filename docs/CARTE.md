@@ -104,7 +104,8 @@ octet** à celui d'avant. Si c'est le cas, le comportement ne peut pas avoir cha
 besoin de test en jeu pour ces étapes, et `npm test` reste vert.
 
 Ordre prévu :
-1. L'outil d'assemblage, plus l'en-tête et les trois modules ajoutés (identique octet pour octet).
+1. ✅ L'outil d'assemblage, plus l'en-tête et les trois modules ajoutés (identique octet pour octet,
+   7 fichiers, fait le 7 nov. 2026).
 2. Les données : Constants, localisations, styles.
 3. Les blocs IkaTools, un par un.
 4. Les onglets d'Imperator, un fichier par onglet.

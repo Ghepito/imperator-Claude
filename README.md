@@ -46,8 +46,9 @@ puis un commit par version. Le détail de chaque version est dans
 [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Architecture
-La carte du script (blocs, tailles, dépendances) et le plan de découpage en modules sont
-dans [`docs/CARTE.md`](docs/CARTE.md).
+Le code source est dans [`src/`](src/) ; `Imperator.user.js` en est l'assemblage
+(`node outils/assembler.js`). La carte du script (blocs, tailles, dépendances) et le plan de
+découpage en modules sont dans [`docs/CARTE.md`](docs/CARTE.md).
 
 ## Crédits
 Script d'origine : AubergineAnodyne (licence MIT). Maintenance et évolutions : Ghepito.

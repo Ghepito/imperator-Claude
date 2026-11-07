@@ -1,0 +1,8 @@
+# Ordre d'assemblage de Imperator.user.js (un fichier par ligne)
+00-entete.js
+01-popover-chantiers.js
+10-coeur.js
+30-modules/debit-envoi.js
+30-modules/capture-vues.js
+30-modules/surlignage-ameliorations.js
+99-demarrage.js

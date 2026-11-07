@@ -7,6 +7,8 @@ const path = require('path');
 const script = path.join(__dirname, '..', 'Imperator.user.js');
 const captures = path.join(__dirname, 'captures');
 const runs = [];
+// 0) Imperator.user.js doit être exactement l'assemblage de src/
+runs.push(['assemblage src/ (identique)', [path.join(__dirname, '..', 'outils', 'assembler.js'), '--verifier']]);
 
 for (const f of fs.readdirSync(path.join(__dirname, 'regressions')).sort()) {
   if (f.endsWith('.js')) runs.push(['regressions/' + f, [path.join('regressions', f), script]]);
