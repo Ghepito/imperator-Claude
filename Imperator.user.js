@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.20
-// @version        2.20
+// @name           Imperator v2.21
+// @version        2.21
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -16,6 +16,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.21 Allegement : langues francais + anglais uniquement (ba, de, es, hu, pl, ro, tr retirees), langue par defaut anglais hors fr. Traductions francaises corrigees (Options du script, Reglages, Enregistrer, Langue, Soufre, Marche noir, navires) et completees (Espionnage, Sanctuaire divin, Port de marchandises, actions, reglages). Code mort retire (style probablysafealert, regex inutilisee, blocs commentes).
 // @history        2.20 Correctifs : niveau max detecte (maxlevel), case verte seulement si un cout est connu. Tableau de bord en unites par heure (production, autonomie vin). Alertes de bureau via GM_notification + son integre ; alerte d'attaque une seule fois, l'icone rouge du conseiller n'est plus masquee. Niveau de vin servi lu sur 70 niveaux. En-tete : jQuery en https, grants GM_notification/unsafeWindow.
 // @history        2.19 Correctif sur le rafraichissement de la map 3D
 // @history        2.18 Biens culturels/taverne : lecture Hôtel de Ville robuste (séparateur de milliers FR, niveau de vin par table non linéaire). getPopulationData : indices de bonus corrigés (table[niveau-1]), vin servi au lieu du niveau de taverne, plafonds musée/taverne. Biens culturels de toutes les villes lus automatiquement à l'ouverture du Musée (MutationObserver, l'ancien #val_culturalGoodsDeposit n'existant plus). Icône du tooltip de croissance alignée sur /cdn/all/both/icons/.
@@ -665,28 +666,6 @@ if (typeof IkaTools == 'undefined') {
                         }
                     }
                 },
-                /*bindEventArgs: function bindEventArgs() {
-            var that = this;
-            var args = Array.prototype.slice.call(arguments);
-            return {
-              bindEventArgs: function boundBindEventArgs() {
-
-                return that.bindEventArgs.apply(that,
-                    args.concat(Array.prototype.slice.call(arguments)));
-              },
-              send: function boundSend() {
-                that.send.apply(that, args.concat(Array.prototype.slice.call(arguments)));
-              },
-
-              scheduleSend: function boundScheduleSend(name, delay, callback) {
-                return that.scheduleSend.apply(that,
-                    [name, delay, callback].concat(args).concat(Array.prototype.slice.call(arguments, 3)));
-              },
-              toJSON: function toJSON() {
-                return undefined;
-              },
-            };
-          },*/
                 send: function send() {
                     var listeners = this.listeners.slice();
                     for (var i = 0, len = listeners.length; i < len; i++) {
@@ -707,26 +686,6 @@ if (typeof IkaTools == 'undefined') {
                         Math.max(delay, 10)));
 
                 },
-                /*startIntervalSend: function startIntervalSend(name, initialDelay, interval) {
-            this.cancelIntervalSend();
-            var sendCall = this.send.bind(this);
-            var sendArgs = [];
-            for (var i = 2; i < arguments.length; i++) {
-              sendArgs.push(arguments[i]);
-            }
-            this.cancelInterval = clearInterval.bind(null, setInterval(
-                IkaTools.Logging.debuggable(
-                    'IkaTools.Utils.EventDispatcher.intervalSend[' + name + ']',
-                    function() {
-                      sendCall.apply(null, sendArgs);
-                    }),
-                interval));
-          },
-          cancelIntervalSend: function cancelIntevalSend() {
-            if (this.cancelInterval) {
-              this.cancelInterval();
-            }
-          },*/
                 toJSON: function toJSON() {
                     return undefined;
                 },
@@ -803,7 +762,6 @@ if (typeof IkaTools == 'undefined') {
             }
 
 
-            var jsonResponseRegex = /ikariam.getClass\(ajax.Responder, (.*?)\);$/m;
             function backgroundFetchIkariamFullPage(url, callback, options) {
                 backgroundFetchPage(url, function(response) {
                     // Patch Correctif “source” : extraire ajaxResponse depuis le HTML
@@ -975,37 +933,6 @@ if (typeof IkaTools == 'undefined') {
                         save: 'Save',
                     },
                 },
-                de: {
-                    formatting: {
-                        "thousandsSeparator": ".",
-                        "unknown": "?",
-                        hourFormatAMPM: false,
-                    },
-                    timeunits: {
-                        long: {
-                            day: 'Tag',
-                            hour: 'Stunde.',
-                            week: 'Woche',
-                        },
-                        short: {
-                            day: 'T',
-                            hour: 'h',
-                            minute: 'm',
-                            second: 's',
-                        },
-                        complete: '-',
-                        yesterday: 'gestern',
-                        tomorrow: 'morgen',
-                        today: 'heute',
-                        am: 'AM',
-                        pm: 'PM',
-                    },
-                    settings: {
-                        script_settings: 'Script Optionen',
-                        settings: 'Einstellungen',
-                        save: 'speichern',
-                    },
-                },
                 fr: {
                     formatting: {
                         "thousandsSeparator": ".",
@@ -1032,133 +959,9 @@ if (typeof IkaTools == 'undefined') {
                         pm: 'PM',
                     },
                     settings: {
-                        script_settings: 'Script Optionen',
-                        settings: 'Einstellungen',
-                        save: 'speichern',
-                    },
-                },
-                hu: {
-                    formatting: {
-                        "thousandsSeparator": ",",
-                        "unknown": "?",
-                        hourFormatAMPM: true,
-                    },
-                    timeunits: {
-                        long: {
-                            day: 'Nap',
-                            hour: 'Óra',
-                            week: 'Hét',
-                        },
-                        short: {
-                            day: 'n',
-                            hour: 'ó',
-                            minute: 'p',
-                            second: 'mp',
-                        },
-                        complete: '-',
-                        yesterday: 'tegnap',
-                        tomorrow: 'holnap',
-                        today: 'ma',
-                        am: 'Délelőtt',
-                        pm: 'Délután',
-                    },
-                    settings: {
-                        script_settings: 'Script Beállítások',
-                        settings: 'Beállítások',
-                        save: 'Mentés',
-                    },
-                },
-                pl: {
-                    formatting: {
-                        "thousandsSeparator": ",",
-                        "unknown": "?",
-                        hourFormatAMPM: true,
-                    },
-                    timeunits: {
-                        long: {
-                            day: 'Dzien',
-                            hour: 'Godzina',
-                            week: 'Tydzien',
-                        },
-                        short: {
-                            day: 'D',
-                            hour: 'h',
-                            minute: 'm',
-                            second: 's',
-                        },
-                        complete: '-',
-                        yesterday: 'wczoraj',
-                        tomorrow: 'jutro',
-                        today: 'dzis',
-                        am: 'AM',
-                        pm: 'PM',
-                    },
-                    settings: {
-                        script_settings: 'Opcje Skryptu',
-                        settings: 'Ustawienia',
-                        save: 'Zapisz',
-                    },
-                },
-                ro: {
-                    formatting: {
-                        "thousandsSeparator": ",",
-                        "unknown": "?",
-                        hourFormatAMPM: false,
-                    },
-                    timeunits: {
-                        long: {
-                            day: 'Zi',
-                            hour: 'Ora',
-                            week: 'Saptamana',
-                        },
-                        short: {
-                            day: 'D',
-                            hour: 'h',
-                            minute: 'm',
-                            second: 's',
-                        },
-                        complete: '-',
-                        yesterday: 'ieri',
-                        tomorrow: 'maine',
-                        today: 'azi',
-                        am: 'AM',
-                        pm: 'PM',
-                    },
-                    settings: {
-                        script_settings: 'Optiuni Script',
-                        settings: 'Setari',
-                        save: 'Salveaza',
-                    },
-                },
-                tr: {
-                    formatting: {
-                        "thousandsSeparator": ",",
-                        "unknown": "?",
-                        hourFormatAMPM: false,
-                    },
-                    timeunits: {
-                        long: {
-                            day: 'Gün',
-                            hour: 'Saat',
-                            week: 'Hafta',
-                        },
-                        short: {
-                            day: 'Gn',
-                            hour: 'Sa',
-                            minute: 'Dk',
-                            second: 'Sn',
-                        },
-                        complete: '-',
-                        yesterday: 'dün',
-                        tomorrow: 'yarın',
-                        today: 'bugün',
-                        am: 'AM',
-                        pm: 'PM',
-                    },
-                    settings: {
-                        script_settings: 'Script Seçenekleri',
-                        settings: 'Ayarlar',
-                        save: 'Kaydet',
+                        script_settings: 'Options du script',
+                        settings: 'Réglages',
+                        save: 'Enregistrer',
                     },
                 },
             });
@@ -4426,11 +4229,6 @@ if (typeof IkaTools == 'undefined') {
                 },
 
                 // Patch Rendre isMaxLevel safe
-
-                //isMaxLevel: function isMaxLevel() {
-                //return (this.getLevel() + (this.isUpgrading() ? 1 : 0)) >=
-                // Constants.BuildingData[this.getType()].maxLevel;
-                // },
 
                 isMaxLevel: function isMaxLevel() {
                     var type = this.getType();
@@ -7914,11 +7712,7 @@ var Imperator = function Imperator() {
                 test_desktop_alert: 'Test desktop notification',
                 test_desktop_alert_title: 'Test notification',
                 test_desktop_alert_text: 'Successful notification!  Click to dismiss.',
-                desktop_alerts_not_supported:
-                'Desktop alerts not supported by your browser.  You can try the HTML Desktop' +
-                'Notification extension for Firefox ' +
-                '(https://addons.mozilla.org/en-us/firefox/addon/html-notifications/) ' +
-                'or switching to Chrome (www.google.com/chrome/).',
+                desktop_alerts_not_supported: 'Notification failed: check that Tampermonkey allows GM_notification for this script and that the browser may show notifications.',
 
                 building_completion_alert_desktop: 'Desktop notification: building upgrade complete',
                 transport_loaded_alert_desktop: 'Desktop notification: transport mission loaded',
@@ -7936,603 +7730,16 @@ var Imperator = function Imperator() {
                 debug: 'Debug',
             },
         },
-        ba: {
-            misc: {
-                resource_overview: 'Pregled resursa',
-                buildings_overview: 'Pregled zgrada',
-                military_overview: 'Pregled vojske',
-
-                upkeep: "Zadovoljstvo",
-                growth: "Rast",
-                trade_good: "Trade Good",
-                city_name: "Grad",
-                action_points: "Akcijski bodovi",
-                actions: "Akcije",
-                research: "Istraživanje",
-                building_spots: "Gradilište",
-
-                constructing: "Izgradnja",
-                summary: "Ukupno:",
-
-                population: "Populacija",
-                population_growth: "Rast",
-
-                resources: 'Resursi',
-                buildings: 'Zgrade',
-                military: 'Trupe',
-
-                resource_overviewTab: 'Resursi',
-                buildings_overviewTab: 'Zgrade',
-                military_overviewTab: 'Trupe',
-
-                resource_cost: 'Cijena',
-                missing: 'Nedostaje',
-
-                full: 'Puno',
-                time_to_full: 'do popune',
-                time_to_empty: 'do pražnjenja',
-
-                maximum_capacity: 'Kapaciet',
-                safe_capacity: 'Sigurno',
-                employed: 'Radnici',
-
-                satisfaction: 'Zadovoljstvo',
-                tavern_wine_serving_level: 'Nivo Taverne',
-                cultural_goods: 'Kulturna dobra',
-
-                units: 'Jedinice',
-                training: 'Regrutirano',
-                deploying: 'Stacioniranje',
-                plundering: 'Pljačka',
-
-                in_transit: 'Transport',
-            },
-            tweaks: {
-                transport_minus_500: '-',
-                transport_plus_500: '+500',
-                transport_plus_1000: '+1k',
-                transport_plus_5000: '+5k',
-
-                transport_minus_500_text: 'Ukloni 500 dobra',
-                transport_plus_500_text: 'Dodaj 500 dobra',
-                transport_plus_1000_text: 'Dodaj 1000 dobra',
-                transport_plus_5000_text: 'Dodaj 5000 dobra',
-
-                donate_plus_1000: '+1k',
-                donate_plus_10000: '+10k',
-                donate_plus_100000: '+100k',
-
-                donate_plus_1000_text: 'Dodaj 1000 drva za donaciju',
-                donate_plus_10000_text: 'Dodaj 10000 drva za donaciju',
-                donate_plus_100000_text: 'Dodaj 100000 drva za donaciju',
-
-            },
-            actions: {
-                deploy_army: 'Stacioniraj trupe',
-                deploy_navy: 'Stacioniraj flotu',
-                transport_goods: 'Prevezi dobra',
-                to_town_hall: 'U Vječnicu',
-                to_city_view: 'Prikaži grad',
-            },
-            resources: {
-                wood: 'Drva',
-                wine: 'Vino',
-                marble: 'Mramor',
-                glass: 'Kristal',
-                sulfur: 'Sumpor',
-            },
-            buildings: {
-                townHall: 'Gradska vječnica',
-                palace: 'Palača',
-                palaceColony: 'Guvernerova palača',
-                tavern: 'Taverna',
-                museum: 'Muzej',
-                academy: 'Akademija',
-                workshop: 'Radionica',
-                temple: 'Hram',
-                embassy: 'Veleposlanstvo',
-                warehouse: 'Skladište',
-                dump: 'Depo',
-                port: 'Trgovačka luka',
-                branchOffice: 'Market',
-                blackMarket: 'Crna Berza',
-                marineChartArchive: 'Sea Chart Arhiva',
-                wall: 'Zid',
-                safehouse: 'Sklonište',
-                barracks: 'Barake',
-
-
-                shipyard: 'Brodogradilište',
-                forester: 'Lugarova kuća',
-                carpentering: 'Stolarija',
-                winegrower: 'Vinarija',
-                vineyard: 'Vinska preša',
-                stonemason: 'Klesar',
-                architect: 'Arhitektov ured',
-                glassblowing: 'Staklarnica',
-                optician: 'Optičar',
-                alchemist: 'Alkemičarev toranj',
-                fireworker: 'Radionica vatrometa',
-            },
-            units: {
-                phalanx: 'Kopljanik',
-                steamgiant: 'Željezni Div',
-                spearman: 'Bacač koplja',
-                swordsman: 'Mačevalac',
-                slinger: 'Praćkar',
-                archer: 'Strijelac',
-                marksman: 'Sumforni Mušketar',
-                ram: 'Ovan',
-                catapult: 'Katapult',
-                mortar: 'Minobacač',
-                gyrocopter: 'Girokopter',
-                bombardier: 'Balloon Bombarder',
-                cook: 'Kuhar',
-                medic: 'Doktor',
-
-                ship_ram: 'Brod Ovan',
-                ship_flamethrower: 'Vatreni Brod',
-                ship_steamboat: 'Parni Ovan',
-                ship_ballista: 'Brod Kopljar',
-                ship_catapult: 'Brod Katapult',
-                ship_mortar: 'Brod Minobacač',
-                ship_submarine: 'Podmornica',
-                ship_paddlespeedship: 'Parni gliser',
-                ship_ballooncarrier: 'Nosač balona',
-                ship_tender: 'Tender',
-                ship_rocketship: 'Raketni brod',
-            },
-            alerts: {
-                building_upgrade_complete: 'Nadogradnja zgrade završena',
-                building_upgrade_complete_text: '%{building} u %{city} nadograđena na nivo %{level}',
-
-                mission_update: 'Izvještaj misije',
-
-                loading: 'utovar %{type} završio u gradu %{city}',
-                en_route: '%{type} je stigao u grad %{city}',
-                returning: '%{type} se vratio u grad %{city}',
-
-                deployarmy: 'Trupe stacionirane',
-                deploynavy: 'Flota stacionirana',
-                plunder: 'Pljačka',
-                transport: 'Transport',
-            },
-            settings: {
-                general: 'Općenito',
-                language: 'Jezik',
-
-                overviews: 'Pregledi',
-
-                tweaks: 'Podešavanja',
-                auto_accept_daily_bonus: 'Automatski dodijeli dnevni bonus',
-                hide_ads: 'Sakrij oglase',
-                hide_facebook: 'Sakrij Facebook gumb',
-                hide_friends_bar: 'Sakrij popis prijatelja',
-                hide_chat: 'Sakrij chat',
-                transport_buttons: 'Dodaj gumbe za transport: -500, +500, +1k, +5k',
-                donation_buttons: 'Dodaj gumbe za donacije: +1k, +10k, +100k',
-
-                alerts: 'Obavijesti',
-                do_test: 'Test',
-                test_desktop_alert: 'Test za obavijesti radne površine',
-                test_desktop_alert_title: 'Testna obavijest',
-                test_desktop_alert_text: 'Uspješno ste obaviješteni!  Kliknite za zatvaranje.',
-                desktop_alerts_not_supported:
-                'Vaš preglednik ne podržava obavijesti radne površine.  Možete pokušati sa HTML obavijestima' +
-                'radnog stola za Firefox ' +
-                '(https://addons.mozilla.org/en-us/firefox/addon/html-notifications/) ' +
-                'ili se prebacite na Chrome (www.google.com/chrome/).',
-
-                building_completion_alert_desktop: 'Obavijest: nadogradnja zgrade završena',
-                transport_loaded_alert_desktop: 'Obavijest: Utovar dobara završio',
-                transport_arrived_alert_desktop: 'Obavijest: Transport dobara stigao',
-                transport_returned_alert_desktop: 'Obavijest: Brodovi su se vratili iz transporta dobara',
-                deploy_army_loaded_alert_desktop: 'Obavijest: Trupe za stacioniranje su se ukrcale',
-                deploy_army_arrived_alert_desktop: 'Obavijest: Trupe stacionirane',
-                deploy_army_returned_alert_desktop: 'Obavijest: Trupe su se vratile',
-                deploy_navy_arrived_alert_desktop: 'Obavijest: Flota stigla na odredište',
-                deploy_navy_returned_alert_desktop: 'Obavijest: Flota se vratila',
-                pillage_loaded_alert_desktop: 'Obavijest: Jedinice za pljačku ukrcane',
-                pillage_arrived_alert_desktop: 'Obavijest: Pljačka stigla na odredište',
-                pillage_returned_alert_desktop: 'Obavijest: Brodovi su se vratili iz pljačke',
-            },
-        },
-        de: {
-            misc: {
-                upkeep: "Unterhalt",
-                growth: "Wachstum",
-                trade_good: "Handelsgüter",
-                city_name: "Stadt",
-                action_points: "Aktionspunkte",
-                actions: "Aktionen",
-                research: "Forschung",
-                building_spots: "freie Bauplätze",
-
-                constructing: "im Bau befindlich",
-                summary: "Summe:",
-
-                population: "Bevölkerung",
-                population_growth: "Wachstum",
-
-                resources: 'Ressourcen',
-                buildings: 'Gebäude',
-                military: 'Militär',
-
-                resource_overview: 'Ressourcenübersicht',
-                buildings_overview: 'Gebäudeübersicht',
-                military_overview: 'Militärübersicht',
-
-                resource_cost: 'Kosten',
-                next_level_cost: 'Kosten nächstes Level',
-                missing: 'fehlt',
-
-                full: 'voll',
-                time_to_full: 'bis voll',
-                time_to_empty: 'bis leer',
-
-                maximum_capacity: 'Kapazität',
-                safe_capacity: 'Sicher',
-                employed: 'Forscher',
-
-                satisfaction: 'Zufriedenheit',
-                tavern_wine_serving_level: 'Tavernen Level',
-                cultural_goods: 'Kulturgüter',
-
-                units: 'Einheiten',
-                training: 'Ausbildung',
-                deploying: 'im Einsatz',
-                plundering: 'Plünderung',
-
-                in_transit: 'Transport',
-            },
-            tweaks: {
-                transport_minus_500: '-',
-                transport_plus_500: '+500',
-                transport_plus_1000: '+1k',
-                transport_plus_5000: '+5k',
-
-                transport_minus_500_text: 'Entferne 500 Waren',
-                transport_plus_500_text: 'Addiere 500 Waren',
-                transport_plus_1000_text: 'Addiere 1000 Waren',
-                transport_plus_5000_text: 'Addiere 5000 Waren',
-
-                donate_plus_1000: '+1k',
-                donate_plus_10000: '+10k',
-                donate_plus_100000: '+100k',
-
-                donate_plus_1000_text: 'Addiere 1000 Holz zur Spende',
-                donate_plus_10000_text: 'Addiere 10000 Holz zur Spende',
-                donate_plus_100000_text: 'Addiere 100000 Holz zur Spende',
-
-            },
-            actions: {
-                deploy_army: 'Armee hier her verlegen',
-                deploy_navy: 'Kriegsschiffe hier her verlegen',
-                transport_goods: 'Waren hier her transportieren',
-                to_town_hall: 'gehe ins Rathaus',
-                to_city_view: 'zeige Stadtansicht',
-                to_barracks: 'gehe zur Kaserne',
-                to_shipyard: 'gehe zur Werft',
-            },
-            resources: {
-                wood: 'Holz',
-                wine: 'Wein',
-                marble: 'Mamor',
-                glass: 'Kristall',
-                sulfur: 'Schwefel',
-            },
-            buildings: {
-                townHall: 'Rathaus',
-                palace: 'Palast',
-                palaceColony: 'Stadthaltersitz',
-                tavern: 'Taverne',
-                museum: 'Museum',
-                academy: 'Akademie',
-                workshop: 'Erfinderwerkstatt',
-                temple: 'Tempel',
-                embassy: 'Botschaft',
-                warehouse: 'Lagerhaus',
-                dump: 'Halde',
-                port: 'Handelshafen',
-                branchOffice: 'Kontor',
-                blackMarket: 'Schwarzmarkt',
-                marineChartArchive: 'Seekarte Archiv',
-                wall: 'Mauer',
-                safehouse: 'Versteck',
-                barracks: 'Kaserne',
-                shipyard: 'Kriegswerft',
-                forester: 'Forsthaus',
-                carpentering: 'Zimmerei',
-                winegrower: 'Winzerei',
-                vineyard: 'Taverne',
-                stonemason: 'Steinmetz',
-                architect: 'Architekt',
-                glassblowing: 'Glasbläser',
-                optician: 'Optiker',
-                alchemist: 'Alchimistenturm',
-                fireworker: 'Feuerwerksplatz',
-            },
-            units: {
-                phalanx: 'Hoplit',
-                steamgiant: 'Dampfgigant',
-                spearman: 'Speerträger',
-                swordsman: 'Schwertkämpfer',
-                slinger: 'Steinschleuderer',
-                archer: 'Bogenschütze',
-                marksman: 'Schwefelbüchsenschütze',
-                ram: 'Rammbock',
-                catapult: 'Katapult',
-                mortar: 'Mörser',
-                gyrocopter: 'Gyrocopter',
-                bombardier: 'Balloon-Bombadier',
-                cook: 'Koch',
-                medic: 'Doktor',
-
-                ship_ram: 'Rammschiff',
-                ship_flamethrower: 'Feuerschiff',
-                ship_steamboat: 'Dampframme',
-                ship_ballista: 'Ballistaschiff',
-                ship_catapult: 'Katapultschiff',
-                ship_mortar: 'Mörserschiff',
-                ship_submarine: 'Tauchboot',
-                ship_paddlespeedship: 'Schaufelschnellboot',
-                ship_ballooncarrier: 'Ballonträger',
-                ship_tender: 'Tender',
-                ship_rocketship: 'Raketenschiff',
-            },
-            alerts: {
-                building_upgrade_complete: 'Gebäudeausbau abgeschlossen',
-                building_upgrade_complete_text: '%{building} in %{city} ausgebaut auf Stufe %{level}',
-
-                mission_update: 'Mission update',
-
-                loading: '%{type} ist fertig mit beladen in %{city}',
-                en_route: '%{type} ist angekommen in %{city}',
-                returning: '%{type} ist zurück gekommen nach %{city}',
-
-                deployarmy: 'Armeeaufträge',
-                deploynavy: 'Flottenaufträge',
-                plunder: 'Plündern',
-                transport: 'Transport',
-
-            },
-            settings: {
-                general: 'Allgemein',
-                language: 'Sprache',
-
-                overviews: 'Übersichten',
-
-                tweaks: 'Sonstiges',
-                auto_accept_daily_bonus: 'Automatisches senden des täglichen Login-Bonus',
-                hide_ads: 'Werbung ausblenden',
-                hide_facebook: 'Facbookbutton ausblenden',
-                hide_friends_bar: 'Freundesliste ausblenden',
-                hide_chat: 'Chat ausblenden',
-                transport_buttons: 'Aanzeige Transport Buttons: -500, +500, +1k, +5k',
-                donation_buttons: 'Anzeige Spende Buttons: +1k, +10k, +100k',
-
-                alerts: 'Alarm',
-                do_test: 'Test',
-                test_desktop_alert: 'Test Desktop Benachrichtigung',
-                test_desktop_alert_title: 'Test Benachrichtigung',
-                test_desktop_alert_text: 'Test erfogreich!  Klicke hier zum beenden.',
-                desktop_alerts_not_supported:
-                'Desktop Alarm wird von deinem Browser nicht unterstützt. Versuche HTML Desktop' +
-                'Benachrichtigungserweiterung für Firefox ' +
-                '(https://addons.mozilla.org/de/firefox/addon/html-notifications/) ' +
-                'oder wechsle zu Chrome (www.google.com/chrome/).',
-
-                building_completion_alert_desktop: 'Benachrichtigung: Gebäudeausbau abgeschlossen',
-                transport_loaded_alert_desktop: 'Benachrichtigung: Transport Mission beladen',
-                transport_arrived_alert_desktop: 'Benachrichtigung: Transport Mission angekommen',
-                transport_returned_alert_desktop: 'Benachrichtigung: Transport Mission zurück gekommen',
-                deploy_army_loaded_alert_desktop: 'Benachrichtigung: eingesetzte Armee beladen',
-                deploy_army_arrived_alert_desktop: 'Benachrichtigung: eingesetzte Armee angekommen',
-                deploy_army_returned_alert_desktop: 'Benachrichtigung: eingesetzte Armee zurück gekommen',
-                deploy_navy_arrived_alert_desktop: 'Benachrichtigung: eingesetzte Flotte angekommen',
-                deploy_navy_returned_alert_desktop: 'Benachrichtigung: eingesetzte Flotte zurück gekommen',
-                pillage_loaded_alert_desktop: 'Benachrichtigung: Plündergut beladen',
-                pillage_arrived_alert_desktop: 'Benachrichtigung: Plündergut angekommen',
-                pillage_returned_alert_desktop: 'Benachrichtigung: Plündergut zurück gekommen',
-
-                debug: 'Debug',
-            },
-        },
-        es: {
-            misc: {
-                resource_overview: 'Tabla de recursos',
-                buildings_overview: 'Tabla de edificios',
-                military_overview: 'Tabla Militar',
-
-                upkeep: "Mantenimiento",
-                growth: "Crecimiento",
-                trade_good: "Bien de Lujo",
-                city_name: "Ciudad",
-                action_points: "Puntos de accion",
-                actions: "Accion",
-                research: "Investigacion",
-                building_spots: "Lugares disponibles",
-                constructing: "Construyendo",
-                summary: "Resumen:",
-
-                population: "Poblacion",
-                population_growth: "Crecimiento",
-
-                resources: 'Recursos',
-                buildings: 'Edificios',
-                military: 'Militar',
-
-                resource_overview: 'Resumen de recursos',
-                buildings_overview: 'Resumen de edificios',
-                military_overview: 'Resumen Militar',
-
-                resource_cost: 'Costos',
-                next_level_cost: 'Costos Proximo nivel',
-                missing: 'Faltante',
-
-                full: 'Lleno',
-                time_to_full: 'Tiempo para llenar',
-                time_to_empty: 'Tiempo para vaciar',
-
-                maximum_capacity: 'Capacidad',
-                safe_capacity: 'Seguro',
-                employed: 'Empleado',
-
-                satisfaction: 'Satisfaccion',
-                tavern_wine_serving_level: 'Vino servido',
-                cultural_goods: 'Bienes Culturales',
-
-                units: 'Unidades',
-                training: 'Entrenando',
-                deploying: 'Desplegando',
-                plundering: 'Saqueando',
-
-                in_transit: 'En transito',
-            },
-            tweaks: {
-                transport_minus_500: '-500',
-                transport_plus_500: '+500',
-                transport_plus_1000: '+1k',
-                transport_plus_5000: '+5k',
-                transport_minus_500_text: 'reduce 500',
-                transport_plus_500_text: 'Aumenta 500',
-                transport_plus_1000_text: 'Aumenta 1000',
-                transport_plus_5000_text: 'Aumenta 5000',
-                donate_plus_1000: '+1k',
-                donate_plus_10000: '+10k',
-                donate_plus_100000: '+100k',
-                donate_plus_1000_text: 'Aumenta 1000',
-                donate_plus_10000_text: 'Aumenta 10000',
-                donate_plus_100000_text: 'Aumenta 100000',
-            },
-            actions: {
-                deploy_army: 'Desplegar Tropas',
-                deploy_navy: 'Despplegar Flotas',
-                transport_goods: 'Transportar Bienes',
-                to_town_hall: 'ir a la intendencia',
-                to_city_view: 'ver ciudad',
-                to_barracks: 'ir al cuartel',
-                to_shipyard: 'ir al astillero',
-            },
-            resources: {
-                wood: 'Madera',
-                wine: 'Vino',
-                marble: 'Marmol',
-                glass: 'Cristal',
-                sulfur: 'Azufre',
-            },
-            buildings: {
-                townHall: 'Intendencia',
-                palace: 'Palacio',
-                palaceColony: 'Residencia del Gobernador',
-                tavern: 'Taberna',
-                museum: 'Museo',
-                academy: 'Academia',
-                workshop: 'Taller de mejoras',
-                temple: 'Templo',
-                embassy: 'Embajada',
-                warehouse: 'Deposito',
-                dump: 'Vertedero',
-                port: 'Puerto',
-                branchOffice: 'Tienda',
-                blackMarket: 'Mercado Negro',
-                marineChartArchive: 'Carta del mar de Archivo',
-                wall: 'Muralla',
-                safehouse: 'Escondite',
-                barracks: 'Cuartel',
-                shipyard: 'Astillero',
-                forester: 'CabaÃ±a del guardabosques',
-                carpentering: 'Carpinteria',
-                winegrower: 'Vinicultor',
-                vineyard: 'Prensa de Vino',
-                stonemason: 'Cantero',
-                architect: 'Oficina del arquitecto',
-                glassblowing: 'Soplador de Vidrio',
-                optician: 'Optica',
-                alchemist: 'Alquimista',
-                fireworker: 'Zona de pruebas pirotecnicas',
-            },
-            units: {
-                phalanx: 'Hoplita',
-                steamgiant: 'Gigante a vapor',
-                spearman: 'Lancero',
-                swordsman: 'Espadachin',
-                slinger: 'Hondero',
-                archer: 'Arquero',
-                marksman: 'Fusilero',
-                ram: 'Ariete',
-                catapult: 'Catapulta',
-                mortar: 'Mortero',
-                gyrocopter: 'Gyrocoptero',
-                bombardier: 'Bombardero',
-                cook: 'Cocinero',
-                medic: 'Medico',
-                ship_ram: 'Barco Espolon',
-                ship_flamethrower: 'Barco Lanzallamas',
-                ship_steamboat: 'Barco Espolon a vapor',
-                ship_ballista: 'Barco Ballesta',
-                ship_catapult: 'Barco Catapulta',
-                ship_mortar: 'Barco mortero',
-                ship_submarine: 'Submarino',
-                ship_paddlespeedship: 'Lancha de palas',
-                ship_ballooncarrier: 'Porta-Globos',
-                ship_tender: 'Barco de mantenimiento',
-                ship_rocketship: 'Barco lanza-misiles',
-            },
-            alerts: {
-                building_upgrade_complete: 'Expansion de edificio completa',
-                building_upgrade_complete_text: '%{building} nivel %{level} completado(a) en%{city}',
-                mission_update: 'Actualizar Mision',
-                loading: 'Carga %{type} completa en %{city}',
-                en_route: '%{type} en camino a %{city}',
-                returning: '%{type} retornando desde %{city}',
-                deployarmy: 'Desplegando tropas',
-                deploynavy: 'Desplegando Flotas',
-                plunder: 'Saquear',
-                transport: 'Transportar',
-            },
-            settings: {
-                general: 'Optciones generales',
-                language: 'Idioma',
-                overviews: 'Tablas',
-                tweaks: 'Ajustes',
-                auto_accept_daily_bonus: 'Aceptar automaticamente el bono diario',
-                hide_ads: 'Ocultar Publicidad',
-                hide_facebook: 'Ocultar Facebook',
-                hide_friends_bar: 'Ocultar barra de amigos',
-                hide_chat: 'Ocultar chat',
-                transport_buttons: 'Botones de transporte: -500, +500, +1k, +5k',
-                donation_buttons: 'Botones para donaciones: +1k, +10k, +100k',
-                alerts: 'Alertas',
-                do_test: 'Probar',
-                test_desktop_alert: 'Notificacion en el escritorio',
-                test_desktop_alert_title: 'Titulo de la notificacion',
-                test_desktop_alert_text: 'Mensaje de la notificacion.',
-                building_completion_alert_desktop: 'Alerta: Ampliacion de edificio completa',
-                transport_loaded_alert_desktop: 'Alerta: Carga completa',
-                transport_arrived_alert_desktop: 'Alerta: Transporte arribÃ³',
-                transport_returned_alert_desktop: 'Alerta: trasnsporte volviÃ³',
-                deploy_army_loaded_alert_desktop: 'Alerta: Carga de Tropas completa',
-                deploy_army_arrived_alert_desktop: 'Alerta: Tropas desplegadas',
-                deploy_army_returned_alert_desktop: 'Alerta: Retorno de tropas',
-                deploy_navy_arrived_alert_desktop: 'Alerta: Flotas desplegadas',
-                deploy_navy_returned_alert_desktop: 'Alerta: Retorno de Flotas',
-                pillage_loaded_alert_desktop: 'Alerta: Cargando saqueo',
-                pillage_arrived_alert_desktop: 'Alerta: Saqueo en curso',
-                pillage_returned_alert_desktop: 'Alerta: Retorno del saqueo',
-                debug: 'Debug',
-            },
-        },
         fr: {
             misc: {
                 resource_overview: 'Vue générale des Ressources',
                 buildings_overview: 'Vue générale des Bâtiments',
                 military_overview: 'Vue générale des Troupes',
-                espionage_overview:'Vue générale des espions',
+                espionage_overview: 'Vue générale de l\'espionnage',
 
                 upkeep: "Entretien",
                 growth: "Croissance",
-                trade_good: "Trade Good",
+                trade_good: "Ressource de luxe",
                 city_name: "Cité",
                 action_points: "Points d'Action",
                 actions: "Actions",
@@ -8577,6 +7784,7 @@ var Imperator = function Imperator() {
                 plundering: 'Pillage',
 
                 in_transit: 'En transit',
+                none: 'Aucune',
             },
             tweaks: {
                 transport_minus_500: '-',
@@ -8596,6 +7804,12 @@ var Imperator = function Imperator() {
                 donate_plus_1000_text: 'Ajouter 1000 unités de bois en donation',
                 donate_plus_10000_text: 'Ajouter 10000 unités de bois en donation',
                 donate_plus_100000_text: 'Ajouter 100000 unités de bois en donation',
+
+                completely_demolish_building_prompt: 'Voulez-vous démolir complètement ce bâtiment ?',
+                destroy_non_mobile_colony_prompt:
+                'Démolition d\'une colonie non mobile bloquée par « Ikariam Imperator » ! Si vous voulez ' +
+                'vraiment démolir cette ville, désactivez d\'abord l\'option de protection dans ' +
+                'les options d\'« Ikariam Imperator ».',
             },
             actions: {
                 deploy_army: 'Déployer Troupes',
@@ -8605,13 +7819,21 @@ var Imperator = function Imperator() {
                 to_city_view: 'Montrer la Ville',
                 to_barracks: 'Montrer la Caserne',
                 to_shipyard: 'Montrer le Chantier Naval',
+                to_island_view: 'Voir l\'île',
+                spy_mission: 'Mission d\'espionnage',
+                blockade: 'Blocus',
+                pillage: 'Piller',
+                occupy: 'Occuper',
+                send_spy: 'Envoyer un espion',
+                view_high_score: 'Voir le classement',
+                view_alliance_page: 'Voir la page de l\'alliance',
             },
             resources: {
                 wood: 'Bois',
                 wine: 'Vin',
                 marble: 'Marbre',
                 glass: 'Cristal',
-                sulfur: 'Souffre',
+                sulfur: 'Soufre',
             },
             buildings: {
                 townHall: 'Hôtel de Ville',
@@ -8628,7 +7850,7 @@ var Imperator = function Imperator() {
                 dump: 'Dépôt',
                 port: 'Port commercial',
                 branchOffice: 'Comptoir',
-                blackMarket: 'Mrché Noir',
+                blackMarket: 'Marché noir',
                 marineChartArchive: 'Archive Carte Marine',
                 wall: 'Mur d\'enceinte',
                 safehouse: 'Cachette',
@@ -8645,6 +7867,9 @@ var Imperator = function Imperator() {
                 alchemist: 'Tour des alchimistes',
                 fireworker: 'Zone de test des artificiers',
                 chronosForge: 'Forge de Chronos',// 👈 AJOUT
+                shrineOfOlympus: 'Sanctuaire divin',
+                dockyard: 'Port de marchandises',
+                pirateFortress: 'Forteresse pirate',
             },
             units: {
                 phalanx: 'Phalange',
@@ -8653,7 +7878,7 @@ var Imperator = function Imperator() {
                 swordsman: 'Epéiste',
                 slinger: 'Lance-pierre',
                 archer: 'Archer',
-                marksman: 'Tireur d`élite',
+                marksman: 'Tireur d\'élite',
                 ram: 'Bélier',
                 catapult: 'Catapulte',
                 mortar: 'Mortier',
@@ -8669,9 +7894,9 @@ var Imperator = function Imperator() {
                 ship_catapult: 'Bateau à catapulte',
                 ship_mortar: 'Bateau à mortier',
                 ship_submarine: 'Bateau de plongée',
-                ship_paddlespeedship: 'Bateau de soutien',
+                ship_paddlespeedship: 'Bateau rapide à aubes',
                 ship_ballooncarrier: 'Porte-ballons',
-                ship_tender: 'Bateau rapide à aubes',
+                ship_tender: 'Bateau de soutien',
                 ship_rocketship: 'Bateau lance-missiles',
             },
             alerts: {
@@ -8689,27 +7914,47 @@ var Imperator = function Imperator() {
                 plunder: 'Pillage',
                 transport: 'Transport',
             },
+            espionage: {
+                player: 'Joueur',
+                townhall_level: 'Niveau de l\'Hôtel de Ville',
+                wall_level: 'Niveau du mur',
+                travel_time: 'Durée du trajet',
+                resources_lootable: 'Pillable',
+                resources_looted: 'Pillé',
+                combats: 'Combats',
+                military_score: 'Score militaire',
+                location: 'Position',
+                view_island: 'Voir l\'île',
+                occupied_by: 'Occupée par',
+                blockaded_by: 'Bloquée par',
+                time_since: 'Il y a',
+                remove_target: 'Retirer la cible',
+            },
             settings: {
                 general: 'Options générales',
-                language: 'Language',
+                language: 'Langue',
 
                 overviews: 'Vues',
 
-                tweaks: 'Tweaks',
-                auto_accept_daily_bonus: 'Soumettre automatiquement sous forme de bonus quotidien',
+                tweaks: 'Ajustements',
+                auto_accept_daily_bonus: 'Valider automatiquement le bonus quotidien',
                 hide_ads: 'Masquer les publicités',
                 hide_facebook: 'Masquer le bouton Facebook',
                 hide_friends_bar: 'Masquer la barre de contact',
                 hide_chat: 'Masquer le chat',
                 transport_buttons: 'Ajouter boutons de transport: -500, +500, +1k, +5k',
                 donation_buttons: 'Ajouter boutons de donation: +1k, +10k, +100k',
+                show_city_owners: 'Afficher le propriétaire à côté du nom des villes (vue île)',
+                prevent_accidental_colony_destruction: 'Empêcher la démolition des colonies non mobiles',
+                initialize_colonization_missions_for_pirate_raiding:
+                'Préparer les missions de colonisation avec le bois et le marbre d\'une forteresse pirate niveau 1 et la vitesse de chargement maximale',
 
                 alerts: 'Alertes',
                 do_test: 'Test',
                 test_desktop_alert: 'Tester la notification bureau',
                 test_desktop_alert_title: 'Tester le titre de la notification',
                 test_desktop_alert_text: 'Notification Réussie ! Cliquez pour fermer.',
-                desktop_alerts_not_supported: 'Les alertes ne sont pas supportées par votre navigateur. Vous pouvez essayer d\'intégrer l\'add-on HTML-Desktop-Notifications' + 'Notification extension for Firefox ' + '(https://addons.mozilla.org/en-us/firefox/addon/...) ' + 'ou passer à Chrome (www.google.com/chrome/).',
+                desktop_alerts_not_supported: 'Notification impossible : vérifiez que Tampermonkey autorise GM_notification pour ce script et que le navigateur peut afficher des notifications.',
 
                 building_completion_alert_desktop: 'Notification: Expansion du Bâtiment terminée',
                 transport_loaded_alert_desktop: 'Notification: Chargement terminé',
@@ -8723,611 +7968,6 @@ var Imperator = function Imperator() {
                 pillage_loaded_alert_desktop: 'Notification: Chargement pillage',
                 pillage_arrived_alert_desktop: 'Notification: Pillage en cours',
                 pillage_returned_alert_desktop: 'Notification: Retour du pillage',
-
-                debug: 'Debug',
-            },
-        },
-        hu: {
-            misc: {
-                resource_overview: 'Nyersanyagok listája',
-                buildings_overview: 'Épületek listája',
-                military_overview: 'Egységek listája',
-
-                upkeep: "Fenntartási költség",
-                growth: "Növekedés",
-                trade_good: "Nyersanyagok küldése",
-                city_name: "Város",
-                action_points: "Műveleti pontok",
-                actions: "Műveletek",
-                research: "Kutatás",
-                building_spots: "Építési helyek",
-
-                constructing: "Építés",
-                summary: "Összegzés:",
-
-                population: "Népesség",
-                population_growth: "Népesség növekedés",
-
-                resources: 'Nyersanyagok',
-                buildings: 'Épületek',
-                military: 'Egységek',
-
-                resource_overview: 'Nyersanyagok listája',
-                buildings_overview: 'Épületek listája',
-                military_overview: 'Egységek listája',
-
-                resource_cost: 'Nyersanyag szükséglet',
-                next_level_cost: 'Következős szinthez szükséges',
-                missing: 'Hiányzik',
-
-                full: 'Tele',
-                time_to_full: 'Tele',
-                time_to_empty: 'Üres',
-
-                maximum_capacity: 'Kapacitás',
-                safe_capacity: 'Védett',
-                employed: 'Tudósok',
-
-                satisfaction: 'Elégedettség',
-                tavern_wine_serving_level: 'Fogadó szintje',
-                cultural_goods: 'Kulturális egyezmény',
-
-                units: 'Egységek',
-                training: 'Képzés',
-                deploying: 'Csapat mozgás',
-                plundering: 'Fosztás',
-
-                in_transit: 'Szállítás',
-            },
-            tweaks: {
-                transport_minus_500: '-',
-                transport_plus_500: '+500',
-                transport_plus_1000: '+1k',
-                transport_plus_5000: '+5k',
-
-                transport_minus_500_text: 'Elvesz 500 nyersanyagot',
-                transport_plus_500_text: 'Hozzáad 500 nyersanyagot',
-                transport_plus_1000_text: 'Hozzáad 1000 nyersanyagot',
-                transport_plus_5000_text: 'Hozzáad 5000 nyersanyagot',
-
-                donate_plus_1000: '+1k',
-                donate_plus_10000: '+10k',
-                donate_plus_100000: '+100k',
-
-                donate_plus_1000_text: '1000 fát adományoz',
-                donate_plus_10000_text: '10000 fát adományoz',
-                donate_plus_100000_text: '100000 fát adományoz',
-            },
-            actions: {
-                deploy_army: 'Katonák küldése',
-                deploy_navy: 'Hajók küldése',
-                transport_goods: 'Nyersanyagok szállítása',
-                to_town_hall: 'Ugrás városházához',
-                to_city_view: 'Ugrás a városhoz',
-                to_barracks: 'Ugrás a barakkhoz',
-                to_shipyard: 'Ugrás a hajógyárhoz',
-            },
-            resources: {
-                wood: 'Fa',
-                wine: 'Bor',
-                marble: 'Márvány',
-                glass: 'Kristály',
-                sulfur: 'Kén',
-            },
-            buildings: {
-                townHall: 'Városháza',
-                palace: 'Palota',
-                palaceColony: 'Helytartó székhelye',
-                tavern: 'Fogadó',
-                museum: 'Múzeum',
-                academy: 'Akadémia',
-                workshop: 'Műhely',
-                temple: 'Templom',
-                embassy: 'Nagykövetség',
-                warehouse: 'Raktár',
-                dump: 'Depó',
-                port: 'Kereskedelmi kikötő',
-                branchOffice: 'Kereskedő poszt',
-                blackMarket: 'Feketepiac',
-                marineChartArchive: 'Tengeri Térkép Archívum',
-                wall: 'Fal',
-                safehouse: 'Rejtekhely',
-                barracks: 'Barakk',
-                shipyard: 'Hajógyár',
-                pirateFortress: 'Kalóz erőd',
-                forester: 'Erdész',
-                carpentering: 'Ácsmester',
-                winegrower: 'Bortermelő',
-                vineyard: 'Szőlőprés',
-                stonemason: 'Kőműves',
-                architect: 'Építész irodája',
-                glassblowing: 'Üvegfúvó',
-                optician: 'Optikus',
-                alchemist: 'Alkimista torony',
-                fireworker: 'Tűzszerész',
-            },
-            units: {
-                phalanx: 'Hoplita',
-                steamgiant: 'Gőzóriás',
-                spearman: 'Dárdás',
-                swordsman: 'Kardforgató',
-                slinger: 'Parittyás',
-                archer: 'Íjász',
-                marksman: 'Kén Karabélyos',
-                ram: 'Faltörő Kos',
-                catapult: 'Katapult',
-                mortar: 'Ágyú',
-                gyrocopter: 'Gyrokopter',
-                bombardier: 'Ballonos-Bombázó',
-                cook: 'Séf',
-                medic: 'Felcser',
-
-                ship_ram: 'Törő-hajó',
-                ship_flamethrower: 'Lánghajó',
-                ship_steamboat: 'Gőzkos',
-                ship_ballista: 'Balliszta Hajó',
-                ship_catapult: 'Katapult Hajó',
-                ship_mortar: 'Ágyú Hajó',
-                ship_submarine: 'Búvárhajó',
-                ship_paddlespeedship: 'Lapátkerekes Gyorshajó',
-                ship_ballooncarrier: 'Léghajó hordozó',
-                ship_tender: 'Úszó bázis',
-                ship_rocketship: 'Rakétás Hajó',
-            },
-            alerts: {
-                building_upgrade_complete: 'Az épület fejlesztése befejeződött',
-                building_upgrade_complete_text: 'A(z) %{building}, %{city}-ban/ben fejlesztve lett a(z) %{level}. szintre.',
-
-                mission_update: 'Küldetés Lista',
-
-                loading: '%{type} befejezte a rakodást itt: %{city}',
-                en_route: '%{type} megérkezett ide: %{city}',
-                returning: '%{type} visszatért ide: %{city}',
-
-                deployarmy: 'Sereg küldés',
-                deploynavy: 'Hajó küldés',
-                plunder: 'Fosztás',
-                transport: 'Szállítás',
-            },
-            settings: {
-                general: 'Általános',
-                language: 'Nyelv választás',
-
-                overviews: 'Listák',
-
-                tweaks: 'Egyéb',
-                auto_accept_daily_bonus: 'Automatikus napi bónusz elfogadás',
-                hide_ads: 'Hírdetések elrejtése',
-                hide_facebook: 'Facebook gomb elrejtése',
-                hide_friends_bar: 'Barátlista elrejtése',
-                hide_chat: 'Chat elrejtése',
-                transport_buttons: 'Szállítási gombok hozzáadása: -500, +500, +1k, +5k',
-                donation_buttons: 'Adományozás gombok hozzáadása: +1k, +10k, +100k',
-
-                alerts: 'Riasztások',
-                do_test: 'Teszt',
-                test_desktop_alert: 'Értesítés tesztelése',
-                test_desktop_alert_title: 'Teszt értesítés',
-                test_desktop_alert_text: 'Sikeres értesítés! Kattincs a bezáráshoz.',
-                desktop_alerts_not_supported: 'Az értesítéseket nem támogatja a böngésződ. Próbáld a HTML Desktop ' + 'Notification extension for Firefox ' + '(https://addons.mozilla.org/en-us/firefox/addon/...) ' + 'vagy telepítsd a Chrome-ot (www.google.com/chrome/).',
-
-                building_completion_alert_desktop: 'Értesítés: Épület fejlesztés elkészült',
-                transport_loaded_alert_desktop: 'Értesítés: Kereskedő hajók rakodása befejeződött',
-                transport_arrived_alert_desktop: 'Értesítés: Kereskedő hajók megérkeztek',
-                transport_returned_alert_desktop: 'Értesítés: Kereskedő hajók visszatértek',
-                deploy_army_loaded_alert_desktop: 'Értesítés: Egységeid elindultak',
-                deploy_army_arrived_alert_desktop: 'Értesítés: Egységeid megérkeztek',
-                deploy_army_returned_alert_desktop: 'Értesítés: Egységeid visszatértek',
-                deploy_navy_arrived_alert_desktop: 'Értesítés: A hajóid megérkeztek',
-                deploy_navy_returned_alert_desktop: 'Értesítés: A hajóid visszatértek',
-                pillage_loaded_alert_desktop: 'Értesítés: A fosztogatók elindultak',
-                pillage_arrived_alert_desktop: 'Értesítés: A fosztogatás elkezdődött',
-                pillage_returned_alert_desktop: 'Értesítés: A fosztogatók visszatértek',
-
-                debug: 'Debug',
-            },
-        },
-        pl: {
-            misc: {
-                resource_overview: 'Podglad - Zasoby',
-                buildings_overview: 'Podglad - Budynki',
-                military_overview: 'Podglad - Wojsko',
-
-                upkeep: "Utrzymanie",
-                growth: "Wzrost",
-                trade_good: "Handel",
-                city_name: "Miasto",
-                action_points: "Punkty Akcji",
-                actions: "Akcja",
-                research: "Badania",
-                building_spots: "Miejsca pod Budowe",
-
-                constructing: "Budowa",
-                summary: "Razem:",
-
-                population: "Populacja",
-                population_growth: "Przyrost",
-
-                resources: 'Zasoby',
-                buildings: 'Budynki',
-                military: 'Wojsko',
-
-                resource_overview: 'Podglad: Zasoby',
-                buildings_overview: 'Podglad: Budynki',
-                military_overview: 'Podglad: Wojsko',
-
-                resource_cost: 'Koszt',
-                missing: 'Zagubiony',
-
-                full: 'Pelno',
-                time_to_full: 'Pelno za',
-                time_to_empty: 'Pusto za',
-
-                maximum_capacity: 'Pojemnosc',
-                safe_capacity: 'Bezpieczne',
-                employed: 'Zatrudnieni',
-
-                satisfaction: 'Zadowolenie',
-                tavern_wine_serving_level: 'Poziom Tawerny',
-                cultural_goods: 'Dobra Kulturowe',
-
-                units: 'Jednostki',
-                training: 'Szkolenie',
-                deploying: 'Deploying',
-                plundering: 'Pladrowanie',
-
-                in_transit: 'Transport',
-            },
-            actions: {
-                deploy_army: 'Wyslij Armie',
-                deploy_navy: 'Wyslij Flote',
-                transport_goods: 'Transport Surowców',
-                to_town_hall: 'Ratusz',
-                to_city_view: 'Podglad Miasta',
-            },
-            resources: {
-                wood: 'Drewno',
-                wine: 'Wino',
-                marble: 'Marmur',
-                glass: 'Krysztal',
-                sulfur: 'Siarka',
-            },
-            buildings: {
-                townHall: 'Ratusz',
-                palace: 'Palac',
-                palaceColony: 'Rezydencja Gubernatora',
-                tavern: 'Tawerna',
-                museum: 'Muzeum',
-                academy: 'Akademia',
-                workshop: 'Warsztat',
-                temple: 'Swiatynia',
-                embassy: 'Ambasada',
-                warehouse: 'Magazyn',
-                dump: 'Skladowisko',
-                port: 'Port',
-                branchOffice: 'Bazar',
-                blackMarket: 'Czarny Rynek',
-                marineChartArchive: 'Archiwum wykres morze',
-                wall: 'Mur',
-                safehouse: 'Kryjówka',
-                barracks: 'Koszary',
-                shipyard: 'Stocznia',
-                forester: 'Lesniczówka',
-                carpentering: 'Ciesla',
-                winegrower: 'Winnica',
-                vineyard: 'Tlocznia Win',
-                stonemason: 'Kamieniarz',
-                architect: 'Architekt',
-                glassblowing: 'Huta Szkla',
-                optician: 'Optyk',
-                alchemist: 'Alchemik',
-                fireworker: 'Pirotechnik',
-            },
-            units: {
-                phalanx: 'Hoplita',
-                steamgiant: 'Gigant Parowy',
-                spearman: 'Oszczepnik',
-                swordsman: 'Wojownik',
-                slinger: 'Procarz',
-                archer: 'Lucznik',
-                marksman: 'Strzelec',
-                ram: 'Taran',
-                catapult: 'Katapulta',
-                mortar: 'Mozdzierz',
-                gyrocopter: 'Zyrokopter',
-                bombardier: 'Balonowy Bombardier',
-                cook: 'Kucharz',
-                medic: 'Medyk',
-
-                ship_ram: 'Taran',
-                ship_flamethrower: 'Miotacz Ognia',
-                ship_steamboat: 'Taran Parowy',
-                ship_ballista: 'Balista',
-                ship_catapult: 'Okret z Katapulta',
-                ship_mortar: 'Okret z Mozdzierzem',
-                ship_submarine: 'Okret Podwodny',
-                ship_paddlespeedship: 'Smigacz z Napedem Kolowym',
-                ship_ballooncarrier: 'Balonowiec',
-                ship_tender: 'Statek Pomocniczy',
-                ship_rocketship: 'Krazownik Rakietowy',
-            },
-            settings: {
-                general: 'Ogólne',
-                language: 'Jezyk',
-
-                overviews: 'Podglad',
-
-                tweaks: 'Ustawienia',
-                auto_accept_daily_bonus: 'Automatyczne zatwierdzenie dziennego bonusa',
-                hide_ads: 'Ukryj dodatki',
-                hide_facebook: 'Ukryj guzik facebook',
-                hide_friends_bar: 'Ukryj listę przyjaciól',
-                hide_chat: 'Ukryj czat',
-                transport_buttons: 'Dodaj przyciski załadunku: -500, +500, +1k, +5k',
-                donation_buttons: 'Dodaj przyciski wpłat: +1k, +10k, +100k',
-
-                alerts: 'Powiadomienia',
-                do_test: 'Test',
-                test_desktop_alert: 'Testuj powiadomienia',
-                test_desktop_alert_title: 'Test powiadomienia',
-                test_desktop_alert_text: 'Test zakończony powodzeniem!  Kliknij aby wyjść',
-                desktop_alerts_not_supported:
-                'Twoja przeglądarka nie obsługuje powiadomień.  ' +
-                'Zainstaluj powiadomienia dla Firefox ' +
-                '(https://addons.mozilla.org/en-us/firefox/addon/html-notifications/) ' +
-                'albo przejdź na Chrome (www.google.com/chrome/).',
-
-                building_completion_alert_desktop: 'Powiadomienie o ukończeniu modernizacji budynku',
-                transport_loaded_alert_desktop: 'Powiadomienie o zakończeniu załadunku towarów',
-                transport_arrived_alert_desktop: 'Powiadomienie o przybyciu statków handlowych',
-                transport_returned_alert_desktop: 'Powiadomienie o powrocie statków handlowych',
-                deploy_army_loaded_alert_desktop: 'Powiadomienie o załadowaniu wojsk',
-                deploy_army_arrived_alert_desktop: 'Powiadomienie o przybyciu wojsk',
-                deploy_army_returned_alert_desktop: 'Powiadomienie o powrocie wojsk',
-                deploy_navy_arrived_alert_desktop: 'Powiadomienie o dopłynięciu okrętów wojennych',
-                deploy_navy_returned_alert_desktop: 'Powiadomienie o powrocie okrętów wojennych',
-                pillage_loaded_alert_desktop: 'Powiadomienie o grabieży',
-                pillage_arrived_alert_desktop: 'Powiadomienie o rozpoczęciu grabieży',
-                pillage_returned_alert_desktop: 'Powiadomienie o powrocie z grabieży',
-            },
-        },
-        tr: {
-            misc: {
-                resource_overview: 'Kaynak Durumu',
-                buildings_overview: 'Binaların Durumu',
-                military_overview: 'Orduya Bakış',
-                espionage_overview: 'Casusluk Sistemi',
-
-                upkeep: "Bakım",
-                growth: "Büyüme",
-                trade_good: "Ticaret",
-                city_name: "Şehir",
-                action_points: "Aksiyon Puanı",
-                actions: "Aksiyonlar",
-                research: "Araştırma",
-                building_spots: "Bina Noktaları",
-
-                constructing: "İnşaat",
-                summary: "Özet:",
-
-                population: "Nüfus",
-                population_growth: "Büyüme",
-
-                resources: 'Kaynaklar',
-                buildings: 'Binalar',
-                military: 'Ordu',
-                espionage: 'Casusluk',
-
-                resource_overview: 'Kaynak Durumu',
-                buildings_overview: 'Binaların Durumu',
-                military_overview: 'Orduya Bakış',
-
-                resource_cost: 'Maliyet',
-                next_level_cost: 'Sonraki Seviye Maliyeti',
-                missing: 'Kayıp',
-
-                full: 'Dolu',
-                time_to_full: 'Dolacak',
-                time_to_empty: 'Boşalacak',
-
-                maximum_capacity: 'Kapasite',
-                safe_capacity: 'Korunan',
-                employed: 'Mevcut',
-
-                satisfaction: 'Memnuniyet',
-                tavern_wine_serving_level: 'Taverna Seviyesi',
-                cultural_goods: 'Kültürel Ürünler',
-
-                units: 'Birimler',
-                training: 'Eğitimde',
-                deploying: 'Yolda',
-                plundering: 'Seferde',
-
-                in_transit: 'Yüklenen',
-                none: 'Yok',
-            },
-            tweaks: {
-                transport_minus_500: '-',
-                transport_plus_500: '+',
-                transport_plus_1000: '+1',
-                transport_plus_5000: '+5',
-
-                transport_minus_500_text: '-500',
-                transport_plus_500_text: '+500',
-                transport_plus_1000_text: '+1000',
-                transport_plus_5000_text: '+5000',
-
-                donate_plus_1000: '+1k',
-                donate_plus_10000: '+10k',
-                donate_plus_100000: '+100k',
-
-                donate_plus_1000_text: '+1000',
-                donate_plus_10000_text: '+10000',
-                donate_plus_100000_text: '+100000',
-
-                completely_demolish_building_prompt: 'Bu binayı tamamen yıkmak istiyor musunuz?',
-                destroy_non_mobile_colony_prompt:
-                'Mobil olmayan koloninin yıkımı "Ikariam Imperator" tarafından bloke edildi!  Eğer gerçekten ' +
-                'bu şehri yıkmak istiyorsanız, önce "Ikariam Imperator" şeçeneklerindeki koruma ' +
-                'seçeneğini kapatınız.',
-            },
-            actions: {
-                deploy_army: 'Asker Gönder',
-                deploy_navy: 'Gemi Gönder',
-                transport_goods: 'Malzeme Gönder',
-                to_town_hall: 'Belediye Binasına Git',
-                to_city_view: 'Şehir Görünümü',
-                to_island_view: 'Ada Görünümü',
-                to_barracks: 'Kışla',
-                to_shipyard: 'Tersane',
-                spy_mission: 'Görev Seç',
-                blockade: 'Limanı Fethet',
-                pillage: 'Yağmala',
-                occupy: 'Şehri İşgalet',
-                send_spy: 'Casus Yolla',
-                view_high_score: 'Puan Bilgileri',
-                view_alliance_page: 'İttifak Sayfasına Bak',
-            },
-            resources: {
-                wood: 'Odun',
-                wine: 'Üzüm',
-                marble: 'Mermer',
-                glass: 'Kristal',
-                sulfur: 'Sülfür',
-            },
-            buildings: {
-                townHall: 'Belediye',
-                palace: 'Saray',
-                palaceColony: 'Valilik',
-                tavern: 'Taverna',
-                museum: 'Müze',
-                academy: 'Akademi',
-                workshop: 'Mucit Atölyesi',
-                temple: 'Tapınak',
-                embassy: 'Büyük Elçilik',
-                warehouse: 'Depo',
-                dump: 'Yığın Sahası',
-                port: 'Ticaret Limanı',
-                branchOffice: 'Ticaret Merkezi',
-                blackMarket: 'Karaborsa',
-                marineChartArchive: 'Deniz Haritası Arşivi',
-                wall: 'Sur',
-                safehouse: 'İstihbarat Merkezi',
-                barracks: 'Kışla',
-                shipyard: 'Donanma Tersanesi',
-                pirateFortress: 'Korsan Kalesi',
-                forester: 'Ormancı Kulübesi',
-                carpentering: 'Marangoz Atölyesi',
-                winegrower: 'Bağ Evi',
-                vineyard: 'Şarap Mahzeni',
-                stonemason: 'Mermer Atölyesi',
-                architect: 'Mimarlık Bürosu',
-                glassblowing: 'Cam Eşya Atölyesi',
-                optician: 'Optik',
-                alchemist: 'Simya Kulesi',
-                fireworker: 'Fişekçi',
-            },
-            units: {
-                phalanx: 'Hoplit',
-                steamgiant: 'Buhar Devi',
-                spearman: 'Mızrakçı',
-                swordsman: 'Kılıç Ustası',
-                slinger: 'Taş Atıcı',
-                archer: 'Okçu',
-                marksman: 'Sülfür Tüfekçisi',
-                ram: 'Şahmerdan',
-                catapult: 'Mancınık',
-                mortar: 'Topçu',
-                gyrocopter: 'Gyrokopter',
-                bombardier: 'Balon Bombardımancısı',
-                cook: 'Aşçı',
-                medic: 'Doktor',
-
-                ship_ram: 'Şahmerdan Gemisi',
-                ship_flamethrower: 'Alev Gemisi',
-                ship_steamboat: 'Buharlı Şahmerdan',
-                ship_ballista: 'Okçu Gemi',
-                ship_catapult: 'Mancınık Gemisi',
-                ship_mortar: 'Havantopu Gemisi',
-                ship_submarine: 'Denizaltı',
-                ship_paddlespeedship: 'Süratli Kürekbotu',
-                ship_ballooncarrier: 'Balon Taşıyıcı',
-                ship_tender: 'Filika',
-                ship_rocketship: 'Füze Gemisi',
-            },
-            alerts: {
-                building_upgrade_complete: 'Bina inşaası tamamlandı',
-                building_upgrade_complete_text: '%{city} şehrindeki %{building} binası %{level} seviyeye yükseltildi.',
-
-                mission_update: 'Görev Güncelleştirme',
-
-                loading: '%{city} şehrindeki %{type} yüklemesi tamamlandı',
-                en_route: '%{type} has arrived in %{city}',
-                returning: '%{type} has returned to %{city}',
-
-                deployarmy: 'Asker Gönderme',
-                deploynavy: 'Donanma Gönderme',
-                plunder: 'Yağmalama',
-                transport: 'Yükleme',
-            },
-            espionage: {
-                player: 'Oyuncu',
-                townhall_level: 'Belediye Seviyesi',
-                wall_level: 'Sur Seviyesi',
-                travel_time: 'Varış Zamanı',
-                resources_lootable: 'Lazım olan gemi',
-                resources_looted: 'Yağmalanacak',
-                combats: 'Savaşlar',
-                military_score: 'General Puanı',
-                location: 'Koordinat',
-                view_island: 'Ada Görünümü',
-                occupied_by: 'İşgalde',
-                blockaded_by: 'Limanı İşgalde',
-                time_since: 'beri',
-                remove_target: 'Listeden Çıkar',
-            },
-            settings: {
-                general: 'Genel',
-                language: 'Dil',
-
-                overviews: 'Genel Bakış',
-
-                tweaks: 'Ekstra',
-                auto_accept_daily_bonus: 'Günlük Bonusları otomatik onayla',
-                hide_ads: 'Reklamları gizle',
-                hide_facebook: 'Facebook butonunu gizle',
-                hide_friends_bar: 'Arkadaşlar çubuğunu gizle',
-                hide_chat: 'Sohbeti gizle',
-                transport_buttons: 'Yükleme limanı butonları: -500, +500, +1k, +5k',
-                donation_buttons: 'Maden bağış butonları: +1k, +10k, +100k',
-                show_city_owners: 'Şehir adının yanında şehir sahibini göster (ada görünümünde)',
-                prevent_accidental_colony_destruction: 'Mobil olmayan kolonilerin imhasını önle',
-                initialize_colonization_missions_for_pirate_raiding:
-                'Ahşap ve mermer ile seviye 1 korsan kale inşa etmek ve kolonizasyon misyonları başlatmak için maksimum taslak hızı kullanın',
-
-                alerts: 'Bildirimler',
-                do_test: 'Test',
-                test_desktop_alert: 'Masaüstü bildirimlerini test et',
-                test_desktop_alert_title: 'Test Bildirimi',
-                test_desktop_alert_text: 'Bildirim başarılı! Kapatmak için tıklayın.',
-                desktop_alerts_not_supported:
-                'Masaüstü bildirimleri tarayıcınız tarafından desteklenmiyor.  You can try the HTML Desktop' +
-                'Firefox için bir HTML masaüstü bildirim uzantısı indirin ' +
-                '(https://addons.mozilla.org/en-us/firefox/addon/html-notifications/) ' +
-                'veya Chrome\'dan giriş yapın (www.google.com/chrome/).',
-
-                building_completion_alert_desktop: 'Bina yükseltmesi tamamlandı',
-                transport_loaded_alert_desktop: 'Kaynaklar yüklendi',
-                transport_arrived_alert_desktop: 'Kaynaklar hedefe vardı',
-                transport_returned_alert_desktop: 'Nakliye gemileri geri döndü',
-                deploy_army_loaded_alert_desktop: 'Ordu yüklendi',
-                deploy_army_arrived_alert_desktop: 'Ordu hedefe vardı',
-                deploy_army_returned_alert_desktop: 'Ordu geri döndü',
-                deploy_navy_arrived_alert_desktop: 'Donanma hedefe vardı',
-                deploy_navy_returned_alert_desktop: 'Donanma geri döndü',
-                pillage_loaded_alert_desktop: 'Yağma yüklendi',
-                pillage_arrived_alert_desktop: 'Yağma geldi',
-                pillage_returned_alert_desktop: 'Yağma geri döndü',
 
                 debug: 'Debug',
             },
@@ -10447,15 +9087,9 @@ min-width: 851px !important; \
         'language',
         '',
         {
-            'Automatic': '',
-            'Türkçe': 'tr',
+            'Automatique': '',
+            'Français': 'fr',
             'English': 'en',
-            'Bosnian': 'ba',
-            'Spanish': 'es',
-            'French': 'fr',
-            'German': 'de',
-            'Hungarian': 'hu',
-            'Polish': 'pl',
         },
         localizer.delayedLocalize('settings','language'));
 
@@ -10943,16 +9577,6 @@ min-width: 851px !important; \
             });
             return this;
         },
-        /*toIslandView: function toIslandView(islandId, view, params, predicate) {
-        clickHandler.register(this.id,
-          function() {
-            if (!predicate || predicate()) {
-              IkaTools.View.goToIslandView(
-                  IkaTools.View.getCurrentCity(), islandId, view, params);
-            }
-          });
-        return this;
-      },*/
         toLocalView: function toLocalView(view, params, predicate) {
             clickHandler.register(this.id, function() {
                 if (!predicate || predicate()) {
@@ -15670,7 +14294,6 @@ min-width: 851px !important; \
         );
 
 
-        GM_addStyle('#advisors #advMilitary a.probablysafealert { background-image: url(http://www.clker.com/cliparts/3/7/6/d/1256186461796715642question-mark-icon.svg); background-size: 90px 90px; background-repeat:no-repeat;}');
 
         // remplacement !!
     }
@@ -15685,13 +14308,6 @@ min-width: 851px !important; \
                 language = hostParts[1];
             }
 
-            if ((language == 'com') || (language == 'org') || (language == 'net')) {
-                language = 'tr';
-            }
-            if ((language == 've') || (language == 'mx') || (language == 'ar') ||
-                (language == 'co') || (language == 'cl')) {
-                language = 'es';
-            }
             // Format moderne Gameforge : sXX-<lang>.ikariam.gameforge.com -> <lang>
             if (hostParts.indexOf('gameforge') > -1) {
                 var first = hostParts[0];
@@ -15699,10 +14315,12 @@ min-width: 851px !important; \
             }
         }
 
-        if (language) {
-            localizer.setPreferredLanguage(language);
-            IkaTools.Intl.localizer.setPreferredLanguage(language);
+        // v2.21 : seuls le français et l'anglais existent ; tout le reste -> anglais
+        if (language !== 'fr') {
+            language = 'en';
         }
+        localizer.setPreferredLanguage(language);
+        IkaTools.Intl.localizer.setPreferredLanguage(language);
     }
 
     function initPirating() {
