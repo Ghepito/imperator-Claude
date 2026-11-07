@@ -1,5 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.19
+// @name           Imperator v2.20
+// @version        2.20
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -9,10 +10,13 @@
 // @grant          GM_setValue
 // @grant          GM_addStyle
 // @grant          GM_xmlhttpRequest
+// @grant          GM_notification
+// @grant          unsafeWindow
 // @include        http://s*.ikariam.gameforge.com/*
 // @include        https://s*.ikariam.gameforge.com/*
-// @require        http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
+// @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.20 Correctifs : niveau max detecte (maxlevel), case verte seulement si un cout est connu. Tableau de bord en unites par heure (production, autonomie vin). Alertes de bureau via GM_notification + son integre ; alerte d'attaque une seule fois, l'icone rouge du conseiller n'est plus masquee. Niveau de vin servi lu sur 70 niveaux. En-tete : jQuery en https, grants GM_notification/unsafeWindow.
 // @history        2.19 Correctif sur le rafraichissement de la map 3D
 // @history        2.18 Biens culturels/taverne : lecture Hôtel de Ville robuste (séparateur de milliers FR, niveau de vin par table non linéaire). getPopulationData : indices de bonus corrigés (table[niveau-1]), vin servi au lieu du niveau de taverne, plafonds musée/taverne. Biens culturels de toutes les villes lus automatiquement à l'ouverture du Musée (MutationObserver, l'ancien #val_culturalGoodsDeposit n'existant plus). Icône du tooltip de croissance alignée sur /cdn/all/both/icons/.
 // @history        2.17 Armee: parseur 'Troupes dans la ville' reecrit sur la structure actuelle du jeu (th > div.army/fleet sNNN -> id d'unite, tr.count -> effectifs, plusieurs tables par onglet, bloc Garnison/Navires uniquement). Ne depend plus des noms d'images (haches par le CDN). Met a jour armee ET flotte d'un coup, ville lue depuis la page. Deux passes (700 ms / 2 s), log console, unites inconnues signalees (ex. Spartiate s319).
@@ -3613,12 +3617,18 @@ if (typeof IkaTools == 'undefined') {
                             }
                         }
 
-                        var use = Constants.BuildingData[Constants.Buildings.TAVERN].wineUse;
-                        for (var i = 0; i < 48; i++) {
-                            if (use[i] >= baseWineConsumption) {
-                                this._updateTavernWineLevel(i, changes);
-                                break;
+                        // v2.20 : table maxWine (70 niveaux, maxWine[0] = niveau 1) au lieu de
+                        // wineUse limitée à 48 entrées (niveaux > 47 jamais reconnus).
+                        var maxWine = Constants.BuildingData[Constants.Buildings.TAVERN].maxWine;
+                        if (isFinite(baseWineConsumption)) {
+                            var wineLevel = 0;
+                            if (baseWineConsumption > 0) {
+                                wineLevel = maxWine.length;
+                                for (var i = 0; i < maxWine.length; i++) {
+                                    if (maxWine[i] >= baseWineConsumption) { wineLevel = i + 1; break; }
+                                }
                             }
+                            this._updateTavernWineLevel(wineLevel, changes);
                         }
 
                         this._updateResources(data.currentResources,
@@ -4428,11 +4438,18 @@ if (typeof IkaTools == 'undefined') {
 
                     // Si Imperator ne connaît pas ce bâtiment (ex: nouveau type, case vide, etc.),
                     // on considère juste qu'il n'est pas au niveau max.
-                    if (!data || typeof data.maxLevel === "undefined") {
+                    // v2.20 : les tables écrivent "maxlevel" (minuscules) ; on accepte les deux.
+                    var maxLevel = data ? (data.maxlevel != null ? data.maxlevel : data.maxLevel) : undefined;
+                    if (!data || maxLevel == null || !isFinite(maxLevel)) {
+                        return false;
+                    }
+                    // Le jeu a proposé un agrandissement pour ce niveau : ce n'est pas le max,
+                    // même si notre table est en retard sur le jeu.
+                    if (this.realUpgradeCost && this.realUpgradeCost.forLevel === this.getLevel() && !this.isUpgrading()) {
                         return false;
                     }
 
-                    return (this.getLevel() + (this.isUpgrading() ? 1 : 0)) >= data.maxLevel;
+                    return (this.getLevel() + (this.isUpgrading() ? 1 : 0)) >= maxLevel;
                 },
 
 
@@ -10508,41 +10525,74 @@ min-width: 851px !important; \
         { '6 h': '6', '12 h': '12', '24 h': '24', '48 h': '48' },
         IkaTools.Utils.fixedFunction('Bénédictions divines : alerte « bientôt fini »'));
 
+    // ============================================================
+    // v2.20 : notifications de bureau via GM_notification (Tampermonkey)
+    // remplace l ancienne API webkit, retirée des navigateurs.
+    // ============================================================
+    function impAsset(path) {
+        if (!path) return undefined;
+        return location.origin + (String(path).charAt(0) === '/' ? '' : '/') + path;
+    }
+    function impBeep(times) {
+        try {
+            var Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            var ctx = impBeep._ctx || (impBeep._ctx = new Ctx());
+            if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+            var t0 = ctx.currentTime;
+            for (var i = 0; i < (times || 3); i++) {
+                var o = ctx.createOscillator(), g = ctx.createGain(), t = t0 + i * 0.5;
+                o.type = 'square';
+                o.frequency.value = 880;
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(0.15, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+                o.connect(g); g.connect(ctx.destination);
+                o.start(t); o.stop(t + 0.4);
+            }
+        } catch (e) {}
+    }
+    function impNotify(opts) {
+        opts = opts || {};
+        if (typeof GM_notification !== 'function') {
+            console.warn('[Imperator] GM_notification indisponible (grant manquant ?)');
+            return false;
+        }
+        try {
+            var d = {
+                title: opts.title || 'Imperator',
+                text: opts.text || ' ',
+                silent: !!opts.sound,
+                onclick: function() { try { window.focus(); } catch (e) {} },
+            };
+            if (opts.image) d.image = opts.image;
+            if (!opts.sticky) d.timeout = 15000;
+            GM_notification(d);
+            if (opts.sound) impBeep(3);
+            console.log('[Imperator] Notification :', d.title, '-', d.text);
+            return true;
+        } catch (e) {
+            console.warn('[Imperator] Notification échouée', e);
+            return false;
+        }
+    }
+
     var testDesktopAlert = settings.html(
         function desktopAlertHtml() {
             return '<a id="DesktopAlertTest" class="button">%s</a>'.format(
                 localizer.localize('settings','do_test'));
         },
         function desktopAlertPostRender() {
-            function showTestDesktopAlert() {
-                if (window.webkitNotifications) {
-                    if (window.webkitNotifications.checkPermission() == 0) { // PERMISSION_ALLOWED
-                        var notification = window.webkitNotifications.createNotification(
-                            'http://' + document.domain + '/skin/layout/advisors/general_alert.png',
-                            localizer.localize('settings','test_desktop_alert_title'),
-                            localizer.localize('settings','test_desktop_alert_text'));
-                        notification.onclick = IkaTools.Logging.debuggable(
-                            'Imperator.testDesktopAlert.dismiss',
-                            function closeNotification() {
-                                notification.cancel();
-                            });
-                        notification.show();
-                        return true;
-                    }
-                } else {
-                    alert(localizer.localize('settings','desktop_alerts_not_supported'));
-                }
-                return false;
-            }
+            // v2.20 : test via GM_notification (+ son)
             $('#DesktopAlertTest').click(IkaTools.Logging.debuggable(
                 'Imperator.testDesktopAlert',
                 function testDesktopAlert() {
-                    if (!showTestDesktopAlert()) {
-                        window.webkitNotifications.requestPermission(
-                            IkaTools.Logging.debuggable(
-                                'Imperator.testDesktopAlert.requestPermission',
-                                showTestDesktopAlert));
-                    }
+                    var ok = impNotify({
+                        title: localizer.localize('settings','test_desktop_alert_title'),
+                        text: localizer.localize('settings','test_desktop_alert_text'),
+                        sound: true,
+                    });
+                    if (!ok) alert(localizer.localize('settings','desktop_alerts_not_supported'));
                 }));
         },
         localizer.delayedLocalize('settings','test_desktop_alert'));
@@ -12531,12 +12581,12 @@ min-width: 851px !important; \
                         var r = city.getResource(res);
                         if (r) {
                             resources[res]  += r.getCurrent()    || 0;
-                            production[res] += r.getProduction() || 0;
+                            production[res] += (r.getProduction() || 0) * IkaTools.Constants.Time.SECONDS_PER_HOUR; // v2.20 : /s -> /h
                             if (r.getCapacity) {
                                 var cap = r.getCapacity();
                                 capacity[res] += (cap && cap.maximum ? cap.maximum : 0);
                             }
-                            if (res === 'wine') wineConsumption += Math.abs(r.getConsumption() || 0);
+                            if (res === 'wine') wineConsumption += Math.abs(r.getConsumption() || 0) * IkaTools.Constants.Time.SECONDS_PER_HOUR; // v2.20 : /h
                         }
                     });
                 });
@@ -15479,29 +15529,9 @@ min-width: 851px !important; \
     }
 
     function initAlerts() {
+        // v2.20 : GM_notification ; audio = son + notification qui reste affichée
         function showDesktopNotification(icon, title, text, audio) {
-            if (window.webkitNotifications &&
-                window.webkitNotifications.checkPermission() == 0) {
-                if (audio) {
-                    var audioNode = $('<audio autoplay="autoplay" loop="loop"><source src="http://soundjax.com/reddo/67560%5Ealarma.mp3" type="audio/mp3" />');
-                    $('body').append(audioNode);
-                }
-                var notification = window.webkitNotifications.createNotification(icon, title, text);
-                notification.onclick = IkaTools.Logging.debuggable(
-                    'Imperarator.buildingCompletionAlert.desktopAlertClicked',
-                    function buildingDesktopAlertClicked() {
-                        notification.cancel();
-                        window.focus();
-                    });
-                notification.onclose = IkaTools.Logging.debuggable(
-                    'Imperator.buildingCompletionAlert.desktopAlertClosed',
-                    function buildingDesktopAlertClosed() {
-                        if (audio) {
-                            audioNode.remove();
-                        }
-                    });
-                notification.show();
-            }
+            return impNotify({ image: icon, title: title, text: text, sound: !!audio, sticky: !!audio });
         }
 
         if (buildingCompletionAlert_Desktop.isEnabled()) {
@@ -15510,8 +15540,7 @@ min-width: 851px !important; \
                     $.each(changes, function forEachBuildingChange(index, change) {
                         if (change.type == IkaTools.Constants.BuildingEventType.UPGRADE_COMPLETE) {
                             showDesktopNotification(
-                                'http://' + IkaTools.View.getDomain() + '/' +
-                                IkaTools.Constants.BuildingData[change.building.getType()].icon,
+                                impAsset((IkaTools.Constants.BuildingData[change.building.getType()] || {}).icon),
                                 localizer.localize('alerts','building_upgrade_complete'),
                                 localizer.localize('alerts','building_upgrade_complete_text').format2(
                                     {
@@ -15559,8 +15588,7 @@ min-width: 851px !important; \
                     }
                     if (missionAlerts[mission + ':' + stage]) {
                         showDesktopNotification(
-                            'http://' + IkaTools.View.getDomain() + '/' +
-                            IkaTools.Constants.Movements.MissionData[mission].icon,
+                            impAsset((IkaTools.Constants.Movements.MissionData[mission] || {}).icon),
                             localizer.localize('alerts','mission_update'),
                             localizer.localize('alerts', stage).format2({
                                 type: localizer.localize('alerts', mission),
@@ -15573,6 +15601,7 @@ min-width: 851px !important; \
 
         var underAttack = $('#advMilitary a').eq(0).hasClass('normalalert');
         var parsedIgnoredHostileMissions = JSON.parse(ignoredHostileMissions.getValue());
+        var impNotifiedHostiles = {}; // v2.20
 
         IkaTools.View.registerIkariamAjaxResponseCallback(
             function enhancedMilitaryAdvisor(response) {
@@ -15593,9 +15622,9 @@ min-width: 851px !important; \
                             if (css.indexOf('normalalert') >= 0) {
                                 if (!underAttack) {
                                     showDesktopNotification(
-                                        'http://' + document.domain + '/skin/layout/advisors/general_alert.png',
-                                        'Under attack',
-                                        'New attack detected',
+                                        null,
+                                        'Ikariam : attaque en approche',
+                                        'Le conseiller militaire signale une attaque. Ouvre-le pour voir le détail.',
                                         true
                                     );
                                     underAttack = true;
@@ -15606,23 +15635,24 @@ min-width: 851px !important; \
 
                                         $.each(movements, function(index, movement) {
                                             if (movement.isHostile() &&
-                                                parsedIgnoredHostileMissions.indexOf(movement.getId()) < 0) {
+                                                parsedIgnoredHostileMissions.indexOf(movement.getId()) < 0 &&
+                                                !impNotifiedHostiles[movement.getId()]) {
+                                                impNotifiedHostiles[movement.getId()] = true; // v2.20 : une alerte par mouvement
                                                 foundUnignoredHostile = true;
                                             }
                                         });
 
                                         if (foundUnignoredHostile) {
                                             showDesktopNotification(
-                                                'http://' + document.domain + '/skin/layout/advisors/general_alert.png',
-                                                'Under attack 2',
-                                                'New attack detected 2',
+                                                null,
+                                                'Ikariam : nouvelle attaque',
+                                                'Un nouveau mouvement hostile a été détecté.',
                                                 true
                                             );
-                                        } else {
-                                            var advMilitaryNode = $('#advMilitary a').eq(0);
-                                            advMilitaryNode.removeClass('normalalert');
-                                            advMilitaryNode.addClass('probablysafealert');
                                         }
+                                        // v2.20 : on ne remplace plus l'icône rouge du conseiller par
+                                        // « probablement sûr » : la détection des mouvements hostiles n'est
+                                        // pas fiable et masquait une vraie attaque.
                                     }
 
                                     IkaTools.EmpireData.updateMovements(onMovementUpdate);
@@ -15948,14 +15978,16 @@ min-width: 851px !important; \
       var costs = b.getUpgradeCosts && b.getUpgradeCosts();
       if (!costs) return false;
       var R = IkaTools.Constants.Resources, keys = [R.WOOD, R.WINE, R.MARBLE, R.GLASS, R.SULFUR];
+      var anyCost = false; // v2.20 : coût inconnu (tout à 0) -> jamais vert
       for (var i = 0; i < keys.length; i++) {
         var need = Math.ceil(costs[keys[i]] || 0);
         if (need <= 0) continue;
+        anyCost = true;
         var stock = 0;
         try { var rr = city.getResource(keys[i]); stock = (rr && rr.getCurrent) ? rr.getCurrent() : 0; } catch (e) {}
         if (stock < need) return false; // pas assez -> pas vert
       }
-      return true;
+      return anyCost;
     } catch (e) { return false; }
   }
 
