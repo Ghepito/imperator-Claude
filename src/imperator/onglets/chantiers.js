@@ -342,12 +342,6 @@
             __impStartPrefillWatch();
         }
 
-        function __impMinAgo(ts){
-            var m=Math.max(0, Math.round((Date.now()-ts)/60000));
-            if (m<1) return '\u00e0 l\u2019instant';
-            if (m<60) return m+' min';
-            var h=Math.floor(m/60); return h+'h'+((m%60)?(' '+(m%60)+'min'):'');
-        }
         /* ---- Fra\u00eecheur des donn\u00e9es (aucune requ\u00eate) ---------------------
          * L'instantan\u00e9 d'une ville se rafra\u00eechit quand tu la visites (capture
          * opportuniste native). On rend juste l'\u00e2ge des donn\u00e9es visible. */

@@ -78,6 +78,8 @@ md += '```\n';
 if (process.argv.includes('--verifier')) {
   let ko = 0;
   if (illisibles.length) { ko++; console.error('Fichiers non lisibles seuls :\n  ' + illisibles.join('\n  ')); }
+  const fuites = fichiers.filter(f => inconnus[f] && inconnus[f].length).map(f => f + ' : ' + inconnus[f].join(', '));
+  if (fuites.length) { ko++; console.error('Noms utilisés mais déclarés nulle part (variables globales implicites ?) :\n  ' + fuites.join('\n  ')); }
   const actuel = fs.existsSync(cible) ? fs.readFileSync(cible, 'utf8') : '';
   if (actuel !== md) { ko++; console.error('docs/DEPENDANCES.md n\'est pas à jour : lancer node outils/dependances.js'); }
   if (!ko) console.log(`Dépendances à jour ; ${fichiers.length} fichiers lisibles seuls, ${ordre.length - fichiers.length} enveloppes`);

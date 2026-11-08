@@ -764,9 +764,6 @@
                         return '<td id="ResearchTotal" class="research imperator_tool_tip">' + formattedTotal + '</td>';
 
 
-                        //      ancienne ligne pour afficher le total des recherches
-                        //      return ('<td id="ResearchTotal" class="research imperator_tool_tip">%s</td>')
-                        //     .format(IkaTools.Intl.formatInteger(total + culturalGoods, true));
                     }
 
                     function makePopulationCells(cities) {

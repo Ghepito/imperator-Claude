@@ -221,22 +221,6 @@
                     return Math.round(n).toString();
                 }
 
-                var resColors = { wood:'#c8960c', wine:'#9b5fc0', marble:'#9e9e9e', glass:'#26c6da', sulfur:'#d4c020' };
-                var resNames  = { wood:'Bois', wine:'Vin', marble:'Marbre', glass:'Cristal', sulfur:'Soufre' };
-
-                function resBar(res) {
-                    var pct = capacity[res] > 0 ? Math.min(100, Math.round(resources[res] / capacity[res] * 100)) : 0;
-                    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">' +
-                        '<div style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:' + resColors[res] + '"></div>' +
-                        '<div style="font-size:11px;color:#888;width:48px">' + resNames[res] + '</div>' +
-                        '<div style="width:120px;height:5px;background:rgba(0,0,0,0.12);border-radius:3px;overflow:hidden">' +
-                            '<div style="width:' + pct + '%;height:100%;background:' + resColors[res] + ';border-radius:3px"></div>' +
-                        '</div>' +
-                        '<div style="font-size:11px;width:60px;text-align:right">' + fmtNum(resources[res]) + '</div>' +
-                        '<div style="font-size:11px;color:#888;width:56px;text-align:right">+' + fmtNum(production[res]) + '/h</div>' +
-                    '</div>';
-                }
-
                 function cityRow(city) {
                     var pop = city.population || 0;
                     var sat = city.happinessScore != null ? city.happinessScore : '?';

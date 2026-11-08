@@ -417,7 +417,6 @@
                             // Protection : structure différente suivant les réponses Ikariam
                             var headerData = data.headerData || data[11] || data[0];
                             if (!headerData || !headerData.advisors || !headerData.advisors.military) {
-                                //console.warn("Imperator: pas de headerData.advisors.military dans la réponse :", data);
                                 return; // on sort juste pour cette réponse, pas d’erreur
                             }
 

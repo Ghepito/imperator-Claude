@@ -16,8 +16,6 @@
                 'god_pan':'1', 'god_dionysus':'2', 'god_tyche':'3',
                 'god_plutus':'4', 'god_theia':'5', 'god_hephaestos':'6'
             };
-            // Seul Pluton (id 4) impacte l'or ; les autres gèrent les ressources.
-            function shrineGodAffectsGold(godId) { return String(godId) === '4'; }
 
             // v2.12 : "2j 12h", "5h 30m", "45m"... -> millisecondes (null si illisible)
             function parseShrineDuration(txt) {

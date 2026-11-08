@@ -1,4 +1,8 @@
 
+            // v2.37 : déclarée ici (c'était une variable globale implicite) ; la fonction est
+            // installée par updateAndStartTracking.
+            var updateCurrentCity = null;
+
             // v2.07 : rafraîchissement manuel des données financières + Sanctuaire.
             // Utilisé par le bouton "Mettre à jour" du Dashboard.
             function refreshFinancesAndShrine(onProgress, onDone) {

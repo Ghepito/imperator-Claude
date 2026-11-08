@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.36
-// @version        2.36
+// @name           Imperator v2.37
+// @version        2.37
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.37 Nettoyage, sans changement visible (7 onglets identiques au banc d'affichage) : 3 fonctions jamais utilisees et du code commente retires ; updateCurrentCity declaree (etait une variable globale implicite).
 // @history        2.36 Reglages > Debug > Exporter mes donnees : telecharge un fichier JSON avec les donnees gardees par Imperator (empire, espionnage, aide des batiments, options), pour le banc d'affichage hors jeu. Rien n'est envoye.
 // @history        2.35 Allegement : sauvegarde de l'empire regroupee (une ecriture par rafale, videe a la fermeture de la page) au lieu d'une ecriture complete a chaque reponse du jeu ; surlignage des ameliorations recalcule a l'ouverture, apres un changement ou toutes les 10 s (au lieu de 1,2 s) ; biens culturels reperes dans les reponses du jeu au lieu d'un observateur de toute la page ; rien ne tourne quand l'onglet du navigateur est cache.
 // @history        2.34 Espionnage : la Cachette donne directement le joueur, son alliance et les coordonnees de chaque ville espionnee (plus besoin de passer sur l'ile pour sortir de 'donnees en attente'). Coordonnees lues aussi entre parentheses (elles valaient 0:0).
@@ -5856,8 +5857,6 @@ if (typeof IkaTools == 'undefined') {
                 'god_pan':'1', 'god_dionysus':'2', 'god_tyche':'3',
                 'god_plutus':'4', 'god_theia':'5', 'god_hephaestos':'6'
             };
-            // Seul Pluton (id 4) impacte l'or ; les autres gèrent les ressources.
-            function shrineGodAffectsGold(godId) { return String(godId) === '4'; }
 
             // v2.12 : "2j 12h", "5h 30m", "45m"... -> millisecondes (null si illisible)
             function parseShrineDuration(txt) {
@@ -6444,6 +6443,10 @@ if (typeof IkaTools == 'undefined') {
                     }
                 }, 0);
             }
+
+            // v2.37 : déclarée ici (c'était une variable globale implicite) ; la fonction est
+            // installée par updateAndStartTracking.
+            var updateCurrentCity = null;
 
             // v2.07 : rafraîchissement manuel des données financières + Sanctuaire.
             // Utilisé par le bouton "Mettre à jour" du Dashboard.
@@ -11300,9 +11303,6 @@ min-width: 851px !important; \
                         return '<td id="ResearchTotal" class="research imperator_tool_tip">' + formattedTotal + '</td>';
 
 
-                        //      ancienne ligne pour afficher le total des recherches
-                        //      return ('<td id="ResearchTotal" class="research imperator_tool_tip">%s</td>')
-                        //     .format(IkaTools.Intl.formatInteger(total + culturalGoods, true));
                     }
 
                     function makePopulationCells(cities) {
@@ -11731,22 +11731,6 @@ min-width: 851px !important; \
                     if (n >= 1000000)    return (n / 1000000).toFixed(1)    + 'M';
                     if (n >= 10000)      return Math.round(n / 1000)        + 'k';
                     return Math.round(n).toString();
-                }
-
-                var resColors = { wood:'#c8960c', wine:'#9b5fc0', marble:'#9e9e9e', glass:'#26c6da', sulfur:'#d4c020' };
-                var resNames  = { wood:'Bois', wine:'Vin', marble:'Marbre', glass:'Cristal', sulfur:'Soufre' };
-
-                function resBar(res) {
-                    var pct = capacity[res] > 0 ? Math.min(100, Math.round(resources[res] / capacity[res] * 100)) : 0;
-                    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">' +
-                        '<div style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:' + resColors[res] + '"></div>' +
-                        '<div style="font-size:11px;color:#888;width:48px">' + resNames[res] + '</div>' +
-                        '<div style="width:120px;height:5px;background:rgba(0,0,0,0.12);border-radius:3px;overflow:hidden">' +
-                            '<div style="width:' + pct + '%;height:100%;background:' + resColors[res] + ';border-radius:3px"></div>' +
-                        '</div>' +
-                        '<div style="font-size:11px;width:60px;text-align:right">' + fmtNum(resources[res]) + '</div>' +
-                        '<div style="font-size:11px;color:#888;width:56px;text-align:right">+' + fmtNum(production[res]) + '/h</div>' +
-                    '</div>';
                 }
 
                 function cityRow(city) {
@@ -13660,12 +13644,6 @@ min-width: 851px !important; \
             __impStartPrefillWatch();
         }
 
-        function __impMinAgo(ts){
-            var m=Math.max(0, Math.round((Date.now()-ts)/60000));
-            if (m<1) return '\u00e0 l\u2019instant';
-            if (m<60) return m+' min';
-            var h=Math.floor(m/60); return h+'h'+((m%60)?(' '+(m%60)+'min'):'');
-        }
         /* ---- Fra\u00eecheur des donn\u00e9es (aucune requ\u00eate) ---------------------
          * L'instantan\u00e9 d'une ville se rafra\u00eechit quand tu la visites (capture
          * opportuniste native). On rend juste l'\u00e2ge des donn\u00e9es visible. */
@@ -14717,7 +14695,6 @@ min-width: 851px !important; \
                             // Protection : structure différente suivant les réponses Ikariam
                             var headerData = data.headerData || data[11] || data[0];
                             if (!headerData || !headerData.advisors || !headerData.advisors.military) {
-                                //console.warn("Imperator: pas de headerData.advisors.military dans la réponse :", data);
                                 return; // on sort juste pour cette réponse, pas d’erreur
                             }
 
