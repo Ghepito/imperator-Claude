@@ -4,7 +4,7 @@ Script Tampermonkey qui ajoute à Ikariam des tableaux de synthèse de l'empire 
 ressources, bâtiments, armée, espionnage, tableau de bord financier, bénédictions divines,
 mouvements de troupes et de flottes.
 
-Version actuelle : **v3.0**, version stable (testée sur le serveur français, jeu 17.6.1,
+Version actuelle : **v3.1** (version stable depuis la v3.0) (testée sur le serveur français, jeu 17.6.1,
 Chrome + Tampermonkey 5.5.1).
 
 ## Ce qu'apporte la v3.0 par rapport à l'Imperator d'origine
@@ -20,8 +20,8 @@ Chrome + Tampermonkey 5.5.1).
   Spartiate reconnu.
 - **Espionnage** : joueur, alliance et coordonnées tirés de la Cachette et de l'île, sans
   requêtes en arrière-plan ; mur et entrepôt des cibles pris en compte.
-- **Alertes de bureau** (fin de chargement, de construction…) et mises à jour automatiques
-  par Tampermonkey.
+- **Alertes de bureau** (fin de chargement, de construction…), avec leur historique (v3.1,
+  entrée « Alertes » du menu de gauche), et mises à jour automatiques par Tampermonkey.
 - **Plus léger et plus sûr** : français et anglais uniquement, sauvegarde regroupée, erreurs
   connues du jeu masquées, textes échappés.
 - **Code restructuré** : 58 fichiers, aucune dépendance circulaire, vérifiés à chaque test.
@@ -59,6 +59,7 @@ comme ci-dessus si Tampermonkey ne l'intercepte pas).
 
 | Version | Installer | Code |
 |---|---|---|
+| v3.1 | [installer](https://github.com/Ghepito/imperator-Claude/raw/9e583cd4fe41d38f4e3f890c88cc675c5a44197e/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/9e583cd4fe41d38f4e3f890c88cc675c5a44197e/Imperator.user.js) |
 | **v3.0** | [installer](https://github.com/Ghepito/imperator-Claude/raw/6f5746d652acc1a5bd541c3ec1e8746db99691da/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/6f5746d652acc1a5bd541c3ec1e8746db99691da/Imperator.user.js) |
 | v2.44 | [installer](https://github.com/Ghepito/imperator-Claude/raw/29193696dc45e7b472be88a067fb177ae7ccc878/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/29193696dc45e7b472be88a067fb177ae7ccc878/Imperator.user.js) |
 | v2.43 | [installer](https://github.com/Ghepito/imperator-Claude/raw/6d11db0de795771cd3db0b023a61423702f65e01/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/6d11db0de795771cd3db0b023a61423702f65e01/Imperator.user.js) |
