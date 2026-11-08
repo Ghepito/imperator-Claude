@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.41
-// @version        2.41
+// @name           Imperator v2.42
+// @version        2.42
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.42 Infobulle de croissance : une valeur plafonnee par la population maximale porte la mention (plein). Popup Planifier l'amelioration : des que la fenetre du batiment s'ouvre, il devient un bandeau compact a son sommet (sur l'image decorative), sans cacher les donnees.
 // @history        2.41 Restructuration, sans changement visible : plus aucune dependance circulaire (6 -> 0). Journal independant des utilitaires et de la sauvegarde ; outils communs de Chantiers et Boissons dans un fichier partage ; les onglets joignent la fenetre d'Imperator par un acces commun. Toute nouvelle boucle fait echouer les tests.
 // @history        2.40 Infobulles de la recherche (onglet Ressources) : icone de l'ampoule retablie (ancien chemin relatif skin/layout/... remplace par celui de l'en-tete de colonne, /cdn/all/both/layout/bulb-on.png). Signale par Ghepito.
 // @history        2.39 Restructuration, sans changement visible : la brique des vues (View) ne depend plus du modele de l'empire (c'est le modele qui lui indique comment retrouver la ville active) ; la bibliotheque n'utilise plus le nom global IkaTools pour joindre ses propres modules. Regle des couches verifiee par les tests.
@@ -152,6 +153,7 @@
       '<div class="imp-cr-btns"><button class="imp-cr-cancel">Annuler</button><button class="imp-cr-plan">Planifier \u2192</button></div>';
     document.body.appendChild(pop);
     positionNear(pop, cell);
+    dockWhenWindowOpens(pop);   // v2.42 : rejoint le haut de la fenêtre du bâtiment
 
     pop.querySelector('.imp-cr-plan').addEventListener('click', function () { planifier(tgt); closePopover(); });
     pop.querySelector('.imp-cr-cancel').addEventListener('click', closePopover);
@@ -167,6 +169,7 @@
     var p = document.querySelector('.imp-cr-pop');
     if (!p) return;
     if (p._outside) document.removeEventListener('mousedown', p._outside, true);
+    if (p._observer) p._observer.disconnect();
     p.remove();
   }
 
@@ -177,6 +180,47 @@
       var top = r.bottom + 6; if (top + h > window.innerHeight - 10) top = r.top - h - 6;
       pop.style.left = Math.max(10, left) + 'px';
       pop.style.top = Math.max(10, top) + 'px';
+    } catch (e) {}
+  }
+
+  // v2.42 : le clic ouvre aussi la fenêtre du bâtiment (chargée par le jeu juste après).
+  // Dès qu'elle apparaît, le popup passe en bandeau compact à son sommet, sur l'image
+  // décorative sous la barre de titre : il suit la fenêtre et ne cache pas ses données.
+  function dockWhenWindowOpens(pop) {
+    if (typeof MutationObserver !== 'function') return;
+    var found = function (node) {
+      if (!node || node.nodeType !== 1) return null;
+      var box = node.matches && node.matches('.mainContentBox') ? node :
+        (node.querySelector && node.querySelector('.mainContentBox'));
+      return box && box.querySelector('.mainHeader') ? box : null;
+    };
+    var obs = new MutationObserver(function (records) {
+      for (var i = 0; i < records.length; i++) {
+        var added = records[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          var box = found(added[j]);
+          if (box) { obs.disconnect(); pop._observer = null; dockInto(pop, box); return; }
+        }
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+    pop._observer = obs;
+    setTimeout(function () { obs.disconnect(); }, 5000);
+  }
+
+  function dockInto(pop, box) {
+    try {
+      if (!pop.parentNode) return;   // déjà fermé
+      var header = box.querySelector('.mainHeader');
+      pop.classList.add('imp-cr-dock');
+      box.appendChild(pop);
+      var top = header.offsetTop + header.offsetHeight + 4;
+      var banner = box.querySelector('.mainContent > .center img, .mainContent > .center');
+      var w = Math.min(box.clientWidth - 24, 560);
+      if (banner && banner.offsetWidth > 300) w = Math.min(w, banner.offsetWidth);
+      pop.style.width = w + 'px';
+      pop.style.left = Math.round((box.clientWidth - w) / 2) + 'px';
+      pop.style.top = top + 'px';
     } catch (e) {}
   }
 
@@ -203,7 +247,15 @@
       '.imp-cr-btns{display:flex;gap:8px}' +
       '.imp-cr-btns button{flex:1;font-size:12px;padding:6px;border-radius:5px;cursor:pointer}' +
       '.imp-cr-cancel{background:#EFDEB2;border:1px solid #B4914E;color:#8A6D39}' +
-      '.imp-cr-plan{background:#D8B871;border:1px solid #8A6D39;color:#5A3E1B;font-weight:600}';
+      '.imp-cr-plan{background:#D8B871;border:1px solid #8A6D39;color:#5A3E1B;font-weight:600}' +
+      // v2.42 : bandeau compact au sommet de la fenêtre du bâtiment
+      '.imp-cr-pop.imp-cr-dock{position:absolute;box-sizing:border-box;padding:6px 10px;display:grid;' +
+      'grid-template-columns:auto auto 1fr 190px;column-gap:14px;row-gap:2px;align-items:center;text-align:left}' +
+      '.imp-cr-dock .imp-cr-pt{grid-column:1 / span 2;grid-row:1;margin:0}' +
+      '.imp-cr-dock .imp-cr-line{grid-row:2;margin:0;white-space:nowrap}' +
+      '.imp-cr-dock .imp-cr-line:nth-of-type(2){grid-column:1}.imp-cr-dock .imp-cr-line:nth-of-type(3){grid-column:2}' +
+      '.imp-cr-dock .imp-cr-note{display:none}' +
+      '.imp-cr-dock .imp-cr-btns{grid-column:4;grid-row:1 / span 2}';
     var st = document.createElement('style'); st.id = 'imp-cr-css'; st.textContent = css; document.head.appendChild(st);
   }
 })();
@@ -8653,6 +8705,13 @@ table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
 } \
 \
+table.resource_use_tool_tip .imp_growth_full { \
+font-size: 10px; \
+font-style: italic; \
+color: #8A6D39; \
+white-space: nowrap; \
+} \
+\
 table.building_upgrade_costs td.resource_missing { \
 color: #AA0303; \
 text-align: right; \
@@ -11625,21 +11684,24 @@ min-width: 851px !important; \
 
                     toolTips.registerRefreshable(updateable.getId(4), function() {
                         var data = city.getPopulationData();
+                        // v2.42 : la croissance s'arrête quand la ville est pleine. Une valeur
+                        // plafonnée (souvent Jour = Semaine) porte la mention « Plein ».
                         function growthIn(hours) {
                             var growth = data.happiness * ( 1 - Math.pow(Math.E, -hours / 50));
-                            if (growth + data.population > data.max) {
+                            var capped = growth + data.population > data.max;
+                            if (capped) {
                                 growth = data.max - data.population;
                             }
-                            return growth;
+                            return IkaTools.Intl.formatDecimal(growth, 2) + (capped ?
+                                ' <span class="imp_growth_full">(' +
+                                localizer.localize('misc','full').toLowerCase() + ')</span>' : '');
                         }
 
                         return makeResourceUseToolTip(
                             data.happiness >= 0 ? '/cdn/all/both/icons/growth_positive.png'
                             : '/cdn/all/both/icons/growth_negative.png',
                             [makeResourceUseTableRowRaw(data.happiness >= 0 ? '+' : '-',
-                                                        IkaTools.Intl.formatDecimal(growthIn(1), 2),
-                                                        IkaTools.Intl.formatDecimal(growthIn(24), 2),
-                                                        IkaTools.Intl.formatDecimal(growthIn(168), 2))]);
+                                                        growthIn(1), growthIn(24), growthIn(168))]);
                     });
 
                     toolTips.registerRefreshable(updateable.getId(1), function() {

@@ -41,6 +41,7 @@
       '<div class="imp-cr-btns"><button class="imp-cr-cancel">Annuler</button><button class="imp-cr-plan">Planifier \u2192</button></div>';
     document.body.appendChild(pop);
     positionNear(pop, cell);
+    dockWhenWindowOpens(pop);   // v2.42 : rejoint le haut de la fenêtre du bâtiment
 
     pop.querySelector('.imp-cr-plan').addEventListener('click', function () { planifier(tgt); closePopover(); });
     pop.querySelector('.imp-cr-cancel').addEventListener('click', closePopover);
@@ -56,6 +57,7 @@
     var p = document.querySelector('.imp-cr-pop');
     if (!p) return;
     if (p._outside) document.removeEventListener('mousedown', p._outside, true);
+    if (p._observer) p._observer.disconnect();
     p.remove();
   }
 
@@ -66,6 +68,47 @@
       var top = r.bottom + 6; if (top + h > window.innerHeight - 10) top = r.top - h - 6;
       pop.style.left = Math.max(10, left) + 'px';
       pop.style.top = Math.max(10, top) + 'px';
+    } catch (e) {}
+  }
+
+  // v2.42 : le clic ouvre aussi la fenêtre du bâtiment (chargée par le jeu juste après).
+  // Dès qu'elle apparaît, le popup passe en bandeau compact à son sommet, sur l'image
+  // décorative sous la barre de titre : il suit la fenêtre et ne cache pas ses données.
+  function dockWhenWindowOpens(pop) {
+    if (typeof MutationObserver !== 'function') return;
+    var found = function (node) {
+      if (!node || node.nodeType !== 1) return null;
+      var box = node.matches && node.matches('.mainContentBox') ? node :
+        (node.querySelector && node.querySelector('.mainContentBox'));
+      return box && box.querySelector('.mainHeader') ? box : null;
+    };
+    var obs = new MutationObserver(function (records) {
+      for (var i = 0; i < records.length; i++) {
+        var added = records[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          var box = found(added[j]);
+          if (box) { obs.disconnect(); pop._observer = null; dockInto(pop, box); return; }
+        }
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+    pop._observer = obs;
+    setTimeout(function () { obs.disconnect(); }, 5000);
+  }
+
+  function dockInto(pop, box) {
+    try {
+      if (!pop.parentNode) return;   // déjà fermé
+      var header = box.querySelector('.mainHeader');
+      pop.classList.add('imp-cr-dock');
+      box.appendChild(pop);
+      var top = header.offsetTop + header.offsetHeight + 4;
+      var banner = box.querySelector('.mainContent > .center img, .mainContent > .center');
+      var w = Math.min(box.clientWidth - 24, 560);
+      if (banner && banner.offsetWidth > 300) w = Math.min(w, banner.offsetWidth);
+      pop.style.width = w + 'px';
+      pop.style.left = Math.round((box.clientWidth - w) / 2) + 'px';
+      pop.style.top = top + 'px';
     } catch (e) {}
   }
 
@@ -92,7 +135,15 @@
       '.imp-cr-btns{display:flex;gap:8px}' +
       '.imp-cr-btns button{flex:1;font-size:12px;padding:6px;border-radius:5px;cursor:pointer}' +
       '.imp-cr-cancel{background:#EFDEB2;border:1px solid #B4914E;color:#8A6D39}' +
-      '.imp-cr-plan{background:#D8B871;border:1px solid #8A6D39;color:#5A3E1B;font-weight:600}';
+      '.imp-cr-plan{background:#D8B871;border:1px solid #8A6D39;color:#5A3E1B;font-weight:600}' +
+      // v2.42 : bandeau compact au sommet de la fenêtre du bâtiment
+      '.imp-cr-pop.imp-cr-dock{position:absolute;box-sizing:border-box;padding:6px 10px;display:grid;' +
+      'grid-template-columns:auto auto 1fr 190px;column-gap:14px;row-gap:2px;align-items:center;text-align:left}' +
+      '.imp-cr-dock .imp-cr-pt{grid-column:1 / span 2;grid-row:1;margin:0}' +
+      '.imp-cr-dock .imp-cr-line{grid-row:2;margin:0;white-space:nowrap}' +
+      '.imp-cr-dock .imp-cr-line:nth-of-type(2){grid-column:1}.imp-cr-dock .imp-cr-line:nth-of-type(3){grid-column:2}' +
+      '.imp-cr-dock .imp-cr-note{display:none}' +
+      '.imp-cr-dock .imp-cr-btns{grid-column:4;grid-row:1 / span 2}';
     var st = document.createElement('style'); st.id = 'imp-cr-css'; st.textContent = css; document.head.appendChild(st);
   }
 })();

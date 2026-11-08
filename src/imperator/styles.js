@@ -232,6 +232,13 @@ table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
 } \
 \
+table.resource_use_tool_tip .imp_growth_full { \
+font-size: 10px; \
+font-style: italic; \
+color: #8A6D39; \
+white-space: nowrap; \
+} \
+\
 table.building_upgrade_costs td.resource_missing { \
 color: #AA0303; \
 text-align: right; \

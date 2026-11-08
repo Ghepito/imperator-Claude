@@ -548,21 +548,24 @@
 
                     toolTips.registerRefreshable(updateable.getId(4), function() {
                         var data = city.getPopulationData();
+                        // v2.42 : la croissance s'arrête quand la ville est pleine. Une valeur
+                        // plafonnée (souvent Jour = Semaine) porte la mention « Plein ».
                         function growthIn(hours) {
                             var growth = data.happiness * ( 1 - Math.pow(Math.E, -hours / 50));
-                            if (growth + data.population > data.max) {
+                            var capped = growth + data.population > data.max;
+                            if (capped) {
                                 growth = data.max - data.population;
                             }
-                            return growth;
+                            return IkaTools.Intl.formatDecimal(growth, 2) + (capped ?
+                                ' <span class="imp_growth_full">(' +
+                                localizer.localize('misc','full').toLowerCase() + ')</span>' : '');
                         }
 
                         return makeResourceUseToolTip(
                             data.happiness >= 0 ? '/cdn/all/both/icons/growth_positive.png'
                             : '/cdn/all/both/icons/growth_negative.png',
                             [makeResourceUseTableRowRaw(data.happiness >= 0 ? '+' : '-',
-                                                        IkaTools.Intl.formatDecimal(growthIn(1), 2),
-                                                        IkaTools.Intl.formatDecimal(growthIn(24), 2),
-                                                        IkaTools.Intl.formatDecimal(growthIn(168), 2))]);
+                                                        growthIn(1), growthIn(24), growthIn(168))]);
                     });
 
                     toolTips.registerRefreshable(updateable.getId(1), function() {
