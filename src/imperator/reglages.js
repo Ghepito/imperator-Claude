@@ -1,3 +1,6 @@
+    // v2.41 : rafraîchissement en arrière-plan, installé par init() (initialisation.js)
+    var backgroundRefresh = null;
+
     var settings = new IkaTools.Settings.Settings('ImperatorSettings');
 
     var localizedLanguage = settings.choice(

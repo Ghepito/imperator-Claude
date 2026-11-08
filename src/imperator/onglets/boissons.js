@@ -1,10 +1,3 @@
-        /* ===== IMPERATOR — Service de boissons (vin) ===== */
-        var __IMP_WINE_TARGET = 100000, __IMP_WINE_SRC_FLOOR = 50000;
-        window.__impSaveWineTrigger = function(){ try{ GM_setValue('imperator_wine_trigger', String(window.ImperatorWineTrigger)); }catch(e){} };
-        window.__impLoadWineTrigger = function(){ var v=85000; try{ v=parseInt(GM_getValue('imperator_wine_trigger','85000'),10); if(isNaN(v)) v=85000; }catch(e){} window.ImperatorWineTrigger=Math.max(0,Math.min(v,__IMP_WINE_TARGET)); };
-        window.__impLoadWineTrigger();
-        function __impWineTrigger(){ var v=window.ImperatorWineTrigger; return (typeof v==='number' && !isNaN(v))?v:85000; }
-
         function __impWineGroups(){
             var R=IkaTools.Constants.Resources, cities=[];
             try{ cities=IkaTools.EmpireData.getOwnCities(); }catch(e){}

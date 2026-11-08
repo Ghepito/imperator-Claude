@@ -132,6 +132,8 @@
 
         //PARTIE OPTIMISEE
 
+        _impPopupProvider = makePopup; // v2.41
+
         const menuImageUrl = '/cdn/all/both/friends/citymenu.png';
 
         function createMenuItem(imagePositionY, localizationKey) {

@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
 module.exports = async function charger(scriptPath, exportPath, opts = {}) {
   const exp = JSON.parse(fs.readFileSync(exportPath, 'utf8'));
-  const store = Object.assign({}, exp.values);
+  const store = Object.assign({}, exp.values, opts.valeurs || {}); // opts.valeurs : valeurs GM en plus
   const logs = [];
   const vc = new VirtualConsole();
   ['log', 'info', 'warn', 'error', 'debug'].forEach(k => vc.on(k, (...a) => logs.push(k + ' ' + a.map(String).join(' '))));

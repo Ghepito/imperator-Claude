@@ -58,14 +58,7 @@ for (const f of fichiers) {
 }
 
 // Dépendances circulaires (A utilise B et B utilise A). Liste tolérée : elle ne peut que diminuer.
-const BOUCLES_TOLEREES = [
-  'ikatools/01-logging <-> ikatools/02-utils',
-  'ikatools/01-logging <-> ikatools/05-data',
-  'imperator/initialisation <-> imperator/reglages',
-  'imperator/onglets/99-popup-menu <-> imperator/onglets/batiments',
-  'imperator/onglets/99-popup-menu <-> imperator/onglets/chantiers',
-  'imperator/onglets/boissons <-> imperator/onglets/chantiers',
-];
+const BOUCLES_TOLEREES = []; // v2.41 : plus aucune boucle ; toute nouvelle boucle fait échouer les tests
 const boucles = [];
 for (const a of fichiers) for (const b of Object.keys(deps[a] || {}))
   if (a < b && deps[b] && deps[b][a]) boucles.push(a.replace(/\.js$/, '') + ' <-> ' + b.replace(/\.js$/, ''));

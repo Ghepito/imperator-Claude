@@ -96,6 +96,54 @@
                 },
             });
 
+            /**
+         * Allows logging options to be configured by browsing to various anchors
+         * (and persisted for future page views).
+         */
+            // v2.41 : déplacée depuis le journal (qui ne dépend plus de Data) ; toujours appelée
+            // sous le nom Logging.setAndSaveOptionsFromPageAnchor.
+            function setAndSaveOptionsFromPageAnchor() {
+                var savedOptions = new Data.Value(
+                    'debugOptions',
+                    { debug: false, timings: false, profile: false , group: false},
+                    { useDomain: false, version: 0 });
+                savedOptions.get();
+
+                var anchor = window.location.hash;
+
+                if (anchor.substring(0, 15) == '#ikaScriptTools') {
+                    if (anchor == '#ikaScriptToolsDebugAll') {
+                        savedOptions.get().debug = true;
+                        savedOptions.get().timings = true;
+                        savedOptions.get().profile = true;
+                    } else if (anchor == '#ikaScriptToolsDebugNone') {
+                        savedOptions.get().debug = false;
+                        savedOptions.get().timings = false;
+                        savedOptions.get().profile = false;
+                    } else if (anchor == '#ikaScriptToolsDebugOn') {
+                        savedOptions.get().debug = true;
+                    } else if (anchor == '#ikaScriptToolsDebugOff') {
+
+                        savedOptions.get().debug = false;
+                    } else if (anchor == '#ikaScriptToolsGroupOn') {
+                        savedOptions.get().group = true;
+                    } else if (anchor == '#ikaScriptToolsGroupOff') {
+                        savedOptions.get().group = false;
+                    } else if (anchor == '#ikaScriptToolsTimingsOn') {
+                        savedOptions.get().timings = true;
+                    } else if (anchor == '#ikaScriptToolsTimingsOff') {
+                        savedOptions.get().timings = false;
+                    } else if (anchor == '#ikaScriptToolsProfilesOn') {
+                        savedOptions.get().profile = true;
+                    } else if (anchor == '#ikaScriptToolsProfilesOff') {
+                        savedOptions.get().profile = false;
+                    }
+                    savedOptions.saveAsync();
+                }
+                Logging.setOptions(savedOptions.get());
+            }
+            Logging.setAndSaveOptionsFromPageAnchor = setAndSaveOptionsFromPageAnchor;
+
             return {
                 Value: Value,
                 listValues: function listValues() { return _impValues.slice(); }, // v2.36

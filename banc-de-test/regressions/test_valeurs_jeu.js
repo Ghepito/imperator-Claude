@@ -5,7 +5,7 @@ const src = path.join(__dirname, '..', '..', 'src');
 let ok = 0, ko = 0;
 const t = (n, c, x = '') => { if (c) { ok++; console.log('PASS', n); } else { ko++; console.log('FAIL', n, x); } };
 const C = new Function(fs.readFileSync(path.join(src, 'ikatools/constants.js'), 'utf8') + ';return Constants;')();
-const ch = fs.readFileSync(path.join(src, 'imperator/onglets/chantiers.js'), 'utf8');
+const ch = fs.readFileSync(path.join(src, 'imperator/onglets/00-transports.js'), 'utf8');
 const val = (re) => { const m = ch.match(re); return m ? Number(m[1]) : NaN; };
 
 t('entrepôt : 480 en sécurité par niveau (vue Entrepôt, niveau 41)', C.GamePlay.RESOURCE_PROTECTION_WAREHOUSE === 480);

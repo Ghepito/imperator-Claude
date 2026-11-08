@@ -68,6 +68,7 @@
          * (May set alwaysTime option to output time regardless of disabled logging settings.)
          * If the group property is true in options (or absent) then group the function call.
          */
+            var _labelSeq = 0;
             function debuggable(debugOptions, func) {
                 if (typeof(debugOptions) == 'string') {
                     debugOptions = { label: debugOptions };
@@ -78,7 +79,8 @@
                                          swallowException: false,
                                         }, debugOptions);
                 if (!debugOptions.label) {
-                    debugOptions.label = Utils.nextId('_debuggable');
+                    // v2.41 : compteur propre au journal (le journal ne dépend plus des utilitaires)
+                    debugOptions.label = '_debuggable' + (++_labelSeq).toString(16);
                 }
 
                 return function debuggableWrapper() {
@@ -171,58 +173,13 @@
                 $.extend(options, newOptions);
             }
 
-            /**
-         * Allows logging options to be configured by browsing to various anchors
-         * (and persisted for future page views).
-         */
-            function setAndSaveOptionsFromPageAnchor() {
-                var savedOptions = new Data.Value(
-                    'debugOptions',
-                    { debug: false, timings: false, profile: false , group: false},
-                    { useDomain: false, version: 0 });
-                savedOptions.get();
-
-                var anchor = window.location.hash;
-
-                if (anchor.substring(0, 15) == '#ikaScriptTools') {
-                    if (anchor == '#ikaScriptToolsDebugAll') {
-                        savedOptions.get().debug = true;
-                        savedOptions.get().timings = true;
-                        savedOptions.get().profile = true;
-                    } else if (anchor == '#ikaScriptToolsDebugNone') {
-                        savedOptions.get().debug = false;
-                        savedOptions.get().timings = false;
-                        savedOptions.get().profile = false;
-                    } else if (anchor == '#ikaScriptToolsDebugOn') {
-                        savedOptions.get().debug = true;
-                    } else if (anchor == '#ikaScriptToolsDebugOff') {
-
-                        savedOptions.get().debug = false;
-                    } else if (anchor == '#ikaScriptToolsGroupOn') {
-                        savedOptions.get().group = true;
-                    } else if (anchor == '#ikaScriptToolsGroupOff') {
-                        savedOptions.get().group = false;
-                    } else if (anchor == '#ikaScriptToolsTimingsOn') {
-                        savedOptions.get().timings = true;
-                    } else if (anchor == '#ikaScriptToolsTimingsOff') {
-                        savedOptions.get().timings = false;
-                    } else if (anchor == '#ikaScriptToolsProfilesOn') {
-                        savedOptions.get().profile = true;
-                    } else if (anchor == '#ikaScriptToolsProfilesOff') {
-                        savedOptions.get().profile = false;
-                    }
-                    savedOptions.saveAsync();
-                }
-                setOptions(savedOptions.get());
-            }
-
             return {
                 debug: debug,
                 debugException: debugException,
                 debuggable: debuggable,
                 time: time,
                 group: group,
-                setAndSaveOptionsFromPageAnchor: setAndSaveOptionsFromPageAnchor,
+                setOptions: setOptions, // v2.41 : options réglées depuis le module Data
                 getExceptionLog: getExceptionLog,
             };
         })();

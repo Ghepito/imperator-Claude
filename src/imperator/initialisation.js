@@ -597,7 +597,7 @@
 
         return { runRefresh: runRefresh };
     }
-    var backgroundRefresh = null;
+    // v2.41 : backgroundRefresh est déclaré dans reglages.js (qui l'utilise)
     function init() {
         configureLocalization();
 

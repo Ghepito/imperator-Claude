@@ -1,3 +1,8 @@
+        // v2.41 : accès à la fenêtre d'Imperator pour les onglets, renseigné par 99-popup-menu
+        // (les onglets ne dépendent plus du fichier qui les assemble).
+        var _impPopupProvider = null;
+        function impPopup() { return _impPopupProvider(); }
+
         function Tab(name, tabText, tabContentHolder, tabContentId, init, renderer) {
             this.updateables = new Updateables(name);
 

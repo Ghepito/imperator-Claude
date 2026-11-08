@@ -265,7 +265,7 @@
                     var cityLink = new Link('BuildingTabToCity_%s'.format(city.getId()))
                     .toCityView(city, undefined, { },
                                 function() {
-                        makePopup().close();
+                        impPopup().close(); // v2.41
                         return true;
                     });
                     var transportLink = new Link('BuildingTabTransportGoods_%s'.format(city.getId()))

@@ -36,6 +36,7 @@ sinon l'assembleur refuse de travailler (pour qu'aucun fichier ne soit oublié e
 | `imperator/styles.js` | **Données** : CSS des tableaux |
 | `imperator/reglages.js` | Options du script (alertes, Debug, Captures…) |
 | `imperator/composants.js` | Briques d'affichage : cases mises à jour, liens, infobulles |
+| `imperator/onglets/00-transports.js` | Outils communs à Chantiers et Boissons : calculs de transport, envois, préférences, réouverture après un transport |
 | `imperator/onglets/` | **Un fichier par onglet** : cadre et bénédictions, Ressources, Tableau de bord, Bâtiments, Armée, Espionnage, Chantiers, Boissons, puis la fenêtre et le menu |
 | `imperator/initialisation.js` | Boutons rapides, alertes, retouches, piraterie, démarrage |
 | **`modules/`** | **Modules ajoutés, indépendants** : débit à l'envoi, capture des vues, surlignage |

@@ -8,7 +8,7 @@ Les fichiers *ouverture* / *fermeture* sont des enveloppes (ils ouvrent ou ferme
 |---|---|---|
 | `01-popover-chantiers` | – | – |
 | `02-garde-fous` | __impH | – |
-| `ikatools/01-logging` | ikaToolsVersion, Logging | `ikatools/02-utils` : Utils<br>`ikatools/05-data` : Data |
+| `ikatools/01-logging` | ikaToolsVersion, Logging | – |
 | `ikatools/02-utils` | Utils | `ikatools/01-logging` : Logging<br>`ikatools/constants` : Constants |
 | `ikatools/03-intl` | Intl | `ikatools/constants` : Constants |
 | `ikatools/04-view` | View | `ikatools/01-logging` : Logging<br>`ikatools/02-utils` : Utils |
@@ -38,18 +38,19 @@ Les fichiers *ouverture* / *fermeture* sont des enveloppes (ils ouvrent ou ferme
 | `imperator/localisations` | localizations | – |
 | `imperator/01-traducteur` | localizer | `ikatools/00-ouverture` : IkaTools<br>`imperator/localisations` : localizations |
 | `imperator/styles` | addStyles | – |
-| `imperator/reglages` | settings, localizedLanguage, showResourceOverview, showBuildingsOverview, showMilitaryOverview, showEspionageOverview, autoAcceptDailyBonus, hideAds … (42) | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`ikatools/empire/04-suivi` : resetData<br>`imperator/initialisation` : backgroundRefresh |
+| `imperator/reglages` | backgroundRefresh, settings, localizedLanguage, showResourceOverview, showBuildingsOverview, showMilitaryOverview, showEspionageOverview, autoAcceptDailyBonus … (43) | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`ikatools/empire/04-suivi` : resetData |
 | `imperator/composants` | addSettingsLink, Updateable, Updateables, clickHandler, Link, toolTips | `ikatools/00-ouverture` : IkaTools<br>`imperator/reglages` : autoAcceptDailyBonus, blessSoonThreshold, buildingCompletionAlert_Desktop, dataExportSetting, debugSetting, deployArmyArrived_Desktop, deployArmyLoaded_Desktop, deployArmyReturned_Desktop, deployNavyArrived_Desktop, deployNavyReturned_Desktop, donationButtons, espionageDebugSetting, exceptionLogSetting, hideAds, hideChat, hideFacebook, hideFriendsBar, initializeColonizationMissionsForPirateRaiding, localizedLanguage, pillageArrived_Desktop, pillageLoaded_Desktop, pillageReturned_Desktop, preventAccidentalColonyDestruction, refreshDataSetting, resetEspionageData, settings, showBuildingsOverview, showCityOwners, showEspionageOverview, showMilitaryOverview, showResourceOverview, testDesktopAlert, transportButtons, transportMissionArrived_Desktop, transportMissionLoaded_Desktop, transportMissionReturned_Desktop, viewCaptureSetting<br>`imperator/01-traducteur` : localizer<br>`ikatools/empire/04-suivi` : resetData |
-| `imperator/onglets/00-cadre-benedictions` | Tab, IMP_GODS, IMP_BLESS_STALE_MS, IMP_BLESS_FAVOR_MAX, impBlessSoonMs, impBlessShrine, impBlessShrineCity, impBlessRefBonus … (26) | `imperator/composants` : Link, Updateables, toolTips<br>`ikatools/00-ouverture` : IkaTools<br>`imperator/reglages` : blessSoonThreshold<br>`02-garde-fous` : __impH<br>`imperator/01-traducteur` : localizer |
-| `imperator/onglets/ressources` | makeResourceTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/00-cadre-benedictions` : Tab, impBlessDataAttrs, impBlessInfo, impBlessInstallOnce, impBlessMakeCaption, impBlessRefBonus, impBlessStateClasses, impBlessToolTipHtml, makeCityNameCells, makeCityNameColGroup, makeCityNameHeaderCells<br>`imperator/composants` : Link, toolTips<br>`imperator/01-traducteur` : localizer<br>`imperator/onglets/chantiers` : openResourcesTabOnTransportClose |
+| `imperator/onglets/00-cadre-benedictions` | _impPopupProvider, impPopup, Tab, IMP_GODS, IMP_BLESS_STALE_MS, IMP_BLESS_FAVOR_MAX, impBlessSoonMs, impBlessShrine … (28) | `imperator/composants` : Link, Updateables, toolTips<br>`ikatools/00-ouverture` : IkaTools<br>`imperator/reglages` : blessSoonThreshold<br>`02-garde-fous` : __impH<br>`imperator/01-traducteur` : localizer |
+| `imperator/onglets/00-transports` | openResourcesTabOnTransportClose, openBuildingsTabOnTransportClose, openMilitaryTabOnDeploymentClose, __IMP_CAP_FAST, __impEsc, __impFmt, __impIsProtected, __rt … (40) | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/00-cadre-benedictions` : impPopup<br>`imperator/01-traducteur` : localizer |
+| `imperator/onglets/ressources` | makeResourceTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/00-cadre-benedictions` : Tab, impBlessDataAttrs, impBlessInfo, impBlessInstallOnce, impBlessMakeCaption, impBlessRefBonus, impBlessStateClasses, impBlessToolTipHtml, makeCityNameCells, makeCityNameColGroup, makeCityNameHeaderCells<br>`imperator/composants` : Link, toolTips<br>`imperator/01-traducteur` : localizer<br>`imperator/onglets/00-transports` : openResourcesTabOnTransportClose |
 | `imperator/onglets/tableau-de-bord` | GOD_COLORS, GOD_BG, _IMP_HORIZONS, _impDashHorizon, _impDashGoldCache, _impDashEventsBound, _impFmtNum, _impFmtS … (12) | `imperator/onglets/00-cadre-benedictions` : IMP_GODS, Tab<br>`ikatools/00-ouverture` : IkaTools<br>`02-garde-fous` : __impH<br>`imperator/01-traducteur` : localizer |
-| `imperator/onglets/batiments` | makeBuildingsTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`imperator/composants` : Link, toolTips<br>`imperator/onglets/00-cadre-benedictions` : Tab, makeCityNameCells, makeCityNameColGroup, makeCityNameHeaderCells<br>`imperator/onglets/99-popup-menu` : makePopup<br>`imperator/onglets/chantiers` : openBuildingsTabOnTransportClose |
-| `imperator/onglets/armee` | UNIT_ORDER, makeMilitaryTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`imperator/composants` : Link, toolTips<br>`imperator/onglets/00-cadre-benedictions` : Tab, makeCityNameCells, makeCityNameColGroup, makeCityNameHeaderCells<br>`imperator/onglets/chantiers` : openMilitaryTabOnDeploymentClose |
+| `imperator/onglets/batiments` | makeBuildingsTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`imperator/composants` : Link, toolTips<br>`imperator/onglets/00-cadre-benedictions` : Tab, impPopup, makeCityNameCells, makeCityNameColGroup, makeCityNameHeaderCells<br>`imperator/onglets/00-transports` : openBuildingsTabOnTransportClose |
+| `imperator/onglets/armee` | UNIT_ORDER, makeMilitaryTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`imperator/composants` : Link, toolTips<br>`imperator/onglets/00-cadre-benedictions` : Tab, makeCityNameCells, makeCityNameColGroup, makeCityNameHeaderCells<br>`imperator/onglets/00-transports` : openMilitaryTabOnDeploymentClose |
 | `imperator/onglets/espionnage` | makeEspionageTab | `02-garde-fous` : __impH<br>`imperator/composants` : Link, toolTips<br>`ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`imperator/onglets/armee` : UNIT_ORDER<br>`imperator/onglets/00-cadre-benedictions` : Tab, makeCityNameHeaderCells |
-| `imperator/onglets/chantiers` | openResourcesTabOnTransportClose, openBuildingsTabOnTransportClose, openMilitaryTabOnDeploymentClose, __IMP_CAP_FAST, __impEsc, __impFmt, __impIsProtected, __rt … (38) | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/99-popup-menu` : makePopup<br>`imperator/01-traducteur` : localizer<br>`imperator/onglets/boissons` : __IMP_WINE_TARGET, __impWineTrigger<br>`imperator/onglets/00-cadre-benedictions` : Tab |
-| `imperator/onglets/boissons` | __IMP_WINE_TARGET, __IMP_WINE_SRC_FLOOR, __impWineTrigger, __impWineGroups, __impWinePlan, makeBoissonsTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/chantiers` : __IMP_CAP_FAST, __IMP_STALE_MIN, __impAge, __impAgeTxt, __impDist, __impEsc, __impFmt, __impInitChantiersDelegation, __impInitTransportReopen, __impInjectChantiersCSS<br>`imperator/onglets/00-cadre-benedictions` : Tab |
-| `imperator/onglets/99-popup-menu` | makePopup, menuImageUrl, createMenuItem, leftMenuResourceContent, leftMenuBuildingsContent, leftMenuArmyContent, leftMenuEspionageContent, menuConfigurations … (10) | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/ressources` : makeResourceTab<br>`imperator/onglets/batiments` : makeBuildingsTab<br>`imperator/onglets/armee` : makeMilitaryTab<br>`imperator/onglets/espionnage` : makeEspionageTab<br>`imperator/onglets/tableau-de-bord` : makeDashboardTab<br>`imperator/onglets/chantiers` : makeChantiersTab, openBuildingsTabOnTransportClose, openMilitaryTabOnDeploymentClose, openResourcesTabOnTransportClose<br>`imperator/onglets/boissons` : makeBoissonsTab<br>`imperator/01-traducteur` : localizer<br>`imperator/reglages` : showBuildingsOverview, showEspionageOverview, showMilitaryOverview, showResourceOverview |
-| `imperator/initialisation` | registerLoggingEventHandlers, fireFakeKeyboardEvent, initQuickGoodsButtons, initBuildingDemolitionHandler, initTweaks, initAlerts, configureLocalization, initPirating … (12) | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`imperator/reglages` : autoAcceptDailyBonus, buildingCompletionAlert_Desktop, deployArmyArrived_Desktop, deployArmyLoaded_Desktop, deployArmyReturned_Desktop, deployNavyArrived_Desktop, deployNavyReturned_Desktop, donationButtons, hideAds, hideChat, hideFacebook, hideFriendsBar, ignoredHostileMissions, impAsset, impNotify, initializeColonizationMissionsForPirateRaiding, localizedLanguage, pillageArrived_Desktop, pillageLoaded_Desktop, pillageReturned_Desktop, preventAccidentalColonyDestruction, showCityOwners, transportButtons, transportMissionArrived_Desktop, transportMissionLoaded_Desktop, transportMissionReturned_Desktop<br>`imperator/styles` : addStyles<br>`imperator/onglets/00-ouverture` : overviewTables<br>`imperator/composants` : addSettingsLink |
+| `imperator/onglets/chantiers` | makeChantiersTab | `imperator/onglets/00-transports` : __IMP_STALE_MIN, __impAge, __impAgeTxt, __impCompletion, __impComputeBilan, __impComputeFlotte, __impComputeRoutage, __impEsc, __impFindCity, __impFmt, __impFmtDur, __impInitChantiersDelegation, __impInitTransportReopen, __impInjectChantiersCSS, __impProtectedPanel<br>`ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/00-cadre-benedictions` : Tab |
+| `imperator/onglets/boissons` | __impWineGroups, __impWinePlan, makeBoissonsTab | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/00-transports` : __IMP_CAP_FAST, __IMP_STALE_MIN, __IMP_WINE_SRC_FLOOR, __IMP_WINE_TARGET, __impAge, __impAgeTxt, __impDist, __impEsc, __impFmt, __impInitChantiersDelegation, __impInitTransportReopen, __impInjectChantiersCSS, __impWineTrigger<br>`imperator/onglets/00-cadre-benedictions` : Tab |
+| `imperator/onglets/99-popup-menu` | makePopup, menuImageUrl, createMenuItem, leftMenuResourceContent, leftMenuBuildingsContent, leftMenuArmyContent, leftMenuEspionageContent, menuConfigurations … (10) | `ikatools/00-ouverture` : IkaTools<br>`imperator/onglets/ressources` : makeResourceTab<br>`imperator/onglets/batiments` : makeBuildingsTab<br>`imperator/onglets/armee` : makeMilitaryTab<br>`imperator/onglets/espionnage` : makeEspionageTab<br>`imperator/onglets/tableau-de-bord` : makeDashboardTab<br>`imperator/onglets/chantiers` : makeChantiersTab<br>`imperator/onglets/boissons` : makeBoissonsTab<br>`imperator/onglets/00-transports` : openBuildingsTabOnTransportClose, openMilitaryTabOnDeploymentClose, openResourcesTabOnTransportClose<br>`imperator/onglets/00-cadre-benedictions` : _impPopupProvider<br>`imperator/01-traducteur` : localizer<br>`imperator/reglages` : showBuildingsOverview, showEspionageOverview, showMilitaryOverview, showResourceOverview |
+| `imperator/initialisation` | registerLoggingEventHandlers, fireFakeKeyboardEvent, initQuickGoodsButtons, initBuildingDemolitionHandler, initTweaks, initAlerts, configureLocalization, initPirating … (11) | `ikatools/00-ouverture` : IkaTools<br>`imperator/01-traducteur` : localizer<br>`imperator/reglages` : autoAcceptDailyBonus, backgroundRefresh, buildingCompletionAlert_Desktop, deployArmyArrived_Desktop, deployArmyLoaded_Desktop, deployArmyReturned_Desktop, deployNavyArrived_Desktop, deployNavyReturned_Desktop, donationButtons, hideAds, hideChat, hideFacebook, hideFriendsBar, ignoredHostileMissions, impAsset, impNotify, initializeColonizationMissionsForPirateRaiding, localizedLanguage, pillageArrived_Desktop, pillageLoaded_Desktop, pillageReturned_Desktop, preventAccidentalColonyDestruction, showCityOwners, transportButtons, transportMissionArrived_Desktop, transportMissionLoaded_Desktop, transportMissionReturned_Desktop<br>`imperator/styles` : addStyles<br>`imperator/onglets/00-ouverture` : overviewTables<br>`imperator/composants` : addSettingsLink |
 | `modules/debit-envoi` | – | `ikatools/00-ouverture` : IkaTools |
 | `modules/capture-vues` | – | `ikatools/00-ouverture` : IkaTools |
 | `modules/surlignage-ameliorations` | – | `ikatools/00-ouverture` : IkaTools |
@@ -59,21 +60,14 @@ Les fichiers *ouverture* / *fermeture* sont des enveloppes (ils ouvrent ou ferme
 
 1 base (garde-fous, constantes, briques IkaTools) → 2 modèle (empire, espionnage) → 3 façade IkaTools → 4 interface Imperator → 5 modules ajoutés. Un fichier n'utilise que sa couche ou les couches inférieures (aucun écart).
 
-## Dépendances circulaires (6)
+## Dépendances circulaires (0)
 
-- `ikatools/01-logging <-> ikatools/02-utils`
-- `ikatools/01-logging <-> ikatools/05-data`
-- `imperator/onglets/boissons <-> imperator/onglets/chantiers`
-- `imperator/onglets/99-popup-menu <-> imperator/onglets/batiments`
-- `imperator/onglets/99-popup-menu <-> imperator/onglets/chantiers`
-- `imperator/initialisation <-> imperator/reglages`
+Aucune.
 
 ## Graphe
 
 ```mermaid
 flowchart LR
-  ikatools_01_logging["ikatools/01-logging"] --> ikatools_02_utils["ikatools/02-utils"]
-  ikatools_01_logging["ikatools/01-logging"] --> ikatools_05_data["ikatools/05-data"]
   ikatools_02_utils["ikatools/02-utils"] --> ikatools_01_logging["ikatools/01-logging"]
   ikatools_02_utils["ikatools/02-utils"] --> ikatools_constants["ikatools/constants"]
   ikatools_03_intl["ikatools/03-intl"] --> ikatools_constants["ikatools/constants"]
@@ -185,7 +179,6 @@ flowchart LR
   imperator_reglages["imperator/reglages"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   imperator_reglages["imperator/reglages"] --> imperator_01_traducteur["imperator/01-traducteur"]
   imperator_reglages["imperator/reglages"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
-  imperator_reglages["imperator/reglages"] --> imperator_initialisation["imperator/initialisation"]
   imperator_composants["imperator/composants"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   imperator_composants["imperator/composants"] --> imperator_reglages["imperator/reglages"]
   imperator_composants["imperator/composants"] --> imperator_01_traducteur["imperator/01-traducteur"]
@@ -195,11 +188,14 @@ flowchart LR
   imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"] --> imperator_reglages["imperator/reglages"]
   imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"] --> 02_garde_fous["02-garde-fous"]
   imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"] --> imperator_01_traducteur["imperator/01-traducteur"]
+  imperator_onglets_00_transports["imperator/onglets/00-transports"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
+  imperator_onglets_00_transports["imperator/onglets/00-transports"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
+  imperator_onglets_00_transports["imperator/onglets/00-transports"] --> imperator_01_traducteur["imperator/01-traducteur"]
   imperator_onglets_ressources["imperator/onglets/ressources"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   imperator_onglets_ressources["imperator/onglets/ressources"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
   imperator_onglets_ressources["imperator/onglets/ressources"] --> imperator_composants["imperator/composants"]
   imperator_onglets_ressources["imperator/onglets/ressources"] --> imperator_01_traducteur["imperator/01-traducteur"]
-  imperator_onglets_ressources["imperator/onglets/ressources"] --> imperator_onglets_chantiers["imperator/onglets/chantiers"]
+  imperator_onglets_ressources["imperator/onglets/ressources"] --> imperator_onglets_00_transports["imperator/onglets/00-transports"]
   imperator_onglets_tableau_de_bord["imperator/onglets/tableau-de-bord"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
   imperator_onglets_tableau_de_bord["imperator/onglets/tableau-de-bord"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   imperator_onglets_tableau_de_bord["imperator/onglets/tableau-de-bord"] --> 02_garde_fous["02-garde-fous"]
@@ -208,26 +204,23 @@ flowchart LR
   imperator_onglets_batiments["imperator/onglets/batiments"] --> imperator_01_traducteur["imperator/01-traducteur"]
   imperator_onglets_batiments["imperator/onglets/batiments"] --> imperator_composants["imperator/composants"]
   imperator_onglets_batiments["imperator/onglets/batiments"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
-  imperator_onglets_batiments["imperator/onglets/batiments"] --> imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"]
-  imperator_onglets_batiments["imperator/onglets/batiments"] --> imperator_onglets_chantiers["imperator/onglets/chantiers"]
+  imperator_onglets_batiments["imperator/onglets/batiments"] --> imperator_onglets_00_transports["imperator/onglets/00-transports"]
   imperator_onglets_armee["imperator/onglets/armee"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   imperator_onglets_armee["imperator/onglets/armee"] --> imperator_01_traducteur["imperator/01-traducteur"]
   imperator_onglets_armee["imperator/onglets/armee"] --> imperator_composants["imperator/composants"]
   imperator_onglets_armee["imperator/onglets/armee"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
-  imperator_onglets_armee["imperator/onglets/armee"] --> imperator_onglets_chantiers["imperator/onglets/chantiers"]
+  imperator_onglets_armee["imperator/onglets/armee"] --> imperator_onglets_00_transports["imperator/onglets/00-transports"]
   imperator_onglets_espionnage["imperator/onglets/espionnage"] --> 02_garde_fous["02-garde-fous"]
   imperator_onglets_espionnage["imperator/onglets/espionnage"] --> imperator_composants["imperator/composants"]
   imperator_onglets_espionnage["imperator/onglets/espionnage"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   imperator_onglets_espionnage["imperator/onglets/espionnage"] --> imperator_01_traducteur["imperator/01-traducteur"]
   imperator_onglets_espionnage["imperator/onglets/espionnage"] --> imperator_onglets_armee["imperator/onglets/armee"]
   imperator_onglets_espionnage["imperator/onglets/espionnage"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
+  imperator_onglets_chantiers["imperator/onglets/chantiers"] --> imperator_onglets_00_transports["imperator/onglets/00-transports"]
   imperator_onglets_chantiers["imperator/onglets/chantiers"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
-  imperator_onglets_chantiers["imperator/onglets/chantiers"] --> imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"]
-  imperator_onglets_chantiers["imperator/onglets/chantiers"] --> imperator_01_traducteur["imperator/01-traducteur"]
-  imperator_onglets_chantiers["imperator/onglets/chantiers"] --> imperator_onglets_boissons["imperator/onglets/boissons"]
   imperator_onglets_chantiers["imperator/onglets/chantiers"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
   imperator_onglets_boissons["imperator/onglets/boissons"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
-  imperator_onglets_boissons["imperator/onglets/boissons"] --> imperator_onglets_chantiers["imperator/onglets/chantiers"]
+  imperator_onglets_boissons["imperator/onglets/boissons"] --> imperator_onglets_00_transports["imperator/onglets/00-transports"]
   imperator_onglets_boissons["imperator/onglets/boissons"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
   imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_onglets_ressources["imperator/onglets/ressources"]
@@ -237,6 +230,8 @@ flowchart LR
   imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_onglets_tableau_de_bord["imperator/onglets/tableau-de-bord"]
   imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_onglets_chantiers["imperator/onglets/chantiers"]
   imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_onglets_boissons["imperator/onglets/boissons"]
+  imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_onglets_00_transports["imperator/onglets/00-transports"]
+  imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_onglets_00_cadre_benedictions["imperator/onglets/00-cadre-benedictions"]
   imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_01_traducteur["imperator/01-traducteur"]
   imperator_onglets_99_popup_menu["imperator/onglets/99-popup-menu"] --> imperator_reglages["imperator/reglages"]
   imperator_initialisation["imperator/initialisation"] --> ikatools_00_ouverture["ikatools/00-ouverture"]

@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 2.41
+
+Restructuration, sans changement visible : plus aucune dependance circulaire (6 -> 0). Journal independant des utilitaires et de la sauvegarde ; outils communs de Chantiers et Boissons dans un fichier partage ; les onglets joignent la fenetre d'Imperator par un acces commun. Toute nouvelle boucle fait echouer les tests.
+
 ## 2.40
 
 Infobulles de la recherche (onglet Ressources) : icone de l'ampoule retablie (ancien chemin relatif skin/layout/... remplace par celui de l'en-tete de colonne, /cdn/all/both/layout/bulb-on.png). Signale par Ghepito.
