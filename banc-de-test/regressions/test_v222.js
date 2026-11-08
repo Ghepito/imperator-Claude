@@ -19,6 +19,6 @@ t('installé une seule fois', (()=>{ let n=0; const w2={__imp_create_error_silen
 const h=s.match(/function __impH\(value\) \{[\s\S]*?\n\}/)[0]; const H=new Function(h+'return __impH;')();
 t('échappe < > & " \'', H(`<img src=x onerror="a('b')">&`)==='&lt;img src=x onerror=&quot;a(&#39;b&#39;)&quot;&gt;&amp;');
 t('null -> vide, accents intacts', H(null)==='' && H('G - Cité 3 é')==='G - Cité 3 é');
-const uses=(s.match(/__impH\(/g)||[]).length; t('11 points échappés (+ définition)', uses===13, uses);
+const uses=(s.match(/__impH\(/g)||[]).length; t('au moins 11 points échappés (+ définition)', uses>=13, uses); // v3.1 : l'historique des alertes en ajoute
 t('plus de filtre basé sur le domaine gfsrv', !/gfsrv\\\.net\|\\\.geo\\\.gf/.test(s));
 console.log(`\n${ok} réussis, ${ko} échoués`); process.exit(ko?1:0);

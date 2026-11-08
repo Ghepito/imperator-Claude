@@ -37,6 +37,7 @@ imperator/00-ouverture.js
 imperator/localisations.js
 imperator/01-traducteur.js
 imperator/styles.js
+imperator/historique-alertes.js
 imperator/reglages.js
 imperator/composants.js
 imperator/onglets/00-ouverture.js

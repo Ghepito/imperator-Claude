@@ -29,7 +29,7 @@ t('autonomie: 100000 vin, 300/h -> 13 j', autonomy(100000,300/3600)===13);
 t('plus aucun appel webkitNotifications', !/window\.webkitNotifications/.test(s));
 t('grant GM_notification', /@grant\s+GM_notification/.test(s));
 const h=s.match(/function impNotify\(opts\) \{[\s\S]*?\n    \}\n/)[0];
-let sent=null; const impNotify=new Function('GM_notification','impBeep','window','console',h+'return impNotify;')((d)=>sent=d,()=>{}, {focus(){}}, {log(){},warn(){}});
+let sent=null; const impNotify=new Function('GM_notification','impBeep','window','console','impAlertHistoryAdd',h+'return impNotify;')((d)=>sent=d,()=>{}, {focus(){}}, {log(){},warn(){}}, ()=>{});
 t('impNotify envoie titre/texte', impNotify({title:'A',text:'B'})===true && sent.title==='A' && sent.timeout===15000);
 impNotify({title:'X',sound:true,sticky:true}); t('alerte collante sans timeout + texte non vide', sent.timeout===undefined && sent.text===' ');
 t('icône rouge conseiller non masquée', !/removeClass\('normalalert'\)/.test(s));

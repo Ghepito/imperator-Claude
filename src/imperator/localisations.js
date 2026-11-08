@@ -5,6 +5,11 @@
                 buildings_overview: 'Buildings Overview',
                 military_overview: 'Military Overview',
                 espionage_overview: 'Espionage Overview',
+                alert_history: 'Alerts', // v3.1
+                alert_history_title: 'Alert history (last 50)',
+                alert_history_empty: 'No alert yet.',
+                alert_history_clear: 'Clear',
+                alert_history_not_shown: 'This alert could not be shown on the desktop.',
 
                 upkeep: "Upkeep",
                 growth: "Growth",
@@ -248,6 +253,11 @@
                 buildings_overview: 'Vue générale des Bâtiments',
                 military_overview: 'Vue générale des Troupes',
                 espionage_overview: 'Vue générale de l\'espionnage',
+                alert_history: 'Alertes', // v3.1
+                alert_history_title: 'Historique des alertes (50 dernières)',
+                alert_history_empty: 'Aucune alerte pour l\'instant.',
+                alert_history_clear: 'Vider',
+                alert_history_not_shown: 'Cette alerte n\'a pas pu s\'afficher sur le bureau.',
 
                 upkeep: "Entretien",
                 growth: "Croissance",

@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.0
-// @version        3.0
+// @name           Imperator v3.1
+// @version        3.1
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.1 Historique des alertes : chaque alerte de bureau (ou celle qui n'a pas pu s'afficher) est notee avec son heure ; les 50 dernieres se consultent par l'entree Alertes du menu de gauche (cloche, nombre de non lues, bouton Vider).
 // @history        3.0 Version stable (sortie de la beta). Aucun changement de code par rapport a la 2.44 : code restructure (58 fichiers, aucune dependance circulaire, couches verifiees), toutes les fonctions courantes validees en jeu. Limites connues dans le README.
 // @history        2.44 Popup Planifier : le clic ne passe plus a l'image publicitaire de la fenetre du jeu (le bandeau reste hors de la fenetre, au-dessus, et retient ses clics) ; Planifier repond a chaque clic.
 // @history        2.43 Chantiers et Boissons : apres un envoi prepare, la fenetre d'Imperator se rouvre des que le serveur confirme le transport (le jeu reste sur le port au lieu de revenir a la ville).
@@ -7999,6 +8000,11 @@ var Imperator = function Imperator() {
                 buildings_overview: 'Buildings Overview',
                 military_overview: 'Military Overview',
                 espionage_overview: 'Espionage Overview',
+                alert_history: 'Alerts', // v3.1
+                alert_history_title: 'Alert history (last 50)',
+                alert_history_empty: 'No alert yet.',
+                alert_history_clear: 'Clear',
+                alert_history_not_shown: 'This alert could not be shown on the desktop.',
 
                 upkeep: "Upkeep",
                 growth: "Growth",
@@ -8242,6 +8248,11 @@ var Imperator = function Imperator() {
                 buildings_overview: 'Vue générale des Bâtiments',
                 military_overview: 'Vue générale des Troupes',
                 espionage_overview: 'Vue générale de l\'espionnage',
+                alert_history: 'Alertes', // v3.1
+                alert_history_title: 'Historique des alertes (50 dernières)',
+                alert_history_empty: 'Aucune alerte pour l\'instant.',
+                alert_history_clear: 'Vider',
+                alert_history_not_shown: 'Cette alerte n\'a pas pu s\'afficher sur le bureau.',
 
                 upkeep: "Entretien",
                 growth: "Croissance",
@@ -9607,6 +9618,120 @@ min-width: 851px !important; \
                    );
     }
 
+
+    // ============================================================
+    // v3.1 : historique des alertes de bureau.
+    // Chaque alerte envoyée (ou qui n'a pas pu s'afficher) est notée : heure, titre, texte.
+    // Les 50 dernières sont gardées. Consultation par l'entrée « Alertes » du menu de gauche.
+    // ============================================================
+    var IMP_ALERT_HISTORY_MAX = 50;
+    var impAlertHistoryData = new IkaTools.Data.Value('alertHistory', [], { version: 1 });
+    var impAlertHistoryListeners = [];
+
+    // Relit la valeur sauvegardée : un autre onglet du jeu a pu ajouter des alertes.
+    function impAlertHistoryList() {
+        var list;
+        try { list = impAlertHistoryData.load(); } catch (e) { list = impAlertHistoryData.data; }
+        return Array.isArray(list) ? list : [];
+    }
+
+    function impAlertHistorySave(list) {
+        impAlertHistoryData.data = list;
+        try { impAlertHistoryData.save(); } catch (e) {}
+        $.each(impAlertHistoryListeners, function(i, f) { try { f(); } catch (e) {} });
+    }
+
+    function impAlertHistoryAdd(title, text, shown) {
+        try {
+            var list = impAlertHistoryList().slice();
+            list.unshift({ time: Date.now(), title: String(title || ''), text: String(text || ''),
+                           shown: !!shown, read: false });
+            if (list.length > IMP_ALERT_HISTORY_MAX) list.length = IMP_ALERT_HISTORY_MAX;
+            impAlertHistorySave(list);
+        } catch (e) {
+            console.warn('[Imperator] Historique des alertes : enregistrement échoué', e);
+        }
+    }
+
+    function impAlertHistoryUnread() {
+        var n = 0;
+        $.each(impAlertHistoryList(), function(i, a) { if (a && !a.read) n++; });
+        return n;
+    }
+
+    function impAlertHistoryMarkRead() {
+        var list = impAlertHistoryList(), changed = false;
+        $.each(list, function(i, a) { if (a && !a.read) { a.read = true; changed = true; } });
+        if (changed) impAlertHistorySave(list);
+    }
+
+    function impAlertHistoryClear() {
+        impAlertHistorySave([]);
+    }
+
+    function impAlertHistoryOnChange(f) {
+        impAlertHistoryListeners.push(f);
+    }
+
+    function impAlertTimeLabel(time) {
+        var d = new Date(time), now = new Date();
+        var two = function(n) { return (n < 10 ? '0' : '') + n; };
+        var hm = two(d.getHours()) + ':' + two(d.getMinutes());
+        if (d.toDateString() === now.toDateString()) return hm;
+        return two(d.getDate()) + '/' + two(d.getMonth() + 1) + ' ' + hm;
+    }
+
+    // Panneau de consultation (indépendant des fenêtres du jeu).
+    function impAlertHistoryShow() {
+        impAlertHistoryStyles();
+        $('#ImperatorAlertHistory').remove();
+        var list = impAlertHistoryList();
+        var rows = $.map(list, function(a) {
+            if (!a) return null;
+            return '<li class="' + (a.read ? '' : 'imp_ah_unread') + '">' +
+                '<span class="imp_ah_time">' + __impH(impAlertTimeLabel(a.time)) + '</span>' +
+                '<span class="imp_ah_title">' + __impH(a.title) + '</span>' +
+                (a.shown ? '' : '<span class="imp_ah_notshown" title="' +
+                    __impH(localizer.localize('misc', 'alert_history_not_shown')) + '">⚠</span>') +
+                '<div class="imp_ah_text">' + __impH(a.text) + '</div></li>';
+        }).join('');
+        var panel = $('<div id="ImperatorAlertHistory">' +
+            '<div class="imp_ah_head"><span>' + __impH(localizer.localize('misc', 'alert_history_title')) +
+            '</span><a class="imp_ah_close" title="×">×</a></div>' +
+            (rows ? '<ul>' + rows + '</ul>' :
+                '<div class="imp_ah_empty">' + __impH(localizer.localize('misc', 'alert_history_empty')) + '</div>') +
+            '<div class="imp_ah_foot"><a class="button imp_ah_clear">' +
+            __impH(localizer.localize('misc', 'alert_history_clear')) + '</a></div></div>');
+        panel.find('.imp_ah_close').click(function() { panel.remove(); });
+        panel.find('.imp_ah_clear').click(function() { impAlertHistoryClear(); impAlertHistoryShow(); });
+        $('body').append(panel);
+        // Les alertes non lues restent en gras pendant cette consultation, puis passent en « lues ».
+        impAlertHistoryMarkRead();
+    }
+
+    var impAlertHistoryStyled = false;
+    function impAlertHistoryStyles() {
+        if (impAlertHistoryStyled) return;
+        impAlertHistoryStyled = true;
+        GM_addStyle(
+            '#ImperatorAlertHistory{position:fixed;left:70px;top:120px;z-index:130000;width:400px;max-height:70vh;' +
+            'display:flex;flex-direction:column;background:#FCF5E1;border:1.5px solid #8A6D39;border-radius:8px;' +
+            'box-shadow:0 4px 14px rgba(90,62,27,.28);color:#5A3E1B;font:12px Arial,sans-serif}' +
+            '#ImperatorAlertHistory .imp_ah_head{display:flex;justify-content:space-between;align-items:center;' +
+            'padding:8px 12px;background:#E4C88D;border-radius:6px 6px 0 0;font-weight:bold;font-size:13px}' +
+            '#ImperatorAlertHistory .imp_ah_close{cursor:pointer;font-size:18px;line-height:14px;color:#5A3E1B}' +
+            '#ImperatorAlertHistory ul{margin:0;padding:0;list-style:none;overflow-y:auto}' +
+            '#ImperatorAlertHistory li{padding:6px 12px;border-bottom:1px solid #E8D8B0}' +
+            '#ImperatorAlertHistory .imp_ah_time{color:#8A6D39;margin-right:8px;font-size:11px}' +
+            '#ImperatorAlertHistory .imp_ah_unread .imp_ah_title,#ImperatorAlertHistory .imp_ah_unread .imp_ah_text{font-weight:bold}' +
+            '#ImperatorAlertHistory .imp_ah_notshown{margin-left:6px;color:#B03A2E;cursor:help}' +
+            '#ImperatorAlertHistory .imp_ah_text{margin-top:2px}' +
+            '#ImperatorAlertHistory .imp_ah_empty{padding:16px 12px;font-style:italic}' +
+            '#ImperatorAlertHistory .imp_ah_foot{padding:8px 12px;text-align:right}' +
+            '#leftMenu .imp_ah_bell{background:none !important;font-size:24px;line-height:42px;text-align:center;position:relative}' +
+            '#leftMenu .imp_ah_badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 3px;' +
+            'border-radius:8px;background:#C0392B;color:#fff;font:bold 10px/16px Arial,sans-serif;text-align:center}');
+    }
     // v2.41 : rafraîchissement en arrière-plan, installé par init() (initialisation.js)
     var backgroundRefresh = null;
 
@@ -9719,6 +9844,7 @@ min-width: 851px !important; \
         opts = opts || {};
         if (typeof GM_notification !== 'function') {
             console.warn('[Imperator] GM_notification indisponible (grant manquant ?)');
+            if (!opts.test) impAlertHistoryAdd(opts.title || 'Imperator', opts.text, false); // v3.1
             return false;
         }
         try {
@@ -9733,9 +9859,11 @@ min-width: 851px !important; \
             GM_notification(d);
             if (opts.sound) impBeep(3);
             console.log('[Imperator] Notification :', d.title, '-', d.text);
+            if (!opts.test) impAlertHistoryAdd(d.title, d.text, true); // v3.1
             return true;
         } catch (e) {
             console.warn('[Imperator] Notification échouée', e);
+            if (!opts.test) impAlertHistoryAdd(opts.title || 'Imperator', opts.text, false); // v3.1
             return false;
         }
     }
@@ -9754,6 +9882,7 @@ min-width: 851px !important; \
                         title: localizer.localize('settings','test_desktop_alert_title'),
                         text: localizer.localize('settings','test_desktop_alert_text'),
                         sound: true,
+                        test: true,   // v3.1 : le test n'entre pas dans l'historique
                     });
                     if (!ok) alert(localizer.localize('settings','desktop_alerts_not_supported'));
                 }));
@@ -14366,6 +14495,24 @@ min-width: 851px !important; \
         var leftMenuArmyContent = createMenuItem(0, 'military_overview');
         var leftMenuEspionageContent = createMenuItem(-71, 'espionage_overview');
 
+        // v3.1 : entrée « Alertes » (historique), toujours présente, avec le nombre de non lues.
+        impAlertHistoryStyles();
+        var leftMenuAlertsContent = $(`
+    <li>
+      <div class="image imp_ah_bell">🔔<span class="imp_ah_badge" style="display:none"></span></div>
+      <div class="name"><span class="namebox">${localizer.localize('misc', 'alert_history')}</span></div>
+    </li>
+  `);
+        function refreshAlertBadge() {
+            var n = impAlertHistoryUnread();
+            leftMenuAlertsContent.find('.imp_ah_badge').text(n > 9 ? '9+' : String(n)).toggle(n > 0);
+        }
+        impAlertHistoryOnChange(refreshAlertBadge);
+        refreshAlertBadge();
+        setInterval(refreshAlertBadge, 60000);   // alertes venues d'un autre onglet du jeu
+        leftMenuAlertsContent.mouseenter(refreshAlertBadge);
+        leftMenuAlertsContent.mousedown(function() { impAlertHistoryShow(); });
+
 
         const menuConfigurations = [
             { condition: showResourceOverview.isEnabled(), content: leftMenuResourceContent },
@@ -14376,7 +14523,8 @@ min-width: 851px !important; \
 
         const menuItems = menuConfigurations
         .filter(config => config.condition)
-        .map(config => new IkaTools.UI.LeftMenu.Item(config.content));
+        .map(config => new IkaTools.UI.LeftMenu.Item(config.content))
+        .concat([new IkaTools.UI.LeftMenu.Item(leftMenuAlertsContent)]);   // v3.1
 
         // FIN PARTIE OPTIMISEE
 

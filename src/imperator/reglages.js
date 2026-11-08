@@ -110,6 +110,7 @@
         opts = opts || {};
         if (typeof GM_notification !== 'function') {
             console.warn('[Imperator] GM_notification indisponible (grant manquant ?)');
+            if (!opts.test) impAlertHistoryAdd(opts.title || 'Imperator', opts.text, false); // v3.1
             return false;
         }
         try {
@@ -124,9 +125,11 @@
             GM_notification(d);
             if (opts.sound) impBeep(3);
             console.log('[Imperator] Notification :', d.title, '-', d.text);
+            if (!opts.test) impAlertHistoryAdd(d.title, d.text, true); // v3.1
             return true;
         } catch (e) {
             console.warn('[Imperator] Notification échouée', e);
+            if (!opts.test) impAlertHistoryAdd(opts.title || 'Imperator', opts.text, false); // v3.1
             return false;
         }
     }
@@ -145,6 +148,7 @@
                         title: localizer.localize('settings','test_desktop_alert_title'),
                         text: localizer.localize('settings','test_desktop_alert_text'),
                         sound: true,
+                        test: true,   // v3.1 : le test n'entre pas dans l'historique
                     });
                     if (!ok) alert(localizer.localize('settings','desktop_alerts_not_supported'));
                 }));

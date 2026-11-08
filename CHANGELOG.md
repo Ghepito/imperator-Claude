@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.1
+
+Historique des alertes : chaque alerte de bureau (ou celle qui n'a pas pu s'afficher) est notee avec son heure ; les 50 dernieres se consultent par l'entree Alertes du menu de gauche (cloche, nombre de non lues, bouton Vider).
+
 ## 3.0 — version stable
 
 Sortie de la bêta. Aucun changement de code par rapport à la 2.44 : le code est restructuré (58 fichiers, aucune dépendance circulaire, couches vérifiées à chaque test) et toutes les fonctions d'usage courant sont validées en jeu. Limites connues : voir le README.

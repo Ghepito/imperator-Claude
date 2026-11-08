@@ -150,6 +150,24 @@
         var leftMenuArmyContent = createMenuItem(0, 'military_overview');
         var leftMenuEspionageContent = createMenuItem(-71, 'espionage_overview');
 
+        // v3.1 : entrée « Alertes » (historique), toujours présente, avec le nombre de non lues.
+        impAlertHistoryStyles();
+        var leftMenuAlertsContent = $(`
+    <li>
+      <div class="image imp_ah_bell">🔔<span class="imp_ah_badge" style="display:none"></span></div>
+      <div class="name"><span class="namebox">${localizer.localize('misc', 'alert_history')}</span></div>
+    </li>
+  `);
+        function refreshAlertBadge() {
+            var n = impAlertHistoryUnread();
+            leftMenuAlertsContent.find('.imp_ah_badge').text(n > 9 ? '9+' : String(n)).toggle(n > 0);
+        }
+        impAlertHistoryOnChange(refreshAlertBadge);
+        refreshAlertBadge();
+        setInterval(refreshAlertBadge, 60000);   // alertes venues d'un autre onglet du jeu
+        leftMenuAlertsContent.mouseenter(refreshAlertBadge);
+        leftMenuAlertsContent.mousedown(function() { impAlertHistoryShow(); });
+
 
         const menuConfigurations = [
             { condition: showResourceOverview.isEnabled(), content: leftMenuResourceContent },
@@ -160,7 +178,8 @@
 
         const menuItems = menuConfigurations
         .filter(config => config.condition)
-        .map(config => new IkaTools.UI.LeftMenu.Item(config.content));
+        .map(config => new IkaTools.UI.LeftMenu.Item(config.content))
+        .concat([new IkaTools.UI.LeftMenu.Item(leftMenuAlertsContent)]);   // v3.1
 
         // FIN PARTIE OPTIMISEE
 
