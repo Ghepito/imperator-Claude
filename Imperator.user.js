@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.43
-// @version        2.43
+// @name           Imperator v2.44
+// @version        2.44
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.44 Popup Planifier : le clic ne passe plus a l'image publicitaire de la fenetre du jeu (le bandeau reste hors de la fenetre, au-dessus, et retient ses clics) ; Planifier repond a chaque clic.
 // @history        2.43 Chantiers et Boissons : apres un envoi prepare, la fenetre d'Imperator se rouvre des que le serveur confirme le transport (le jeu reste sur le port au lieu de revenir a la ville).
 // @history        2.42 Infobulle de croissance : une valeur plafonnee par la population maximale porte la mention (plein). Popup Planifier l'amelioration : des que la fenetre du batiment s'ouvre, il devient un bandeau compact a son sommet (sur l'image decorative), sans cacher les donnees.
 // @history        2.41 Restructuration, sans changement visible : plus aucune dependance circulaire (6 -> 0). Journal independant des utilitaires et de la sauvegarde ; outils communs de Chantiers et Boissons dans un fichier partage ; les onglets joignent la fenetre d'Imperator par un acces commun. Toute nouvelle boucle fait echouer les tests.
@@ -156,6 +157,10 @@
     positionNear(pop, cell);
     dockWhenWindowOpens(pop);   // v2.42 : rejoint le haut de la fenêtre du bâtiment
 
+    // v2.43 : les clics dans le popup ne vont jamais au jeu
+    ['mousedown', 'mouseup', 'click'].forEach(function (t) {
+      pop.addEventListener(t, function (ev) { ev.stopPropagation(); }, false);
+    });
     pop.querySelector('.imp-cr-plan').addEventListener('click', function () { planifier(tgt); closePopover(); });
     pop.querySelector('.imp-cr-cancel').addEventListener('click', closePopover);
 
@@ -171,6 +176,7 @@
     if (!p) return;
     if (p._outside) document.removeEventListener('mousedown', p._outside, true);
     if (p._observer) p._observer.disconnect();
+    if (p._follow) clearInterval(p._follow);
     p.remove();
   }
 
@@ -209,19 +215,27 @@
     setTimeout(function () { obs.disconnect(); }, 5000);
   }
 
+  // v2.43 : le bandeau reste dans <body>, au-dessus de tout (et non dans la fenêtre du jeu,
+  // où l'image publicitaire et les gestionnaires du jeu attrapaient le clic). Il suit la
+  // fenêtre par sa position à l'écran, recalculée tant qu'il est ouvert.
   function dockInto(pop, box) {
     try {
       if (!pop.parentNode) return;   // déjà fermé
-      var header = box.querySelector('.mainHeader');
       pop.classList.add('imp-cr-dock');
-      box.appendChild(pop);
-      var top = header.offsetTop + header.offsetHeight + 4;
-      var banner = box.querySelector('.mainContent > .center img, .mainContent > .center');
-      var w = Math.min(box.clientWidth - 24, 560);
-      if (banner && banner.offsetWidth > 300) w = Math.min(w, banner.offsetWidth);
-      pop.style.width = w + 'px';
-      pop.style.left = Math.round((box.clientWidth - w) / 2) + 'px';
-      pop.style.top = top + 'px';
+      var place = function () {
+        if (!pop.parentNode) { clearInterval(pop._follow); return; }
+        if (!box.isConnected) return;   // fenêtre fermée : le bandeau reste où il est
+        var header = box.querySelector('.mainHeader');
+        var r = box.getBoundingClientRect(), hr = header ? header.getBoundingClientRect() : r;
+        var banner = box.querySelector('.mainContent > .center img');
+        var w = Math.min(r.width - 24, 560);
+        if (banner && banner.offsetWidth > 300) w = Math.min(w, banner.offsetWidth);
+        pop.style.width = w + 'px';
+        pop.style.left = Math.round(r.left + (r.width - w) / 2) + 'px';
+        pop.style.top = Math.round(hr.bottom + 4) + 'px';
+      };
+      place();
+      pop._follow = setInterval(place, 250);
     } catch (e) {}
   }
 
@@ -250,7 +264,7 @@
       '.imp-cr-cancel{background:#EFDEB2;border:1px solid #B4914E;color:#8A6D39}' +
       '.imp-cr-plan{background:#D8B871;border:1px solid #8A6D39;color:#5A3E1B;font-weight:600}' +
       // v2.42 : bandeau compact au sommet de la fenêtre du bâtiment
-      '.imp-cr-pop.imp-cr-dock{position:absolute;box-sizing:border-box;padding:6px 10px;display:grid;' +
+      '.imp-cr-pop.imp-cr-dock{position:fixed;box-sizing:border-box;padding:6px 10px;display:grid;' +
       'grid-template-columns:auto auto 1fr 190px;column-gap:14px;row-gap:2px;align-items:center;text-align:left}' +
       '.imp-cr-dock .imp-cr-pt{grid-column:1 / span 2;grid-row:1;margin:0}' +
       '.imp-cr-dock .imp-cr-line{grid-row:2;margin:0;white-space:nowrap}' +

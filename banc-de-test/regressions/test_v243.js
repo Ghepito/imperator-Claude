@@ -3,7 +3,7 @@ const fs = require('fs');
 const s = fs.readFileSync(process.argv[2], 'utf8');
 let ok = 0, ko = 0;
 const t = (n, c, x = '') => { if (c) { ok++; console.log('PASS', n); } else { ko++; console.log('FAIL', n, x); } };
-t('version 2.43', /@version        2\.43\n/.test(s));
+t('version >= 2.43', /@version        2\.4[3-9]\n/.test(s));
 const i = s.indexOf('function __impInitTransportReopen(){'), bloc = s.slice(i, s.indexOf('function __impProtectedPanel(){', i));
 t('écoute l\'envoi du formulaire de transport', /registerAjaxFormSubmitCallback\(function\(form\)/.test(bloc) &&
   /form\.id!=='transport' && form\.id!=='transportForm'/.test(bloc));

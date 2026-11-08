@@ -19,6 +19,14 @@ const pop = d.querySelector('.imp-cr-pop');
 t('popup ouvert au clic', !!pop && pop.parentNode === d.body);
 d.getElementById('container').innerHTML = '<div id="temple" class="mainContentBox"><div class="hd header mainHeader">Temple</div><div class="mainContent"><div class="center"><img></div></div></div>';
 setTimeout(() => {
-  t('popup déplacé dans la fenêtre du bâtiment, en bandeau', pop.parentNode === d.getElementById('temple') && pop.classList.contains('imp-cr-dock'));
+  // v2.43 : le bandeau reste dans <body> (au-dessus de la fenêtre du jeu), il en suit la position.
+  t('popup passé en bandeau quand la fenêtre du bâtiment s\'ouvre', pop.parentNode === d.body && pop.classList.contains('imp-cr-dock'));
+  // Clic sur « Planifier » : l'image publicitaire du jeu ne reçoit rien, Chantiers est appelé.
+  let pub = 0, ouvert = 0;
+  d.getElementById('temple').addEventListener('click', () => pub++);
+  d.addEventListener('click', e => { if (e.target.closest && e.target.closest('.imp-cr-pop')) pub++; });
+  dom.window.ImperatorOpenChantiers = () => ouvert++;
+  pop.querySelector('.imp-cr-plan').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  t('Planifier : Chantiers ouvert, le clic ne va pas au jeu', ouvert === 1 && pub === 0 && !d.querySelector('.imp-cr-pop'));
   console.log(`\n${ok} réussis, ${ko} échoués`); process.exit(ko ? 1 : 0);
 }, 20);
