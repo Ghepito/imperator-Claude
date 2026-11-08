@@ -208,9 +208,12 @@
                                         return '<tr><td class="resource_count">%s</td><td>%s</td></tr>'.format(
                                             IkaTools.Intl.formatInteger(count, true),
                                             // v2.32 : « ? » tant que l'heure d'arrivée est inconnue
+                                            // v2.33 : temps restant suivi de l'heure d'arrivée (« 6h 22m (aujourd'hui 15:37) »)
                                             (movement.isEtaUnknown && movement.isEtaUnknown()) ? '?' :
-                                            IkaTools.Intl.formatRemainingTime(
-                                                movement.getArrivalTime() - IkaTools.View.gameTimeNow()));
+                                            '<span class="nowrap">' + IkaTools.Intl.formatRemainingTime(
+                                                movement.getArrivalTime() - IkaTools.View.gameTimeNow()) +
+                                            ' (' + IkaTools.Intl.formatAbsoluteTime(new Date(movement.getArrivalTime())) +
+                                            ')</span>');
                                     } else {
                                         return '';
                                     }

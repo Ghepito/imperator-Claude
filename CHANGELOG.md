@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 2.33
+
+Infobulle 'En transit' (onglet Ressources) : l'heure d'arrivee est affichee apres le temps restant, comme pour les constructions (demande de Ghepito).
+
 ## 2.32
 
 Mouvements : un transport lu en chargement dans le Conseiller militaire n'a pas de duree de trajet connue ; sa cargaison n'est plus creditee des la fin du chargement : on attend l'heure reelle du Conseiller (affichee '?' d'ici la). Heure d'arrivee lue a la seconde (heure affichee par le Conseiller) au lieu du temps restant arrondi. Capture : les donnees envoyees juste apres une vue (tableau des mouvements) sont aussi retenues.

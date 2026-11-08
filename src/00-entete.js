@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.32
-// @version        2.32
+// @name           Imperator v2.33
+// @version        2.33
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.33 Infobulle 'En transit' (onglet Ressources) : l'heure d'arrivee est affichee apres le temps restant, comme pour les constructions (demande de Ghepito).
 // @history        2.32 Mouvements : un transport lu en chargement dans le Conseiller militaire n'a pas de duree de trajet connue ; sa cargaison n'est plus creditee des la fin du chargement : on attend l'heure reelle du Conseiller (affichee '?' d'ici la). Heure d'arrivee lue a la seconde (heure affichee par le Conseiller) au lieu du temps restant arrondi. Capture : les donnees envoyees juste apres une vue (tableau des mouvements) sont aussi retenues.
 // @history        2.31 Couts des batiments : l'aide du jeu (encyclopedie, page d'un batiment) est lue et retenue ; ses couts exacts servent avant les anciennes tables (perimees, chiffres tronques), et elle indique les niveaux au-dela de l'ancien maximum. Espionnage : joueur en vacances affiche 'En vacances' au lieu d'un nombre de navires ; navires a piller comptes a 580 par navire (au lieu de 500).
 // @history        2.30 Icone du Spartiate : image du jeu (ikipedia/319.png, relevee par Ghepito) au lieu d'un nom d'image suppose. Textes : entree parasite 'dashboard' retiree des noms de batiments en francais. Premiere version construite depuis src/.
