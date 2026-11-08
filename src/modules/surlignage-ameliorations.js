@@ -47,10 +47,18 @@
     } catch (e) { return false; }
   }
 
+  // v2.35 : recalcul complet seulement à l'ouverture de l'onglet, après un changement
+  // (ressources, bâtiments) ou toutes les 10 s pour suivre la production.
+  var lastRun = 0, wasVisible = false, dirty = true;
+  function markDirty() { dirty = true; setTimeout(decorate, 0); }
   function decorate() {
     try {
+      if (document.hidden) { wasVisible = false; return; }
       var table = document.getElementById(TABLE_ID);
-      if (!table || table.offsetParent === null) return; // absent, ou onglet Buildings non visible
+      if (!table || table.offsetParent === null) { wasVisible = false; return; } // onglet Bâtiments fermé
+      var now = Date.now();
+      if (wasVisible && !dirty && now - lastRun < 10000) return;
+      wasVisible = true; dirty = false; lastRun = now;
       var cells = table.querySelectorAll(CELL_SEL);
       for (var i = 0; i < cells.length; i++) {
         if (isLaunchable(cells[i])) cells[i].classList.add('imp-up-ok');
@@ -62,8 +70,8 @@
   function start() {
     if (!ready()) return false;
     // Feedback immédiat quand ressources / bâtiments changent (arrivée, envoi, fin d'upgrade…)
-    try { IkaTools.EmpireData.registerResourcesChangedHandler(function () { setTimeout(decorate, 0); }); } catch (e) {}
-    try { IkaTools.EmpireData.registerBuildingsChangedHandler(function () { setTimeout(decorate, 0); }); } catch (e) {}
+    try { IkaTools.EmpireData.registerResourcesChangedHandler(markDirty); } catch (e) {}
+    try { IkaTools.EmpireData.registerBuildingsChangedHandler(markDirty); } catch (e) {}
     // Filet : couvre l'ouverture de l'aperçu et les changements d'onglet (ne coûte rien si non visible).
     setInterval(decorate, 1200);
     decorate();

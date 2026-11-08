@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 2.35
+
+Allegement : sauvegarde de l'empire regroupee (une ecriture par rafale, videe a la fermeture de la page) au lieu d'une ecriture complete a chaque reponse du jeu ; surlignage des ameliorations recalcule a l'ouverture, apres un changement ou toutes les 10 s (au lieu de 1,2 s) ; biens culturels reperes dans les reponses du jeu au lieu d'un observateur de toute la page ; rien ne tourne quand l'onglet du navigateur est cache.
+
 ## 2.34
 
 Espionnage : la Cachette donne directement le joueur, son alliance et les coordonnees de chaque ville espionnee (plus besoin de passer sur l'ile pour sortir de 'donnees en attente'). Coordonnees lues aussi entre parentheses (elles valaient 0:0).

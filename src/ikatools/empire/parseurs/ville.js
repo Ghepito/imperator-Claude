@@ -74,19 +74,29 @@
                     }
                 }
 
-                function start() {
-                    var lastForm = null;
-                    var timer = null;
-                    new MutationObserver(function () {
-                        var form = document.getElementById('moveCulturalGoods');
-                        if (!form || form === lastForm) return;
-                        lastForm = form;
-                        clearTimeout(timer);
-                        timer = setTimeout(function () { readAll(); }, 300);
-                    }).observe(document.body, { childList: true, subtree: true });
+                // v2.35 : plus d'observateur de toute la page (réveillé à chaque compte à rebours
+                // du jeu) ; on regarde seulement les réponses du jeu qui contiennent le formulaire.
+                var timer = null;
+                function schedule() {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () { readAll(); }, 300);
                 }
-                if (document.body) start();
-                else document.addEventListener('DOMContentLoaded', start);
+                View.registerIkariamAjaxResponseCallback(function watchCulturalGoods(response) {
+                    var seen = false;
+                    try {
+                        Utils.iterateIkariamAjaxResponse(response, function (index, name, data) {
+                            if (seen || !data) return;
+                            var html = typeof data === 'string' ? data :
+                                       (typeof data[1] === 'string' ? data[1] : '');
+                            if (html.indexOf('moveCulturalGoods') >= 0) seen = true;
+                        });
+                    } catch (e) {}
+                    if (seen) schedule();
+                });
+                // Page chargée directement sur le formulaire (F5)
+                function checkPage() { if (document.getElementById('moveCulturalGoods')) schedule(); }
+                if (document.readyState !== 'loading') checkPage();
+                else document.addEventListener('DOMContentLoaded', checkPage);
             })();
 
 

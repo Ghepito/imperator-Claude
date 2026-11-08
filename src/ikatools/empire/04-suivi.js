@@ -230,8 +230,8 @@
                                   unsafeWindow.ikariam.backgroundView.screen.data,
                                   true);
 
-                //empireData.saveAsync(); <- valeur avant
-                empireData.save();
+                // v2.35 : sauvegarde regroupée (écrite au plus tard 500 ms après, ou à la fermeture)
+                empireData.saveSoon();
 
                 // Capturer l'or depuis dataSetForView (disponible au chargement)
                 try {
@@ -536,8 +536,8 @@
                         processBuildingUpgradeView(viewHtml);
                         // parseBilanDomIfVisible appelé uniquement via createTemplateView hook
 
-                        //empireData.saveAsync();  <- valeur avant
-                        empireData.save();
+                        // v2.35 : sauvegarde regroupée (écrite au plus tard 500 ms après, ou à la fermeture)
+                        empireData.saveSoon();
                     },
                     true
                 );

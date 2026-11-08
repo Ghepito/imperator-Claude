@@ -56,7 +56,7 @@
                         var building = city && city.getBuildingByPosition ? city.getBuildingByPosition(position) : null;
                         if (building) {
                             building.realUpgradeCost = cost;
-                            empireData.save();
+                            empireData.saveSoon(); // v2.35
                         }
                     } catch(e) {
                         console.warn('[Imperator] processBuildingUpgradeView a échoué', e);

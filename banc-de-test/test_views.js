@@ -113,7 +113,7 @@ for (const [name, root, expect] of [
   const civ = { movements: {}, _dropMovement() {}, _updateMovement(mv) { this.movements[mv.id] = mv; } };
   const run = new Function('$', 'Constants', 'View', 'Movement', 'MilitaryUnits', 'getCivilizationData',
     'raiseMovementsChanged', 'empireData', 'setTimeout', 'console', src + 'return processMilitaryAdvisorView;');
-  run($, Constants, { gameTimeNow: () => NOW }, Movement, MilitaryUnits, () => civ, () => {}, { save() {} }, f => f(),
+  run($, Constants, { gameTimeNow: () => NOW }, Movement, MilitaryUnits, () => civ, () => {}, { save() {}, saveSoon() {} }, f => f(),
       { warn() {}, log() {} })(c.templateData);
   t('5 transports lus', created.length === 5, created.length);
   t('identifiants d\'événement lus', created.every(m => m.id > 3000000));
@@ -145,7 +145,7 @@ for (const [name, root, expect] of [
   const civ = { movements: {}, _dropMovement() {}, _updateMovement(mv) { this.movements[mv.id] = mv; } };
   new Function('$', 'Constants', 'View', 'Movement', 'MilitaryUnits', 'getCivilizationData',
     'raiseMovementsChanged', 'empireData', 'setTimeout', 'console', src + 'return processMilitaryAdvisorView;')(
-    $, Constants, { gameTimeNow: () => 1e12 }, Movement, MilitaryUnits, () => civ, () => {}, { save() {} }, f => f(),
+    $, Constants, { gameTimeNow: () => 1e12 }, Movement, MilitaryUnits, () => civ, () => {}, { save() {}, saveSoon() {} }, f => f(),
     { warn() {}, log() {} })(c.templateData);
   const pl = created.find(m => m.mission === Constants.Movements.Mission.PLUNDER);
   t('6 mouvements lus dont 1 pillage', created.length === 6 && !!pl, created.length);
@@ -189,7 +189,7 @@ if (fs.readdirSync(dir).some(f => f.startsWith('militaryAdvisorCharge'))) {
   const at = new Date(2026, 10, 8, 9, 4, 0).getTime();
   new Function('$', 'Constants', 'View', 'Movement', 'MilitaryUnits', 'getCivilizationData',
     'raiseMovementsChanged', 'empireData', 'setTimeout', 'console', src + 'return processMilitaryAdvisorView;')(
-    $, Constants, { gameTimeNow: () => at }, Movement, MilitaryUnits, () => civ, () => {}, { save() {} }, f => f(),
+    $, Constants, { gameTimeNow: () => at }, Movement, MilitaryUnits, () => civ, () => {}, { save() {}, saveSoon() {} }, f => f(),
     { warn() {}, log() {} })(c.templateData);
   const m = created[0];
   t('1 transport lu dans la page (le tableau n\'était pas dans les données)', created.length === 1 && m.id === 3717941, created.length);

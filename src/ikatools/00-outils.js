@@ -1135,6 +1135,20 @@ if (typeof IkaTools == 'undefined') {
 
        */
         var Data = function() {
+            // v2.35 : sauvegardes regroupées (saveSoon) ; tout ce qui attend est écrit
+            // avant que la page ne se ferme ou ne change.
+            var _impPending = [];
+            function _impFlushPending() {
+                var list = _impPending; _impPending = [];
+                for (var i = 0; i < list.length; i++) {
+                    try { list[i]._flushSoon(); } catch (e) {}
+                }
+            }
+            try {
+                window.addEventListener('pagehide', _impFlushPending);
+                window.addEventListener('beforeunload', _impFlushPending);
+            } catch (e) {}
+
             function Value(key, defaultValue, options) {
                 this.options = $.extend({ useDomain: true, loadCallback: function() {} }, options);
                 if (this.options.useDomain) {
@@ -1174,6 +1188,19 @@ if (typeof IkaTools == 'undefined') {
                         this.needsSave = false;
                     }
                     return this.data;
+                },
+                // v2.35 : une seule écriture pour une rafale de demandes (dans les 500 ms)
+                saveSoon: function saveSoon() {
+                    this.needsSave = true;
+                    if (this._soonTimer) return;
+                    _impPending.push(this);
+                    this._soonTimer = setTimeout(this._flushSoon.bind(this), 500);
+                },
+                _flushSoon: function flushSoon() {
+                    if (this._soonTimer) { clearTimeout(this._soonTimer); this._soonTimer = null; }
+                    var i = _impPending.indexOf(this);
+                    if (i >= 0) _impPending.splice(i, 1);
+                    this.doSave(false);
                 },
                 saveAsync: function saveAsync() {
                     this.needsSave = true;

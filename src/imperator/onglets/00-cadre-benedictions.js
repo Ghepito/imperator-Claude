@@ -379,6 +379,7 @@
             // Ticker : fait évoluer états et libellés sans redessiner le tableau
             setInterval(function impBlessTick() {
                 try {
+                    if (document.hidden) return; // v2.35 : onglet du navigateur en arrière-plan
                     var now = Date.now();
                     $('[data-imp-bless-end]').each(function() {
                         var $e = $(this);

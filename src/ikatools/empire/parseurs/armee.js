@@ -78,7 +78,7 @@
                         military._markPresentUpdated(r.army, r.navy);
 
                         raiseMilitaryChanged([{ city: c, military: military, type: 'data_updated' }]);
-                        empireData.save();
+                        empireData.saveSoon(); // v2.35
                         console.log('[Imperator] Troupes dans la ville lues (' + c.getName() + ') :', r.counts);
                         if (r.unknown.length && isLast) {
                             console.log('[Imperator] Unités non gérées par le script, ignorées :', r.unknown.join(', '));
@@ -258,7 +258,7 @@
                         }
 
                         raiseMilitaryChanged([{ city: c, military: military, type: 'data_updated' }]);
-                        empireData.save();
+                        empireData.saveSoon(); // v2.35
                         console.log('[Imperator] ' + label + ' lu (' + c.getName() + ') :', r.counts);
                     } catch (e) {
                         console.warn('[Imperator] Lecture ' + label + ' a échoué', e);

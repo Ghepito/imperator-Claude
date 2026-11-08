@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.34
-// @version        2.34
+// @name           Imperator v2.35
+// @version        2.35
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.35 Allegement : sauvegarde de l'empire regroupee (une ecriture par rafale, videe a la fermeture de la page) au lieu d'une ecriture complete a chaque reponse du jeu ; surlignage des ameliorations recalcule a l'ouverture, apres un changement ou toutes les 10 s (au lieu de 1,2 s) ; biens culturels reperes dans les reponses du jeu au lieu d'un observateur de toute la page ; rien ne tourne quand l'onglet du navigateur est cache.
 // @history        2.34 Espionnage : la Cachette donne directement le joueur, son alliance et les coordonnees de chaque ville espionnee (plus besoin de passer sur l'ile pour sortir de 'donnees en attente'). Coordonnees lues aussi entre parentheses (elles valaient 0:0).
 // @history        2.33 Infobulle 'En transit' (onglet Ressources) : l'heure d'arrivee est affichee apres le temps restant, comme pour les constructions (demande de Ghepito).
 // @history        2.32 Mouvements : un transport lu en chargement dans le Conseiller militaire n'a pas de duree de trajet connue ; sa cargaison n'est plus creditee des la fin du chargement : on attend l'heure reelle du Conseiller (affichee '?' d'ici la). Heure d'arrivee lue a la seconde (heure affichee par le Conseiller) au lieu du temps restant arrondi. Capture : les donnees envoyees juste apres une vue (tableau des mouvements) sont aussi retenues.
@@ -1514,6 +1515,20 @@ if (typeof IkaTools == 'undefined') {
 
        */
         var Data = function() {
+            // v2.35 : sauvegardes regroupées (saveSoon) ; tout ce qui attend est écrit
+            // avant que la page ne se ferme ou ne change.
+            var _impPending = [];
+            function _impFlushPending() {
+                var list = _impPending; _impPending = [];
+                for (var i = 0; i < list.length; i++) {
+                    try { list[i]._flushSoon(); } catch (e) {}
+                }
+            }
+            try {
+                window.addEventListener('pagehide', _impFlushPending);
+                window.addEventListener('beforeunload', _impFlushPending);
+            } catch (e) {}
+
             function Value(key, defaultValue, options) {
                 this.options = $.extend({ useDomain: true, loadCallback: function() {} }, options);
                 if (this.options.useDomain) {
@@ -1553,6 +1568,19 @@ if (typeof IkaTools == 'undefined') {
                         this.needsSave = false;
                     }
                     return this.data;
+                },
+                // v2.35 : une seule écriture pour une rafale de demandes (dans les 500 ms)
+                saveSoon: function saveSoon() {
+                    this.needsSave = true;
+                    if (this._soonTimer) return;
+                    _impPending.push(this);
+                    this._soonTimer = setTimeout(this._flushSoon.bind(this), 500);
+                },
+                _flushSoon: function flushSoon() {
+                    if (this._soonTimer) { clearTimeout(this._soonTimer); this._soonTimer = null; }
+                    var i = _impPending.indexOf(this);
+                    if (i >= 0) _impPending.splice(i, 1);
+                    this.doSave(false);
                 },
                 saveAsync: function saveAsync() {
                     this.needsSave = true;
@@ -5199,7 +5227,7 @@ if (typeof IkaTools == 'undefined') {
                         military._markPresentUpdated(r.army, r.navy);
 
                         raiseMilitaryChanged([{ city: c, military: military, type: 'data_updated' }]);
-                        empireData.save();
+                        empireData.saveSoon(); // v2.35
                         console.log('[Imperator] Troupes dans la ville lues (' + c.getName() + ') :', r.counts);
                         if (r.unknown.length && isLast) {
                             console.log('[Imperator] Unités non gérées par le script, ignorées :', r.unknown.join(', '));
@@ -5379,7 +5407,7 @@ if (typeof IkaTools == 'undefined') {
                         }
 
                         raiseMilitaryChanged([{ city: c, military: military, type: 'data_updated' }]);
-                        empireData.save();
+                        empireData.saveSoon(); // v2.35
                         console.log('[Imperator] ' + label + ' lu (' + c.getName() + ') :', r.counts);
                     } catch (e) {
                         console.warn('[Imperator] Lecture ' + label + ' a échoué', e);
@@ -5473,19 +5501,29 @@ if (typeof IkaTools == 'undefined') {
                     }
                 }
 
-                function start() {
-                    var lastForm = null;
-                    var timer = null;
-                    new MutationObserver(function () {
-                        var form = document.getElementById('moveCulturalGoods');
-                        if (!form || form === lastForm) return;
-                        lastForm = form;
-                        clearTimeout(timer);
-                        timer = setTimeout(function () { readAll(); }, 300);
-                    }).observe(document.body, { childList: true, subtree: true });
+                // v2.35 : plus d'observateur de toute la page (réveillé à chaque compte à rebours
+                // du jeu) ; on regarde seulement les réponses du jeu qui contiennent le formulaire.
+                var timer = null;
+                function schedule() {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () { readAll(); }, 300);
                 }
-                if (document.body) start();
-                else document.addEventListener('DOMContentLoaded', start);
+                View.registerIkariamAjaxResponseCallback(function watchCulturalGoods(response) {
+                    var seen = false;
+                    try {
+                        Utils.iterateIkariamAjaxResponse(response, function (index, name, data) {
+                            if (seen || !data) return;
+                            var html = typeof data === 'string' ? data :
+                                       (typeof data[1] === 'string' ? data[1] : '');
+                            if (html.indexOf('moveCulturalGoods') >= 0) seen = true;
+                        });
+                    } catch (e) {}
+                    if (seen) schedule();
+                });
+                // Page chargée directement sur le formulaire (F5)
+                function checkPage() { if (document.getElementById('moveCulturalGoods')) schedule(); }
+                if (document.readyState !== 'loading') checkPage();
+                else document.addEventListener('DOMContentLoaded', checkPage);
             })();
 
 
@@ -5986,7 +6024,7 @@ if (typeof IkaTools == 'undefined') {
                             // Réutilise l'événement gold (le Dashboard écoute déjà dessus) pour redessiner
                             raiseGoldChanged();
                             raiseShrineChanged(); // v2.12 : onglet Ressources
-                            empireData.save();
+                            empireData.saveSoon(); // v2.35
                         }
                     } catch(e) {
                         console.warn('[Imperator] processShrineView a échoué', e);
@@ -6054,7 +6092,7 @@ if (typeof IkaTools == 'undefined') {
                         var building = city && city.getBuildingByPosition ? city.getBuildingByPosition(position) : null;
                         if (building) {
                             building.realUpgradeCost = cost;
-                            empireData.save();
+                            empireData.saveSoon(); // v2.35
                         }
                     } catch(e) {
                         console.warn('[Imperator] processBuildingUpgradeView a échoué', e);
@@ -6395,7 +6433,7 @@ if (typeof IkaTools == 'undefined') {
                                                        ' mouvement(s) obsolète(s) retiré(s), ' + parsed.length + ' lu(s)');
 
                         if (changes.length) raiseMovementsChanged(changes);
-                        empireData.save();
+                        empireData.saveSoon(); // v2.35
                     } catch(e) {
                         console.warn('[Imperator] processMilitaryAdvisorView a échoué', e);
                     }
@@ -6633,8 +6671,8 @@ if (typeof IkaTools == 'undefined') {
                                   unsafeWindow.ikariam.backgroundView.screen.data,
                                   true);
 
-                //empireData.saveAsync(); <- valeur avant
-                empireData.save();
+                // v2.35 : sauvegarde regroupée (écrite au plus tard 500 ms après, ou à la fermeture)
+                empireData.saveSoon();
 
                 // Capturer l'or depuis dataSetForView (disponible au chargement)
                 try {
@@ -6939,8 +6977,8 @@ if (typeof IkaTools == 'undefined') {
                         processBuildingUpgradeView(viewHtml);
                         // parseBilanDomIfVisible appelé uniquement via createTemplateView hook
 
-                        //empireData.saveAsync();  <- valeur avant
-                        empireData.save();
+                        // v2.35 : sauvegarde regroupée (écrite au plus tard 500 ms après, ou à la fermeture)
+                        empireData.saveSoon();
                     },
                     true
                 );
@@ -10381,6 +10419,7 @@ min-width: 851px !important; \
             // Ticker : fait évoluer états et libellés sans redessiner le tableau
             setInterval(function impBlessTick() {
                 try {
+                    if (document.hidden) return; // v2.35 : onglet du navigateur en arrière-plan
                     var now = Date.now();
                     $('[data-imp-bless-end]').each(function() {
                         var $e = $(this);
@@ -15227,10 +15266,18 @@ min-width: 851px !important; \
     } catch (e) { return false; }
   }
 
+  // v2.35 : recalcul complet seulement à l'ouverture de l'onglet, après un changement
+  // (ressources, bâtiments) ou toutes les 10 s pour suivre la production.
+  var lastRun = 0, wasVisible = false, dirty = true;
+  function markDirty() { dirty = true; setTimeout(decorate, 0); }
   function decorate() {
     try {
+      if (document.hidden) { wasVisible = false; return; }
       var table = document.getElementById(TABLE_ID);
-      if (!table || table.offsetParent === null) return; // absent, ou onglet Buildings non visible
+      if (!table || table.offsetParent === null) { wasVisible = false; return; } // onglet Bâtiments fermé
+      var now = Date.now();
+      if (wasVisible && !dirty && now - lastRun < 10000) return;
+      wasVisible = true; dirty = false; lastRun = now;
       var cells = table.querySelectorAll(CELL_SEL);
       for (var i = 0; i < cells.length; i++) {
         if (isLaunchable(cells[i])) cells[i].classList.add('imp-up-ok');
@@ -15242,8 +15289,8 @@ min-width: 851px !important; \
   function start() {
     if (!ready()) return false;
     // Feedback immédiat quand ressources / bâtiments changent (arrivée, envoi, fin d'upgrade…)
-    try { IkaTools.EmpireData.registerResourcesChangedHandler(function () { setTimeout(decorate, 0); }); } catch (e) {}
-    try { IkaTools.EmpireData.registerBuildingsChangedHandler(function () { setTimeout(decorate, 0); }); } catch (e) {}
+    try { IkaTools.EmpireData.registerResourcesChangedHandler(markDirty); } catch (e) {}
+    try { IkaTools.EmpireData.registerBuildingsChangedHandler(markDirty); } catch (e) {}
     // Filet : couvre l'ouverture de l'aperçu et les changements d'onglet (ne coûte rien si non visible).
     setInterval(decorate, 1200);
     decorate();

@@ -32,7 +32,7 @@ function runParser(bodyHtml) {
   const ctx = new Function('$', 'getOwnCities', 'getCivilizationData', 'raiseGoldChanged', 'raiseShrineChanged',
     'empireData', 'setTimeout', 'console',
     parserSrc + '\nreturn { processShrineView: processShrineView, parseShrineDuration: parseShrineDuration };');
-  const api = ctx($, () => cities, () => civ, () => {}, () => {}, { save() {} },
+  const api = ctx($, () => cities, () => civ, () => {}, () => {}, { save() {}, saveSoon() {} },
     (f) => f(), { warn: (...m) => warnings.push(m.join(' ')), log() {} });
   api.processShrineView(null, raw);
   return { shrine, cities, warnings };

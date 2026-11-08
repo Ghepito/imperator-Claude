@@ -189,7 +189,7 @@
                             // Réutilise l'événement gold (le Dashboard écoute déjà dessus) pour redessiner
                             raiseGoldChanged();
                             raiseShrineChanged(); // v2.12 : onglet Ressources
-                            empireData.save();
+                            empireData.saveSoon(); // v2.35
                         }
                     } catch(e) {
                         console.warn('[Imperator] processShrineView a échoué', e);

@@ -229,7 +229,7 @@
                                                        ' mouvement(s) obsolète(s) retiré(s), ' + parsed.length + ' lu(s)');
 
                         if (changes.length) raiseMovementsChanged(changes);
-                        empireData.save();
+                        empireData.saveSoon(); // v2.35
                     } catch(e) {
                         console.warn('[Imperator] processMilitaryAdvisorView a échoué', e);
                     }
