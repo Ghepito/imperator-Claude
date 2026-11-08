@@ -17,7 +17,7 @@ sinon l'assembleur refuse de travailler (pour qu'aucun fichier ne soit oublié e
 | `01-popover-chantiers.js` | Clic sur un niveau de bâtiment → popover « Planifier » |
 | `02-garde-fous.js` | Erreurs connues du jeu masquées, filtre AJAX sûr, échappement HTML |
 | **`ikatools/`** | **Bibliothèque : lit le jeu et tient le modèle de l'empire** |
-| `ikatools/00-outils.js` | Journal, utilitaires, traduction, vues, sauvegarde, interface, réglages |
+| `ikatools/01-logging.js` … `07-settings.js` | Journal, utilitaires, traduction (formats), vues du jeu, sauvegarde, interface (infobulles, fenêtres), réglages : un fichier chacun |
 | `ikatools/constants.js` | **Données** du jeu : ressources, bâtiments, unités, coûts, vues |
 | `ikatools/empire/00-armee.js` | Armée d'une ville, unités, lots en formation |
 | `ikatools/empire/01-ville.js` | Ville : ressources, capacité d'entrepôt, bâtiments, population |
@@ -26,7 +26,9 @@ sinon l'assembleur refuse de travailler (pour qu'aucun fichier ne soit oublié e
 | `ikatools/empire/parseurs/` | **Un fichier par vue du jeu** : formulaires d'envoi, armée (troupes, caserne, chantier naval), ville (Hôtel de Ville, académie, palais, temple), finances (Bilan), sanctuaire, amélioration de bâtiment, aide des bâtiments (coûts exacts), conseiller militaire |
 | `ikatools/empire/04-suivi.js` | Branchement sur les réponses du jeu, rafraîchissements |
 | `ikatools/espionnage.js` | Cibles, joueurs, alliances, rapports, combats |
-| `ikatools/empire/99-fin.js`, `ikatools/99-fin-et-attente.js` | Fermetures, attente des données au chargement |
+| `ikatools/empire/98-retour.js`, `ikatools/98-retour.js` | Ce qu'EmpireData et IkaTools rendent accessible |
+| `03-attente-donnees.js` | Attente des données au chargement |
+| `*ouverture.js`, `*fermeture.js` | Enveloppes (ouvrent / ferment un bloc) |
 | **`imperator/`** | **Interface : réglages, onglets, alertes** |
 | `imperator/localisations.js` | **Données** : textes français et anglais |
 | `imperator/styles.js` | **Données** : CSS des tableaux |
@@ -37,9 +39,9 @@ sinon l'assembleur refuse de travailler (pour qu'aucun fichier ne soit oublié e
 | **`modules/`** | **Modules ajoutés, indépendants** : débit à l'envoi, capture des vues, surlignage |
 | `99-demarrage.js` | Lancement d'Imperator |
 
-**Fragments.** Pour l'instant, la plupart de ces fichiers sont des morceaux d'un même
-ensemble : `ikatools/…` sont à l'intérieur de la fonction IkaTools, `imperator/…` à
-l'intérieur de la fonction Imperator. Ils ne sont pas lisibles seuls, sauf les trois fichiers
-de **données**, que `banc-de-test/regressions/test_sources.js` vérifie un par un.
+**Fichiers autonomes.** Chaque fichier se lit seul (c'est vérifié par `npm test`), sauf les
+**enveloppes** `*ouverture.js` / `*fermeture.js`, qui ouvrent ou ferment un bloc : IkaTools,
+EmpireData, Imperator, les onglets. Ce que chaque fichier fournit et utilise des autres est dans
+[`../docs/DEPENDANCES.md`](../docs/DEPENDANCES.md), généré par `node outils/dependances.js`.
 
 Le plan complet du découpage est dans [`../docs/CARTE.md`](../docs/CARTE.md).

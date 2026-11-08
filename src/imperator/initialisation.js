@@ -640,6 +640,3 @@
     return {
         init: init,
     }
-}();
-
-

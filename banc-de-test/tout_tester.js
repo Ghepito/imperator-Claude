@@ -9,6 +9,7 @@ const captures = path.join(__dirname, 'captures');
 const runs = [];
 // 0) Imperator.user.js doit être exactement l'assemblage de src/
 runs.push(['assemblage src/ (identique)', [path.join(__dirname, '..', 'outils', 'assembler.js'), '--verifier']]);
+runs.push(['src/ : fichiers lisibles seuls', [path.join(__dirname, '..', 'outils', 'dependances.js'), '--verifier']]);
 
 for (const f of fs.readdirSync(path.join(__dirname, 'regressions')).sort()) {
   if (f.endsWith('.js')) runs.push(['regressions/' + f, [path.join('regressions', f), script]]);

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "acorn": "^8.19.0",
+    "eslint-scope": "^7.2.2"
+  }
+}

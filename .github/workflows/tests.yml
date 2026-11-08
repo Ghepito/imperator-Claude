@@ -10,5 +10,7 @@ jobs:
           node-version: 20
       - run: npm ci
         working-directory: banc-de-test
+      - run: npm ci
+        working-directory: outils
       - run: npm test
         working-directory: banc-de-test

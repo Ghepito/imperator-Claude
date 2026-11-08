@@ -1,4 +1,3 @@
-        var EmpireData = function() {
             function Military(city) {
                 this._ikaToolsType = 'military';
 

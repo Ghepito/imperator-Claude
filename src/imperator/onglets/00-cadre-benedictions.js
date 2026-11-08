@@ -1,5 +1,3 @@
-
-    function overviewTables() {
         function Tab(name, tabText, tabContentHolder, tabContentId, init, renderer) {
             this.updateables = new Updateables(name);
 

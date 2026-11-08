@@ -111,4 +111,8 @@ Ordre prévu :
 3. ✅ Les blocs IkaTools, un par un (modèle, un parseur par vue, suivi, espionnage).
 4. ✅ Les onglets d'Imperator, un fichier par onglet (40 fichiers en tout, identique octet
    pour octet).
-5. Seulement ensuite, des améliorations dans les modules (et là, tests en jeu comme d'habitude).
+5. ✅ Fichiers autonomes : 46 fichiers lisibles seuls + 9 enveloppes (ouverture/fermeture),
+   IkaTools découpé en un fichier par module, carte des dépendances générée et vérifiée
+   ([`DEPENDANCES.md`](DEPENDANCES.md)). Toujours identique octet pour octet.
+6. Ensuite, des améliorations dans les modules, prouvées par le banc d'affichage (7 onglets
+   identiques) ou testées en jeu quand l'affichage change.
