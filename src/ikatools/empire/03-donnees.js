@@ -39,6 +39,7 @@
             function getCity(id) {
                 return empireData.get().cities[id];
             };
+            View.setCityLookup(getCity); // v2.39 : la ville active est retrouvée ici
 
             var coordsRegex = /\[(\d+):(\d+)\]/;
             function parseCoordinates(coords) {

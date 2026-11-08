@@ -70,6 +70,22 @@ const boucles = [];
 for (const a of fichiers) for (const b of Object.keys(deps[a] || {}))
   if (a < b && deps[b] && deps[b][a]) boucles.push(a.replace(/\.js$/, '') + ' <-> ' + b.replace(/\.js$/, ''));
 
+// Couches : un fichier n'utilise que des fichiers de sa couche ou des couches inférieures.
+//  1 base (garde-fous, constantes, briques IkaTools)  2 modèle (empire, espionnage)
+//  3 façade IkaTools (98-retour, ouverture qui déclare IkaTools)  4 interface Imperator  5 modules ajoutés
+function couche(f) {
+  if (/^ikatools\/(00-ouverture|98-retour|zz-fermeture)\.js$/.test(f) || f === '03-attente-donnees.js') return 3;
+  if (/^ikatools\/empire\/98-retour\.js$/.test(f)) return 3;
+  if (/^ikatools\/(empire\/|espionnage)/.test(f)) return 2;
+  if (/^(ikatools\/|0[0-2]-)/.test(f)) return 1;
+  if (/^imperator\//.test(f)) return 4;
+  return 5;
+}
+const viols = [];
+for (const f of fichiers) for (const o of Object.keys(deps[f] || {}))
+  if (couche(o) > couche(f)) viols.push(f.replace(/\.js$/, '') + ' (couche ' + couche(f) + ') utilise ' + o.replace(/\.js$/, '') +
+                                          ' (couche ' + couche(o) + ') : ' + deps[f][o].join(', '));
+
 const court = f => f.replace(/\.js$/, '');
 let md = '# Dépendances entre les fichiers de `src/`\n\n' +
   'Généré par `node outils/dependances.js` : ne pas modifier à la main. ' +
@@ -83,6 +99,9 @@ for (const f of fichiers) {
   md += '| `' + court(f) + '` | ' + (fo.length > 8 ? fo.slice(0, 8).join(', ') + ' … (' + fo.length + ')' : fo.join(', ') || '–') +
         ' | ' + (u || '–') + (inconnus[f].length ? '<br>*hors src (globaux du script)* : ' + inconnus[f].sort().join(', ') : '') + ' |\n';
 }
+md += '\n## Couches\n\n1 base (garde-fous, constantes, briques IkaTools) → 2 modèle (empire, espionnage) → ' +
+  '3 façade IkaTools → 4 interface Imperator → 5 modules ajoutés. Un fichier n\'utilise que sa couche ou les ' +
+  'couches inférieures (' + (viols.length ? viols.length + ' écart(s)' : 'aucun écart') + ').\n';
 md += '\n## Dépendances circulaires (' + boucles.length + ')\n\n' +
   (boucles.length ? boucles.map(b => '- `' + b + '`').join('\n') : 'Aucune.') + '\n';
 md += '\n## Graphe\n\n```mermaid\nflowchart LR\n';
@@ -93,6 +112,7 @@ md += '```\n';
 if (process.argv.includes('--verifier')) {
   let ko = 0;
   if (illisibles.length) { ko++; console.error('Fichiers non lisibles seuls :\n  ' + illisibles.join('\n  ')); }
+  if (viols.length) { ko++; console.error('Dépendances vers une couche supérieure :\n  ' + viols.join('\n  ')); }
   const nouvelles = boucles.filter(b => !BOUCLES_TOLEREES.includes(b));
   if (nouvelles.length) { ko++; console.error('Nouvelles dépendances circulaires :\n  ' + nouvelles.join('\n  ')); }
   const resolues = BOUCLES_TOLEREES.filter(b => !boucles.includes(b));

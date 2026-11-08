@@ -13,9 +13,16 @@
                 }
             }
 
+            // v2.39 : la brique des vues ne va plus chercher le modèle de l'empire elle-même ;
+            // c'est le modèle qui lui indique comment retrouver une ville (setCityLookup).
+            var _cityLookup = null;
+            function setCityLookup(lookup) {
+                _cityLookup = lookup;
+            }
+
             function getCurrentCity() {
                 var id = getCurrentCityId();
-                return id ? EmpireData.getCity(id) : null;
+                return (id && _cityLookup) ? _cityLookup(id) : null;
             }
 
             function isActiveCity(city) {
@@ -332,6 +339,7 @@
 
                 getCurrentCityId: getCurrentCityId,
                 getCurrentCity: getCurrentCity,
+                setCityLookup: setCityLookup, // v2.39
                 isActiveCity: isActiveCity,
 
                 getCurrentIslandId: getCurrentIslandId,

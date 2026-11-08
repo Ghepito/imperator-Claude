@@ -287,7 +287,7 @@
                     // L'ancien "préserver les mouvements existants" recopiait indéfiniment des reliquats.
                     var mapTargets = [];
                     try {
-                        var espTargets = IkaTools.EmpireData.Espionage.getTargets();
+                        var espTargets = Espionage.getTargets();
                         $.each(espTargets, function(i, target) {
                             var coords = target.getIslandCoordinates ? target.getIslandCoordinates() : target.coords;
                             if (coords && (coords[0] || coords[1])) {

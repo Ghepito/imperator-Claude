@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.38
-// @version        2.38
+// @name           Imperator v2.39
+// @version        2.39
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.39 Restructuration, sans changement visible : la brique des vues (View) ne depend plus du modele de l'empire (c'est le modele qui lui indique comment retrouver la ville active) ; la bibliotheque n'utilise plus le nom global IkaTools pour joindre ses propres modules. Regle des couches verifiee par les tests.
 // @history        2.38 Restructuration du coeur de l'empire, sans changement visible (7 onglets identiques au banc d'affichage) : magasin de donnees separe des evenements, acces en lecture regroupes, registre des types pour recreer les objets sauvegardes. Dependances circulaires : 16 -> 6.
 // @history        2.37 Nettoyage, sans changement visible (7 onglets identiques au banc d'affichage) : 3 fonctions jamais utilisees et du code commente retires ; updateCurrentCity declaree (etait une variable globale implicite).
 // @history        2.36 Reglages > Debug > Exporter mes donnees : telecharge un fichier JSON avec les donnees gardees par Imperator (empire, espionnage, aide des batiments, options), pour le banc d'affichage hors jeu. Rien n'est envoye.
@@ -1162,9 +1163,16 @@ if (typeof IkaTools == 'undefined') {
                 }
             }
 
+            // v2.39 : la brique des vues ne va plus chercher le modèle de l'empire elle-même ;
+            // c'est le modèle qui lui indique comment retrouver une ville (setCityLookup).
+            var _cityLookup = null;
+            function setCityLookup(lookup) {
+                _cityLookup = lookup;
+            }
+
             function getCurrentCity() {
                 var id = getCurrentCityId();
-                return id ? EmpireData.getCity(id) : null;
+                return (id && _cityLookup) ? _cityLookup(id) : null;
             }
 
             function isActiveCity(city) {
@@ -1481,6 +1489,7 @@ if (typeof IkaTools == 'undefined') {
 
                 getCurrentCityId: getCurrentCityId,
                 getCurrentCity: getCurrentCity,
+                setCityLookup: setCityLookup, // v2.39
                 isActiveCity: isActiveCity,
 
                 getCurrentIslandId: getCurrentIslandId,
@@ -1684,7 +1693,7 @@ if (typeof IkaTools == 'undefined') {
                             top: (e.pageY + this.options.offsetY) + 'px',
                         });
 
-                        this.pendingShowEvent = setTimeout(IkaTools.Logging.debuggable(
+                        this.pendingShowEvent = setTimeout(Logging.debuggable(
                             'IkaTools.UI.ToolTipHandler.showToolTip[' + this.options.toolTipClass + ']',
                             this._showToolTip.bind(this)), this.options.delay);
                     }
@@ -1931,7 +1940,7 @@ if (typeof IkaTools == 'undefined') {
                     this.container.append(tab.contentHolder);
                     tab.contentHolder.hide();
                     tab.tabHolder.click(
-                        IkaTools.Logging.debuggable('IkaTools.TabPane.Tab.click',
+                        Logging.debuggable('IkaTools.TabPane.Tab.click',
                                                     this.activate.bind(this, tab)));
                 }
             }
@@ -2014,7 +2023,7 @@ if (typeof IkaTools == 'undefined') {
                     }.bind(this));
                     var tabPane = new TabPane(tabs,  {
                         tabActivatedCallback: function() {
-                            IkaTools.UI.resizePopup();
+                            resizePopup();
                         },
                     });
                     var popup = new PopupWindow(
@@ -3972,13 +3981,13 @@ if (typeof IkaTools == 'undefined') {
                     var multiplier = 1.0;
 
                     multiplier += civData.hasResearched(
-                        IkaTools.Constants.Research.Science.PAPER) ? .02 : 0;
+                        Constants.Research.Science.PAPER) ? .02 : 0;
                     multiplier += civData.hasResearched(
-                        IkaTools.Constants.Research.Science.INK) ? .04 : 0;
+                        Constants.Research.Science.INK) ? .04 : 0;
                     multiplier += civData.hasResearched(
-                        IkaTools.Constants.Research.Science.MECHANICAL_PEN) ? .08 : 0;
+                        Constants.Research.Science.MECHANICAL_PEN) ? .08 : 0;
                     multiplier += (civData.getResearchLevel(
-                        IkaTools.Constants.Research.Science.SCIENTIFIC_FUTURE) || 0) * .02;
+                        Constants.Research.Science.SCIENTIFIC_FUTURE) || 0) * .02;
                     multiplier -= this.getCorruption();
 
                     return this.scientists * multiplier;
@@ -4889,6 +4898,7 @@ if (typeof IkaTools == 'undefined') {
             function getCity(id) {
                 return empireData.get().cities[id];
             };
+            View.setCityLookup(getCity); // v2.39 : la ville active est retrouvée ici
 
             var coordsRegex = /\[(\d+):(\d+)\]/;
             function parseCoordinates(coords) {
@@ -6765,7 +6775,7 @@ if (typeof IkaTools == 'undefined') {
                     // L'ancien "préserver les mouvements existants" recopiait indéfiniment des reliquats.
                     var mapTargets = [];
                     try {
-                        var espTargets = IkaTools.EmpireData.Espionage.getTargets();
+                        var espTargets = Espionage.getTargets();
                         $.each(espTargets, function(i, target) {
                             var coords = target.getIslandCoordinates ? target.getIslandCoordinates() : target.coords;
                             if (coords && (coords[0] || coords[1])) {
@@ -7480,9 +7490,9 @@ if (typeof IkaTools == 'undefined') {
                             try {
                                 var bg = null;
                                 Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
-                                    if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
+                                    if (name == Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
                                         bg = data;
-                                    } else if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA &&
+                                    } else if (name == Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA &&
                                                data && !bg) {
                                         bg = data['backgroundData'] || data[11] || null;
                                     }
@@ -7512,8 +7522,8 @@ if (typeof IkaTools == 'undefined') {
 
                     View.registerIkariamAjaxResponseCallback(
                         function processHideoutView(response) {
-                            IkaTools.Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
-                                if (name == IkaTools.Constants.IkariamAjaxResponseType.CHANGE_VIEW) {
+                            Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
+                                if (name == Constants.IkariamAjaxResponseType.CHANGE_VIEW) {
                                     if (data[0] == Constants.View.HIDEOUT) {
                                         var newTargets = [];
                                         $('#tabSafehouse li.city a').each(function(index, item) {
@@ -7665,7 +7675,7 @@ if (typeof IkaTools == 'undefined') {
                                                     report.find('div p.link:first a.button:first',report).attr('href'))['detailedCombatId']);
                                                 var combatTime = Utils.parseIkariamTimestamp(report.find('.header .date').text()).getTime();
                                                 var type = report.find('.overview .fleet').length ?
-                                                    IkaTools.Constants.CombatType.BLOCKADE : IkaTools.Constants.CombatType.PILLAGE;
+                                                    Constants.CombatType.BLOCKADE : Constants.CombatType.PILLAGE;
 
                                                 var combat = target._getOrAddCombat(combatId);
                                                 combat.type = type;

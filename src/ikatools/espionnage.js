@@ -408,9 +408,9 @@
                             try {
                                 var bg = null;
                                 Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
-                                    if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
+                                    if (name == Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
                                         bg = data;
-                                    } else if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA &&
+                                    } else if (name == Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA &&
                                                data && !bg) {
                                         bg = data['backgroundData'] || data[11] || null;
                                     }
@@ -440,8 +440,8 @@
 
                     View.registerIkariamAjaxResponseCallback(
                         function processHideoutView(response) {
-                            IkaTools.Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
-                                if (name == IkaTools.Constants.IkariamAjaxResponseType.CHANGE_VIEW) {
+                            Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
+                                if (name == Constants.IkariamAjaxResponseType.CHANGE_VIEW) {
                                     if (data[0] == Constants.View.HIDEOUT) {
                                         var newTargets = [];
                                         $('#tabSafehouse li.city a').each(function(index, item) {
@@ -593,7 +593,7 @@
                                                     report.find('div p.link:first a.button:first',report).attr('href'))['detailedCombatId']);
                                                 var combatTime = Utils.parseIkariamTimestamp(report.find('.header .date').text()).getTime();
                                                 var type = report.find('.overview .fleet').length ?
-                                                    IkaTools.Constants.CombatType.BLOCKADE : IkaTools.Constants.CombatType.PILLAGE;
+                                                    Constants.CombatType.BLOCKADE : Constants.CombatType.PILLAGE;
 
                                                 var combat = target._getOrAddCombat(combatId);
                                                 combat.type = type;

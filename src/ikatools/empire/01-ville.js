@@ -542,13 +542,13 @@
                     var multiplier = 1.0;
 
                     multiplier += civData.hasResearched(
-                        IkaTools.Constants.Research.Science.PAPER) ? .02 : 0;
+                        Constants.Research.Science.PAPER) ? .02 : 0;
                     multiplier += civData.hasResearched(
-                        IkaTools.Constants.Research.Science.INK) ? .04 : 0;
+                        Constants.Research.Science.INK) ? .04 : 0;
                     multiplier += civData.hasResearched(
-                        IkaTools.Constants.Research.Science.MECHANICAL_PEN) ? .08 : 0;
+                        Constants.Research.Science.MECHANICAL_PEN) ? .08 : 0;
                     multiplier += (civData.getResearchLevel(
-                        IkaTools.Constants.Research.Science.SCIENTIFIC_FUTURE) || 0) * .02;
+                        Constants.Research.Science.SCIENTIFIC_FUTURE) || 0) * .02;
                     multiplier -= this.getCorruption();
 
                     return this.scientists * multiplier;

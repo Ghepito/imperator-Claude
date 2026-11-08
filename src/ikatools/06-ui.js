@@ -66,7 +66,7 @@
                             top: (e.pageY + this.options.offsetY) + 'px',
                         });
 
-                        this.pendingShowEvent = setTimeout(IkaTools.Logging.debuggable(
+                        this.pendingShowEvent = setTimeout(Logging.debuggable(
                             'IkaTools.UI.ToolTipHandler.showToolTip[' + this.options.toolTipClass + ']',
                             this._showToolTip.bind(this)), this.options.delay);
                     }
@@ -313,7 +313,7 @@
                     this.container.append(tab.contentHolder);
                     tab.contentHolder.hide();
                     tab.tabHolder.click(
-                        IkaTools.Logging.debuggable('IkaTools.TabPane.Tab.click',
+                        Logging.debuggable('IkaTools.TabPane.Tab.click',
                                                     this.activate.bind(this, tab)));
                 }
             }
@@ -396,7 +396,7 @@
                     }.bind(this));
                     var tabPane = new TabPane(tabs,  {
                         tabActivatedCallback: function() {
-                            IkaTools.UI.resizePopup();
+                            resizePopup();
                         },
                     });
                     var popup = new PopupWindow(
