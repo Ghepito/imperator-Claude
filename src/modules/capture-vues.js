@@ -93,6 +93,19 @@
         try { town.backgroundData = scrub(JSON.stringify(background, null, 1)); } catch (e) {}
         keep('cityData', town);
       }
+      // v2.32 : réponse sans nouvelle vue mais avec des données (ex. le tableau des mouvements du
+      // Conseiller militaire, envoyé juste après la page) : rattachée à la dernière vue capturée.
+      if (!items.length && templateData) {
+        var last = null;
+        Object.keys(store).forEach(function (k) {
+          if (k !== 'island' && k !== 'cityData' && (!last || store[k].time > last.time)) last = store[k];
+        });
+        if (last && Date.now() - last.time < 60000) {
+          try {
+            last.followUps = (last.followUps || []).concat([scrub(JSON.stringify(templateData, null, 1))]).slice(-5);
+          } catch (e) {}
+        }
+      }
       items.forEach(function (it) {
         var entry = {
           view: it.view,
@@ -133,6 +146,7 @@
     var noTpl = function (x) { return String(x).replace(/<\/template/gi, '<\\/template'); };
     var json = String(entry.templateData || 'null').replace(/<\/script/gi, '<\\/script');
     var bgJson = String(entry.backgroundData || 'null').replace(/<\/script/gi, '<\\/script'); // v2.26
+    var fuJson = '[' + (entry.followUps || []).join(',\n').replace(/<\/script/gi, '<\\/script') + ']'; // v2.32
     return '<!doctype html>\n<html lang="fr"><head><meta charset="utf-8">' +
       '<title>Capture ' + esc(entry.view) + '</title></head><body>\n' +
       '<h1>Capture Imperator : ' + esc(entry.view) + '</h1>\n' +
@@ -147,6 +161,7 @@
       '<template id="imp-capture-raw">\n' + noTpl(entry.raw || '') + '\n</template>\n' +
       '<script type="application/json" id="imp-capture-templateData">\n' + json + '\n</script>\n' +
       '<script type="application/json" id="imp-capture-backgroundData">\n' + bgJson + '\n</script>\n' +
+      '<script type="application/json" id="imp-capture-followUps">\n' + fuJson + '\n</script>\n' +
       '</body></html>\n';
   }
 

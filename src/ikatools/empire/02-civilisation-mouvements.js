@@ -323,6 +323,8 @@
                 },
                 _updateAndStartTimer: function updateAndStartTimer() {
                     this._cancelTimer();
+                    // v2.32 : durée du trajet inconnue : on attend l'heure réelle du Conseiller militaire
+                    if (this._etaUnknown) return false;
 
                     if (this.completionTime <= View.gameTimeNow()) {
                         return this._toNextStage();
@@ -337,12 +339,16 @@
                         // v2.16 : Infinity devenait null à la sauvegarde JSON -> mouvement fantôme.
                         // Trajet inconnu (cible hors empire) : on garde la fin de chargement, la purge
                         // retirera l'estimation ; le conseiller militaire donne le vrai horaire.
-                        if (isFinite(this.transportTime)) {
+                        // v2.32 : une durée nulle (transport lu en chargement dans le Conseiller) est
+                        // aussi inconnue : sinon la cargaison était créditée dès la fin du chargement.
+                        if (this._hasTransportTime()) {
                             this.completionTime += this.transportTime;
+                            this._startTimer();
                         } else {
-                            this._etaUnknown = true;
+                            this._etaUnknown = true; // pas de minuterie : rien n'est crédité à l'aveugle
+                            console.log('[Imperator] Mouvement ' + this.id + ' : chargement terminé, heure ' +
+                                        'd\'arrivée en attente du Conseiller militaire');
                         }
-                        this._startTimer();
                     } else if (this.stage == Constants.Movements.Stage.EN_ROUTE) {
                         if (isFinalStage) {
                             this._updateCity(this.getTargetCity(), this.getOriginCity());
@@ -375,6 +381,8 @@
                     var t = this.completionTime;
                     if (t === null || t === undefined || typeof t !== 'number' || !isFinite(t)) return true;
                     if (this.stage == Constants.Movements.Stage.LOADING) return false; // passera EN_ROUTE
+                    // v2.32 : arrivée inconnue : gardé 24 h (le Conseiller militaire donnera l'heure réelle)
+                    if (this._etaUnknown) return t + 24 * 60 * Constants.Time.MILLIS_PER_MINUTE < (now || View.gameTimeNow());
                     return t + 10 * Constants.Time.MILLIS_PER_MINUTE < (now || View.gameTimeNow());
                 },
                 getId: function getId() {
@@ -406,10 +414,19 @@
                 },
                 getArrivalTime: function() {
                     var time = this.getCompletionTime();
-                    if (this.stage == Constants.Movements.Stage.LOADING) {
+                    if (this.stage == Constants.Movements.Stage.LOADING && this._hasTransportTime()) {
                         time += this.transportTime;
                     }
                     return time;
+                },
+                // v2.32 : durée de trajet connue (nombre > 0 ; 0, null, NaN = inconnue)
+                _hasTransportTime: function hasTransportTime() {
+                    return typeof this.transportTime === 'number' && isFinite(this.transportTime) && this.transportTime > 0;
+                },
+                // v2.32 : heure d'arrivée inconnue (en chargement sans trajet, ou chargement terminé)
+                isEtaUnknown: function isEtaUnknown() {
+                    return !!this._etaUnknown ||
+                        (this.stage == Constants.Movements.Stage.LOADING && !this._hasTransportTime());
                 },
                 getUnits: function getUnits() {
                     return this.units;

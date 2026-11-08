@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.31
-// @version        2.31
+// @name           Imperator v2.32
+// @version        2.32
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.32 Mouvements : un transport lu en chargement dans le Conseiller militaire n'a pas de duree de trajet connue ; sa cargaison n'est plus creditee des la fin du chargement : on attend l'heure reelle du Conseiller (affichee '?' d'ici la). Heure d'arrivee lue a la seconde (heure affichee par le Conseiller) au lieu du temps restant arrondi. Capture : les donnees envoyees juste apres une vue (tableau des mouvements) sont aussi retenues.
 // @history        2.31 Couts des batiments : l'aide du jeu (encyclopedie, page d'un batiment) est lue et retenue ; ses couts exacts servent avant les anciennes tables (perimees, chiffres tronques), et elle indique les niveaux au-dela de l'ancien maximum. Espionnage : joueur en vacances affiche 'En vacances' au lieu d'un nombre de navires ; navires a piller comptes a 580 par navire (au lieu de 500).
 // @history        2.30 Icone du Spartiate : image du jeu (ikipedia/319.png, relevee par Ghepito) au lieu d'un nom d'image suppose. Textes : entree parasite 'dashboard' retiree des noms de batiments en francais. Premiere version construite depuis src/.
 // @history        2.29 Espionnage sans requetes en arriere-plan : le Repaire ne recharge plus l'ile de chaque cible (donnees deja lues au passage sur l'ile). Mur et entrepot d'une ville espionnee lus a l'ouverture de sa vue : la colonne Pillable tient enfin compte de la protection de l'entrepot. Code mort retire (addTargetById, chargement de ville jamais appele). Capture : donnees de la derniere vue ville retenues.
@@ -4675,6 +4676,8 @@ if (typeof IkaTools == 'undefined') {
                 },
                 _updateAndStartTimer: function updateAndStartTimer() {
                     this._cancelTimer();
+                    // v2.32 : durée du trajet inconnue : on attend l'heure réelle du Conseiller militaire
+                    if (this._etaUnknown) return false;
 
                     if (this.completionTime <= View.gameTimeNow()) {
                         return this._toNextStage();
@@ -4689,12 +4692,16 @@ if (typeof IkaTools == 'undefined') {
                         // v2.16 : Infinity devenait null à la sauvegarde JSON -> mouvement fantôme.
                         // Trajet inconnu (cible hors empire) : on garde la fin de chargement, la purge
                         // retirera l'estimation ; le conseiller militaire donne le vrai horaire.
-                        if (isFinite(this.transportTime)) {
+                        // v2.32 : une durée nulle (transport lu en chargement dans le Conseiller) est
+                        // aussi inconnue : sinon la cargaison était créditée dès la fin du chargement.
+                        if (this._hasTransportTime()) {
                             this.completionTime += this.transportTime;
+                            this._startTimer();
                         } else {
-                            this._etaUnknown = true;
+                            this._etaUnknown = true; // pas de minuterie : rien n'est crédité à l'aveugle
+                            console.log('[Imperator] Mouvement ' + this.id + ' : chargement terminé, heure ' +
+                                        'd\'arrivée en attente du Conseiller militaire');
                         }
-                        this._startTimer();
                     } else if (this.stage == Constants.Movements.Stage.EN_ROUTE) {
                         if (isFinalStage) {
                             this._updateCity(this.getTargetCity(), this.getOriginCity());
@@ -4727,6 +4734,8 @@ if (typeof IkaTools == 'undefined') {
                     var t = this.completionTime;
                     if (t === null || t === undefined || typeof t !== 'number' || !isFinite(t)) return true;
                     if (this.stage == Constants.Movements.Stage.LOADING) return false; // passera EN_ROUTE
+                    // v2.32 : arrivée inconnue : gardé 24 h (le Conseiller militaire donnera l'heure réelle)
+                    if (this._etaUnknown) return t + 24 * 60 * Constants.Time.MILLIS_PER_MINUTE < (now || View.gameTimeNow());
                     return t + 10 * Constants.Time.MILLIS_PER_MINUTE < (now || View.gameTimeNow());
                 },
                 getId: function getId() {
@@ -4758,10 +4767,19 @@ if (typeof IkaTools == 'undefined') {
                 },
                 getArrivalTime: function() {
                     var time = this.getCompletionTime();
-                    if (this.stage == Constants.Movements.Stage.LOADING) {
+                    if (this.stage == Constants.Movements.Stage.LOADING && this._hasTransportTime()) {
                         time += this.transportTime;
                     }
                     return time;
+                },
+                // v2.32 : durée de trajet connue (nombre > 0 ; 0, null, NaN = inconnue)
+                _hasTransportTime: function hasTransportTime() {
+                    return typeof this.transportTime === 'number' && isFinite(this.transportTime) && this.transportTime > 0;
+                },
+                // v2.32 : heure d'arrivée inconnue (en chargement sans trajet, ou chargement terminé)
+                isEtaUnknown: function isEtaUnknown() {
+                    return !!this._etaUnknown ||
+                        (this.stage == Constants.Movements.Stage.LOADING && !this._hasTransportTime());
                 },
                 getUnits: function getUnits() {
                     return this.units;
@@ -6165,6 +6183,25 @@ if (typeof IkaTools == 'undefined') {
                 return found ? total : null;
             }
 
+            // v2.32 : le temps restant affiché est arrondi (« 06h 33m » : à la minute, « 1j 16h » : à
+            // l'heure). L'heure d'arrivée affichée à côté (« 15:37:58 ») est exacte : on la retient si
+            // elle concorde avec l'estimation, à la précision du temps restant près.
+            function _impRefineWithClock(estimate, cellTxt, remTxt) {
+                var clocks = String(cellTxt || '').match(/\d{1,2}:\d{2}:\d{2}/g);
+                if (!clocks || !isFinite(estimate)) return estimate;
+                var hms = clocks[clocks.length - 1].split(':');
+                var unit = /\d+\s*s/i.test(remTxt) ? 1000 : /\d+\s*m/i.test(remTxt) ? 60000 :
+                           /\d+\s*h/i.test(remTxt) ? 3600000 : 86400000;
+                var d = new Date(estimate);
+                d.setHours(parseInt(hms[0], 10), parseInt(hms[1], 10), parseInt(hms[2], 10), 0);
+                var best = null;
+                for (var k = -1; k <= 1; k++) {
+                    var c = d.getTime() + k * 86400000;
+                    if (best === null || Math.abs(c - estimate) < Math.abs(best - estimate)) best = c;
+                }
+                return Math.abs(best - estimate) <= unit ? best : estimate;
+            }
+
             function processMilitaryAdvisorView(templateData) {
                 setTimeout(function parseMilitaryMovements() {
                     try {
@@ -6222,7 +6259,8 @@ if (typeof IkaTools == 'undefined') {
                                 var remTxt = $tr.children('td').eq(1).find('span').first().text();
                                 var remMs = _impParseDurationMs(remTxt);
                                 if (remMs == null) return;
-                                var completion = View.gameTimeNow() + remMs;
+                                var completion = _impRefineWithClock(View.gameTimeNow() + remMs,
+                                                                     $tr.children('td').eq(1).text(), remTxt); // v2.32
 
                                 // Origine / destination (cityId)
                                 var oHref = $tr.find('td.source a').attr('href') || '';
@@ -10588,6 +10626,8 @@ min-width: 851px !important; \
                                     if (isCountableMovement(movement)) {
                                         return '<tr><td class="resource_count">%s</td><td>%s</td></tr>'.format(
                                             IkaTools.Intl.formatInteger(count, true),
+                                            // v2.32 : « ? » tant que l'heure d'arrivée est inconnue
+                                            (movement.isEtaUnknown && movement.isEtaUnknown()) ? '?' :
                                             IkaTools.Intl.formatRemainingTime(
                                                 movement.getArrivalTime() - IkaTools.View.gameTimeNow()));
                                     } else {
@@ -14976,6 +15016,19 @@ min-width: 851px !important; \
         try { town.backgroundData = scrub(JSON.stringify(background, null, 1)); } catch (e) {}
         keep('cityData', town);
       }
+      // v2.32 : réponse sans nouvelle vue mais avec des données (ex. le tableau des mouvements du
+      // Conseiller militaire, envoyé juste après la page) : rattachée à la dernière vue capturée.
+      if (!items.length && templateData) {
+        var last = null;
+        Object.keys(store).forEach(function (k) {
+          if (k !== 'island' && k !== 'cityData' && (!last || store[k].time > last.time)) last = store[k];
+        });
+        if (last && Date.now() - last.time < 60000) {
+          try {
+            last.followUps = (last.followUps || []).concat([scrub(JSON.stringify(templateData, null, 1))]).slice(-5);
+          } catch (e) {}
+        }
+      }
       items.forEach(function (it) {
         var entry = {
           view: it.view,
@@ -15016,6 +15069,7 @@ min-width: 851px !important; \
     var noTpl = function (x) { return String(x).replace(/<\/template/gi, '<\\/template'); };
     var json = String(entry.templateData || 'null').replace(/<\/script/gi, '<\\/script');
     var bgJson = String(entry.backgroundData || 'null').replace(/<\/script/gi, '<\\/script'); // v2.26
+    var fuJson = '[' + (entry.followUps || []).join(',\n').replace(/<\/script/gi, '<\\/script') + ']'; // v2.32
     return '<!doctype html>\n<html lang="fr"><head><meta charset="utf-8">' +
       '<title>Capture ' + esc(entry.view) + '</title></head><body>\n' +
       '<h1>Capture Imperator : ' + esc(entry.view) + '</h1>\n' +
@@ -15030,6 +15084,7 @@ min-width: 851px !important; \
       '<template id="imp-capture-raw">\n' + noTpl(entry.raw || '') + '\n</template>\n' +
       '<script type="application/json" id="imp-capture-templateData">\n' + json + '\n</script>\n' +
       '<script type="application/json" id="imp-capture-backgroundData">\n' + bgJson + '\n</script>\n' +
+      '<script type="application/json" id="imp-capture-followUps">\n' + fuJson + '\n</script>\n' +
       '</body></html>\n';
   }
 

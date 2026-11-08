@@ -172,6 +172,35 @@ for (const [name, root, expect] of [
   t('pas de recrédit tant que le pillage est à l\'aller', incr.length === 0);
 }
 
+// ---------------------------------------------------------------- Conseiller militaire : navires de charge (lu dans la page)
+if (fs.readdirSync(dir).some(f => f.startsWith('militaryAdvisorCharge'))) {
+  head('Conseiller militaire, navires de charge (militaryAdvisorCharge)');
+  const c = capture('militaryAdvisorCharge');
+  const src = slice('function _impParseDurationMs(txt)', '// v2.07 : rafraîchissement manuel');
+  const $ = page(c.rendered); // tableau absent des données : le parseur le lit dans la page
+  function MilitaryUnits() { this.units = {}; }
+  MilitaryUnits.prototype.getCounts = function () { return this.units; };
+  MilitaryUnits.prototype._setCount = function (u, n) { this.units[u] = n; };
+  const created = [];
+  function Movement(id, type, completion, mission, stage, o, tgt, tr, units, res) {
+    Object.assign(this, { id, completion, mission, stage, o, tgt, units, res }); created.push(this);
+  }
+  const civ = { movements: {}, _dropMovement() {}, _updateMovement(mv) { this.movements[mv.id] = mv; } };
+  const at = new Date(2026, 10, 8, 9, 4, 0).getTime();
+  new Function('$', 'Constants', 'View', 'Movement', 'MilitaryUnits', 'getCivilizationData',
+    'raiseMovementsChanged', 'empireData', 'setTimeout', 'console', src + 'return processMilitaryAdvisorView;')(
+    $, Constants, { gameTimeNow: () => at }, Movement, MilitaryUnits, () => civ, () => {}, { save() {} }, f => f(),
+    { warn() {}, log() {} })(c.templateData);
+  const m = created[0];
+  t('1 transport lu dans la page (le tableau n\'était pas dans les données)', created.length === 1 && m.id === 3717941, created.length);
+  t('G - Marbre 3 (18983) → G - Marbre 4 (18981), en route', m && String(m.o) === '18983' && String(m.tgt) === '18981' &&
+    m.stage === Constants.Movements.Stage.EN_ROUTE);
+  t('cargaison : 550 000 de bois (11 navires de charge × 50 000)', m && m.res && m.res.wood === 550000, m && m.res);
+  t('navires de charge non comptés comme unités', m && Object.keys(m.units.getCounts()).length === 0);
+  const d = m && new Date(m.completion);
+  t('arrivée 15:37:58 (' + (d && d.toTimeString().slice(0, 8)) + ')', d && d.toTimeString().slice(0, 8) === '15:37:58');
+}
+
 // ---------------------------------------------------------------- Bilan
 {
   head('Bilan des finances (finances)');

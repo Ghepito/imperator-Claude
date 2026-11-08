@@ -19,6 +19,25 @@
                 return found ? total : null;
             }
 
+            // v2.32 : le temps restant affiché est arrondi (« 06h 33m » : à la minute, « 1j 16h » : à
+            // l'heure). L'heure d'arrivée affichée à côté (« 15:37:58 ») est exacte : on la retient si
+            // elle concorde avec l'estimation, à la précision du temps restant près.
+            function _impRefineWithClock(estimate, cellTxt, remTxt) {
+                var clocks = String(cellTxt || '').match(/\d{1,2}:\d{2}:\d{2}/g);
+                if (!clocks || !isFinite(estimate)) return estimate;
+                var hms = clocks[clocks.length - 1].split(':');
+                var unit = /\d+\s*s/i.test(remTxt) ? 1000 : /\d+\s*m/i.test(remTxt) ? 60000 :
+                           /\d+\s*h/i.test(remTxt) ? 3600000 : 86400000;
+                var d = new Date(estimate);
+                d.setHours(parseInt(hms[0], 10), parseInt(hms[1], 10), parseInt(hms[2], 10), 0);
+                var best = null;
+                for (var k = -1; k <= 1; k++) {
+                    var c = d.getTime() + k * 86400000;
+                    if (best === null || Math.abs(c - estimate) < Math.abs(best - estimate)) best = c;
+                }
+                return Math.abs(best - estimate) <= unit ? best : estimate;
+            }
+
             function processMilitaryAdvisorView(templateData) {
                 setTimeout(function parseMilitaryMovements() {
                     try {
@@ -76,7 +95,8 @@
                                 var remTxt = $tr.children('td').eq(1).find('span').first().text();
                                 var remMs = _impParseDurationMs(remTxt);
                                 if (remMs == null) return;
-                                var completion = View.gameTimeNow() + remMs;
+                                var completion = _impRefineWithClock(View.gameTimeNow() + remMs,
+                                                                     $tr.children('td').eq(1).text(), remTxt); // v2.32
 
                                 // Origine / destination (cityId)
                                 var oHref = $tr.find('td.source a').attr('href') || '';

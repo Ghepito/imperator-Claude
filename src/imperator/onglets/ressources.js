@@ -207,6 +207,8 @@
                                     if (isCountableMovement(movement)) {
                                         return '<tr><td class="resource_count">%s</td><td>%s</td></tr>'.format(
                                             IkaTools.Intl.formatInteger(count, true),
+                                            // v2.32 : « ? » tant que l'heure d'arrivée est inconnue
+                                            (movement.isEtaUnknown && movement.isEtaUnknown()) ? '?' :
                                             IkaTools.Intl.formatRemainingTime(
                                                 movement.getArrivalTime() - IkaTools.View.gameTimeNow()));
                                     } else {
