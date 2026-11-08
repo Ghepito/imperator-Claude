@@ -2,6 +2,22 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.0 — version stable
+
+Sortie de la bêta. Aucun changement de code par rapport à la 2.44 : le code est restructuré (58 fichiers, aucune dépendance circulaire, couches vérifiées à chaque test) et toutes les fonctions d'usage courant sont validées en jeu. Limites connues : voir le README.
+
+## 2.44
+
+Popup Planifier : le clic ne passe plus a l'image publicitaire de la fenetre du jeu (le bandeau reste hors de la fenetre, au-dessus, et retient ses clics) ; Planifier repond a chaque clic.
+
+## 2.43
+
+Chantiers et Boissons : apres un envoi prepare, la fenetre d'Imperator se rouvre des que le serveur confirme le transport (le jeu reste sur le port au lieu de revenir a la ville).
+
+## 2.42
+
+Infobulle de croissance : une valeur plafonnee par la population maximale porte la mention (plein). Popup Planifier l'amelioration : des que la fenetre du batiment s'ouvre, il devient un bandeau compact a son sommet (sur l'image decorative), sans cacher les donnees.
+
 ## 2.41
 
 Restructuration, sans changement visible : plus aucune dependance circulaire (6 -> 0). Journal independant des utilitaires et de la sauvegarde ; outils communs de Chantiers et Boissons dans un fichier partage ; les onglets joignent la fenetre d'Imperator par un acces commun. Toute nouvelle boucle fait echouer les tests.

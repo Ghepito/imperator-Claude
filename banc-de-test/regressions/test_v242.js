@@ -3,7 +3,8 @@ const fs = require('fs');
 const s = fs.readFileSync(process.argv[2], 'utf8');
 let ok = 0, ko = 0;
 const t = (n, c, x = '') => { if (c) { ok++; console.log('PASS', n); } else { ko++; console.log('FAIL', n, x); } };
-t('version >= 2.42', /@version        2\.4[2-9]\n/.test(s));
+const _v = (s.match(/@version\s+([0-9.]+)/) || [])[1] || '0', _n = v => v.split('.').map(Number), _ge = (a, b) => (a[0] - b[0]) || ((a[1] || 0) - (b[1] || 0));
+t('version >= 2.42', _ge(_n(_v), _n('2.42')) >= 0, _v);
 t('croissance : valeur plafonnée marquée « plein »', /var capped = growth \+ data\.population > data\.max;/.test(s) &&
   /imp_growth_full/.test(s) && /growthIn\(1\), growthIn\(24\), growthIn\(168\)/.test(s));
 t('popup : ancrage dans la fenêtre du bâtiment', /dockWhenWindowOpens\(pop\);/.test(s) && /\.mainContentBox/.test(s) &&

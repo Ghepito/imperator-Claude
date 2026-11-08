@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.44
-// @version        2.44
+// @name           Imperator v3.0
+// @version        3.0
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.0 Version stable (sortie de la beta). Aucun changement de code par rapport a la 2.44 : code restructure (58 fichiers, aucune dependance circulaire, couches verifiees), toutes les fonctions courantes validees en jeu. Limites connues dans le README.
 // @history        2.44 Popup Planifier : le clic ne passe plus a l'image publicitaire de la fenetre du jeu (le bandeau reste hors de la fenetre, au-dessus, et retient ses clics) ; Planifier repond a chaque clic.
 // @history        2.43 Chantiers et Boissons : apres un envoi prepare, la fenetre d'Imperator se rouvre des que le serveur confirme le transport (le jeu reste sur le port au lieu de revenir a la ville).
 // @history        2.42 Infobulle de croissance : une valeur plafonnee par la population maximale porte la mention (plein). Popup Planifier l'amelioration : des que la fenetre du batiment s'ouvre, il devient un bandeau compact a son sommet (sur l'image decorative), sans cacher les donnees.

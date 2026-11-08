@@ -4,8 +4,40 @@ Script Tampermonkey qui ajoute à Ikariam des tableaux de synthèse de l'empire 
 ressources, bâtiments, armée, espionnage, tableau de bord financier, bénédictions divines,
 mouvements de troupes et de flottes.
 
-Version actuelle : **v2.44** (testée sur le serveur français, jeu 17.6.1,
+Version actuelle : **v3.0**, version stable (testée sur le serveur français, jeu 17.6.1,
 Chrome + Tampermonkey 5.5.1).
+
+## Ce qu'apporte la v3.0 par rapport à l'Imperator d'origine
+- **Données vraies** : population, croissance, satisfaction, bilan financier et coûts des
+  bâtiments lus dans les pages du jeu (aide de l'encyclopédie comprise) plutôt qu'estimés.
+- **Onglets Chantiers et Boissons** : planification des améliorations (popup « Planifier »
+  sur un niveau de bâtiment), préparation des envois, réouverture après le transport,
+  autonomie en vin.
+- **Bénédictions divines** : jauge de faveur par dieu, durée et bonus calculés comme le jeu.
+- **Mouvements** : chargement, aller et retour distingués ; heure d'arrivée affichée ;
+  ressources débitées dès l'envoi, créditées une seule fois à l'arrivée.
+- **Armée** : troupes, caserne et chantier naval relus sur la structure actuelle du jeu ;
+  Spartiate reconnu.
+- **Espionnage** : joueur, alliance et coordonnées tirés de la Cachette et de l'île, sans
+  requêtes en arrière-plan ; mur et entrepôt des cibles pris en compte.
+- **Alertes de bureau** (fin de chargement, de construction…) et mises à jour automatiques
+  par Tampermonkey.
+- **Plus léger et plus sûr** : français et anglais uniquement, sauvegarde regroupée, erreurs
+  connues du jeu masquées, textes échappés.
+- **Code restructuré** : 58 fichiers, aucune dépendance circulaire, vérifiés à chaque test.
+
+## Limites connues
+Fonctions écrites et testées hors jeu, pas encore vérifiées en jeu faute d'occasion :
+- retour d'un pillage (butin en transit puis crédité) ;
+- cible avec entrepôt (part protégée retirée du pillable) ; cible en mode vacances ;
+- nouvelle cible complète dès l'ouverture de la Cachette ;
+- icône du Spartiate ; notification de fin de construction.
+
+Non traité : les **mouvements hostiles** (attaques, espionnage reçus), en attente d'une
+capture du Conseiller militaire.
+
+Les boutons de transport des onglets Ressources et Bâtiments rouvrent leur onglet seulement
+si le jeu revient à la vue de la ville (choix assumé).
 
 ## Installer ou mettre à jour
 1. Ouvrir [`Imperator.user.js`](Imperator.user.js) puis cliquer sur **Raw**.
@@ -57,7 +89,13 @@ comme ci-dessus si Tampermonkey ne l'intercepte pas).
 ## Méthode de travail
 Une version à la fois : périmètre validé, patch, tests hors jeu
 (voir [`banc-de-test/`](banc-de-test/)), essai en jeu avec une liste de contrôle,
-puis un commit par version. Le détail de chaque version est dans
+puis un commit par version.
+
+Règles depuis la v3.0 :
+- toute nouvelle fonction ou correction est publiée avec son test ;
+- ce qui change l'affichage ou le comportement en jeu est validé en jeu avant d'être
+  considéré comme stable ;
+- la vérification automatique (`npm test`, dépendances, banc d'affichage) doit rester verte. Le détail de chaque version est dans
 [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Architecture
