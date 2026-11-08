@@ -22,6 +22,11 @@ if (fs.existsSync(captures)) {
   console.log('(pas de dossier captures/ : test_views et test_shrine ignorés)');
 }
 
+// Banc d'affichage (si les données exportées sont présentes dans donnees/)
+if (fs.existsSync(path.join(__dirname, 'donnees', 'export.json'))) {
+  runs.push(['affichage/instantanes.js', [path.join('affichage', 'instantanes.js'), script]]);
+}
+
 let failed = 0;
 for (const [name, args] of runs) {
   const r = spawnSync(process.execPath, args, { cwd: __dirname, encoding: 'utf8' });

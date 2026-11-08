@@ -35,3 +35,16 @@ est exclu du dépôt (`.gitignore`) et ne doit jamais être publié.
 
 Référence (v2.29, captures du 7 nov. 2026, jeu 17.6.1) : vues 63/63, Sanctuaire 10/10,
 régressions toutes vertes.
+
+## Banc d'affichage
+`affichage/instantanes.js` fait tourner tout le script hors jeu (jsdom), avec les données
+exportées depuis le jeu (Réglages > Debug > **Exporter mes données**, fichier placé dans
+`donnees/export.json`), ouvre la fenêtre d'Imperator et dessine les **7 onglets**.
+
+    node affichage/instantanes.js ../Imperator.user.js --enregistrer   # référence
+    node affichage/instantanes.js ../Imperator.user.js                 # comparaison
+
+Une réécriture du code est sûre quand les 7 onglets restent **identiques au caractère près**
+à la référence (horloge figée à l'heure de l'export ; identifiants générés renumérotés).
+Limite : les infobulles ne sont pas dessinées. Le dossier `donnees/` contient des données de
+jeu (dont d'autres joueurs) : il est exclu du dépôt.
