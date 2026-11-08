@@ -1149,7 +1149,10 @@ if (typeof IkaTools == 'undefined') {
                 window.addEventListener('beforeunload', _impFlushPending);
             } catch (e) {}
 
+            var _impValues = []; // v2.36 : toutes les données sauvegardées (pour l'export)
+
             function Value(key, defaultValue, options) {
+                _impValues.push(this);
                 this.options = $.extend({ useDomain: true, loadCallback: function() {} }, options);
                 if (this.options.useDomain) {
                     this.key = View.getDomain() + "/" + key + "/" +
@@ -1226,6 +1229,7 @@ if (typeof IkaTools == 'undefined') {
 
             return {
                 Value: Value,
+                listValues: function listValues() { return _impValues.slice(); }, // v2.36
             };
         }();
 

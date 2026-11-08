@@ -25,7 +25,7 @@
                                                    /*ignoredHostileMissions*/]),
              new IkaTools.UI.SettingsWindow.Group(localizer.localize('settings','debug'),
                                                   [debugSetting, resetData, espionageDebugSetting, resetEspionageData,
-                                                   exceptionLogSetting, refreshDataSetting, viewCaptureSetting]),
+                                                   exceptionLogSetting, refreshDataSetting, viewCaptureSetting, dataExportSetting]),
             ]);
         settingsWindow.registerSavedSettingsHandler(function reloadOnSavedSettings() {
             window.location.reload();

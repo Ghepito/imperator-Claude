@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.35
-// @version        2.35
+// @name           Imperator v2.36
+// @version        2.36
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.36 Reglages > Debug > Exporter mes donnees : telecharge un fichier JSON avec les donnees gardees par Imperator (empire, espionnage, aide des batiments, options), pour le banc d'affichage hors jeu. Rien n'est envoye.
 // @history        2.35 Allegement : sauvegarde de l'empire regroupee (une ecriture par rafale, videe a la fermeture de la page) au lieu d'une ecriture complete a chaque reponse du jeu ; surlignage des ameliorations recalcule a l'ouverture, apres un changement ou toutes les 10 s (au lieu de 1,2 s) ; biens culturels reperes dans les reponses du jeu au lieu d'un observateur de toute la page ; rien ne tourne quand l'onglet du navigateur est cache.
 // @history        2.34 Espionnage : la Cachette donne directement le joueur, son alliance et les coordonnees de chaque ville espionnee (plus besoin de passer sur l'ile pour sortir de 'donnees en attente'). Coordonnees lues aussi entre parentheses (elles valaient 0:0).
 // @history        2.33 Infobulle 'En transit' (onglet Ressources) : l'heure d'arrivee est affichee apres le temps restant, comme pour les constructions (demande de Ghepito).
@@ -1529,7 +1530,10 @@ if (typeof IkaTools == 'undefined') {
                 window.addEventListener('beforeunload', _impFlushPending);
             } catch (e) {}
 
+            var _impValues = []; // v2.36 : toutes les données sauvegardées (pour l'export)
+
             function Value(key, defaultValue, options) {
+                _impValues.push(this);
                 this.options = $.extend({ useDomain: true, loadCallback: function() {} }, options);
                 if (this.options.useDomain) {
                     this.key = View.getDomain() + "/" + key + "/" +
@@ -1606,6 +1610,7 @@ if (typeof IkaTools == 'undefined') {
 
             return {
                 Value: Value,
+                listValues: function listValues() { return _impValues.slice(); }, // v2.36
             };
         }();
 
@@ -9757,6 +9762,48 @@ min-width: 851px !important; \
         },
         IkaTools.Utils.fixedFunction('Captures de vues'));
 
+    // v2.36 : export des données d'Imperator (banc d'affichage hors jeu). Rien n'est envoyé :
+    // un fichier est téléchargé sur l'ordinateur.
+    var dataExportSetting = settings.html(
+        function dataExportHtml() {
+            return '<a id="ImperatorDataExport" class="button">Exporter mes données</a>' +
+                   '<span id="ImperatorDataExportStatus" style="margin-left:8px;font-size:11px;"></span>';
+        },
+        function dataExportPostRender() {
+            $('#ImperatorDataExport').click(function() {
+                try {
+                    var values = {}, n = 0, size = 0;
+                    $.each(IkaTools.Data.listValues(), function(i, v) {
+                        try { if (v.needsSave) v.doSave(true); } catch (e) {}
+                        var raw = GM_getValue(v.key);
+                        if (raw === undefined || raw === null) return;
+                        values[v.key] = raw;
+                        n++; size += String(raw).length;
+                    });
+                    var file = JSON.stringify({
+                        format: 'imperator-export',
+                        imperator: (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '?',
+                        date: new Date().toISOString(),
+                        domain: IkaTools.View.getDomain(),
+                        values: values,
+                    }, null, 1);
+                    var d = new Date(), p = function(x) { return (x < 10 ? '0' : '') + x; };
+                    var name = 'imperator_donnees_' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+                               '_' + p(d.getHours()) + 'h' + p(d.getMinutes()) + '.json';
+                    var url = URL.createObjectURL(new Blob([file], { type: 'application/json;charset=utf-8' }));
+                    var a = document.createElement('a');
+                    a.href = url; a.download = name;
+                    document.body.appendChild(a); a.click();
+                    setTimeout(function() { try { URL.revokeObjectURL(url); a.remove(); } catch (e) {} }, 1000);
+                    $('#ImperatorDataExportStatus').text(n + ' jeux de données, ' + Math.round(size / 1024) + ' ko');
+                    console.log('[Imperator] Données exportées : ' + name + ' (' + n + ' jeux, ' + Math.round(size / 1024) + ' ko)');
+                } catch (e) {
+                    $('#ImperatorDataExportStatus').text('échec : ' + e);
+                }
+            });
+        },
+        IkaTools.Utils.fixedFunction('Exporter mes données'));
+
     var refreshDataSetting = settings.html(
         function refreshDataHtml() {
             return '<a id="ImperatorRefreshData" class="button">Mettre à jour</a>' +
@@ -9808,7 +9855,7 @@ min-width: 851px !important; \
                                                    /*ignoredHostileMissions*/]),
              new IkaTools.UI.SettingsWindow.Group(localizer.localize('settings','debug'),
                                                   [debugSetting, resetData, espionageDebugSetting, resetEspionageData,
-                                                   exceptionLogSetting, refreshDataSetting, viewCaptureSetting]),
+                                                   exceptionLogSetting, refreshDataSetting, viewCaptureSetting, dataExportSetting]),
             ]);
         settingsWindow.registerSavedSettingsHandler(function reloadOnSavedSettings() {
             window.location.reload();

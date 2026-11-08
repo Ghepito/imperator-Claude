@@ -1,3 +1,6 @@
 # Captures du jeu : données d'autres joueurs, jamais publiées
 banc-de-test/captures/
 node_modules/
+# Exports des données d'Imperator : privés, jamais publiés
+banc-de-test/donnees/
+imperator_donnees_*.json

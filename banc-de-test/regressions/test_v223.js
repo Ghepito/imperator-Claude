@@ -28,6 +28,6 @@ t('vue inconnue -> pas de téléchargement', win.__impDownloadCapture('nope')===
 for(let i=0;i<25;i++) cb([['changeView',['v'+i,'<div></div>']]]);
 t('20 vues maximum', Object.keys(win.__impCaptures).length===20);
 t('ADD_WINDOW retenue aussi', (cb([['addWindow',['bilan','<table></table>']]]), !!win.__impCaptures.bilan));
-t('réglage ajouté au groupe Debug', /exceptionLogSetting, refreshDataSetting, viewCaptureSetting\]/.test(s));
+t('réglage ajouté au groupe Debug', /exceptionLogSetting, refreshDataSetting, viewCaptureSetting[\],]/.test(s)); // v2.36 : d'autres réglages peuvent suivre
 t('aucune requête réseau dans le module', !/GM_xmlhttpRequest|backgroundFetch|\$\.ajax|fetch\(/.test(blk));
 console.log(`\n${ok} réussis, ${ko} échoués`); process.exit(ko?1:0);

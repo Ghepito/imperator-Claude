@@ -262,6 +262,48 @@
         },
         IkaTools.Utils.fixedFunction('Captures de vues'));
 
+    // v2.36 : export des données d'Imperator (banc d'affichage hors jeu). Rien n'est envoyé :
+    // un fichier est téléchargé sur l'ordinateur.
+    var dataExportSetting = settings.html(
+        function dataExportHtml() {
+            return '<a id="ImperatorDataExport" class="button">Exporter mes données</a>' +
+                   '<span id="ImperatorDataExportStatus" style="margin-left:8px;font-size:11px;"></span>';
+        },
+        function dataExportPostRender() {
+            $('#ImperatorDataExport').click(function() {
+                try {
+                    var values = {}, n = 0, size = 0;
+                    $.each(IkaTools.Data.listValues(), function(i, v) {
+                        try { if (v.needsSave) v.doSave(true); } catch (e) {}
+                        var raw = GM_getValue(v.key);
+                        if (raw === undefined || raw === null) return;
+                        values[v.key] = raw;
+                        n++; size += String(raw).length;
+                    });
+                    var file = JSON.stringify({
+                        format: 'imperator-export',
+                        imperator: (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '?',
+                        date: new Date().toISOString(),
+                        domain: IkaTools.View.getDomain(),
+                        values: values,
+                    }, null, 1);
+                    var d = new Date(), p = function(x) { return (x < 10 ? '0' : '') + x; };
+                    var name = 'imperator_donnees_' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+                               '_' + p(d.getHours()) + 'h' + p(d.getMinutes()) + '.json';
+                    var url = URL.createObjectURL(new Blob([file], { type: 'application/json;charset=utf-8' }));
+                    var a = document.createElement('a');
+                    a.href = url; a.download = name;
+                    document.body.appendChild(a); a.click();
+                    setTimeout(function() { try { URL.revokeObjectURL(url); a.remove(); } catch (e) {} }, 1000);
+                    $('#ImperatorDataExportStatus').text(n + ' jeux de données, ' + Math.round(size / 1024) + ' ko');
+                    console.log('[Imperator] Données exportées : ' + name + ' (' + n + ' jeux, ' + Math.round(size / 1024) + ' ko)');
+                } catch (e) {
+                    $('#ImperatorDataExportStatus').text('échec : ' + e);
+                }
+            });
+        },
+        IkaTools.Utils.fixedFunction('Exporter mes données'));
+
     var refreshDataSetting = settings.html(
         function refreshDataHtml() {
             return '<a id="ImperatorRefreshData" class="button">Mettre à jour</a>' +
