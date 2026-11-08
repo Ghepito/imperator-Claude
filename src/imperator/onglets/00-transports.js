@@ -476,6 +476,30 @@
                         });
                     }catch(e){}
                 });
+                // v2.42 : après l'envoi, le jeu reste sur le port (pas de retour à la ville).
+                // On rouvre donc dès que le serveur confirme le transport (même signal que le
+                // débit à l'envoi : retour de type 10).
+                IkaTools.View.registerAjaxFormSubmitCallback(function(form){
+                    try{
+                        if (!form || (form.id!=='transport' && form.id!=='transportForm')) return;
+                        var which=window.__impReopenAfterTransport;
+                        if (!which) return;
+                        IkaTools.View.registerNextIkariamAjaxRequestCallback(function(response){
+                            try{
+                                var success=false;
+                                IkaTools.Utils.iterateIkariamAjaxResponse(response, function(i,name,data){
+                                    if (name===IkaTools.Constants.IkariamAjaxResponseType.PROVIDE_FEEDBACK &&
+                                        data && data[0] && data[0].type==10) success=true;
+                                });
+                                if (!success) return;
+                                window.__impReopenAfterTransport=null;
+                                setTimeout(function(){
+                                    try{ if(which==='boissons' && window.ImperatorOpenBoissons) window.ImperatorOpenBoissons(); else if(window.ImperatorOpenChantiers) window.ImperatorOpenChantiers(); }catch(e){}
+                                }, 300);
+                            }catch(e){}
+                        });
+                    }catch(e){}
+                });
             }catch(e){}
         }
 
