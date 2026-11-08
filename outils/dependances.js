@@ -57,6 +57,19 @@ for (const f of fichiers) {
   }
 }
 
+// Dépendances circulaires (A utilise B et B utilise A). Liste tolérée : elle ne peut que diminuer.
+const BOUCLES_TOLEREES = [
+  'ikatools/01-logging <-> ikatools/02-utils',
+  'ikatools/01-logging <-> ikatools/05-data',
+  'imperator/initialisation <-> imperator/reglages',
+  'imperator/onglets/99-popup-menu <-> imperator/onglets/batiments',
+  'imperator/onglets/99-popup-menu <-> imperator/onglets/chantiers',
+  'imperator/onglets/boissons <-> imperator/onglets/chantiers',
+];
+const boucles = [];
+for (const a of fichiers) for (const b of Object.keys(deps[a] || {}))
+  if (a < b && deps[b] && deps[b][a]) boucles.push(a.replace(/\.js$/, '') + ' <-> ' + b.replace(/\.js$/, ''));
+
 const court = f => f.replace(/\.js$/, '');
 let md = '# Dépendances entre les fichiers de `src/`\n\n' +
   'Généré par `node outils/dependances.js` : ne pas modifier à la main. ' +
@@ -70,6 +83,8 @@ for (const f of fichiers) {
   md += '| `' + court(f) + '` | ' + (fo.length > 8 ? fo.slice(0, 8).join(', ') + ' … (' + fo.length + ')' : fo.join(', ') || '–') +
         ' | ' + (u || '–') + (inconnus[f].length ? '<br>*hors src (globaux du script)* : ' + inconnus[f].sort().join(', ') : '') + ' |\n';
 }
+md += '\n## Dépendances circulaires (' + boucles.length + ')\n\n' +
+  (boucles.length ? boucles.map(b => '- `' + b + '`').join('\n') : 'Aucune.') + '\n';
 md += '\n## Graphe\n\n```mermaid\nflowchart LR\n';
 const id = f => court(f).replace(/[^A-Za-z0-9]/g, '_');
 for (const f of fichiers) for (const o of Object.keys(deps[f] || {})) md += '  ' + id(f) + '["' + court(f) + '"] --> ' + id(o) + '["' + court(o) + '"]\n';
@@ -78,11 +93,15 @@ md += '```\n';
 if (process.argv.includes('--verifier')) {
   let ko = 0;
   if (illisibles.length) { ko++; console.error('Fichiers non lisibles seuls :\n  ' + illisibles.join('\n  ')); }
+  const nouvelles = boucles.filter(b => !BOUCLES_TOLEREES.includes(b));
+  if (nouvelles.length) { ko++; console.error('Nouvelles dépendances circulaires :\n  ' + nouvelles.join('\n  ')); }
+  const resolues = BOUCLES_TOLEREES.filter(b => !boucles.includes(b));
+  if (resolues.length) console.log('Boucles résolues, à retirer de BOUCLES_TOLEREES : ' + resolues.join(' ; '));
   const fuites = fichiers.filter(f => inconnus[f] && inconnus[f].length).map(f => f + ' : ' + inconnus[f].join(', '));
   if (fuites.length) { ko++; console.error('Noms utilisés mais déclarés nulle part (variables globales implicites ?) :\n  ' + fuites.join('\n  ')); }
   const actuel = fs.existsSync(cible) ? fs.readFileSync(cible, 'utf8') : '';
   if (actuel !== md) { ko++; console.error('docs/DEPENDANCES.md n\'est pas à jour : lancer node outils/dependances.js'); }
-  if (!ko) console.log(`Dépendances à jour ; ${fichiers.length} fichiers lisibles seuls, ${ordre.length - fichiers.length} enveloppes`);
+  if (!ko) console.log(`Dépendances à jour ; ${fichiers.length} fichiers lisibles seuls, ${ordre.length - fichiers.length} enveloppes, ${boucles.length} boucles tolérées`);
   process.exit(ko ? 1 : 0);
 }
 fs.writeFileSync(cible, md);

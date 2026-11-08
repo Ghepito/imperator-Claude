@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 2.38
+
+Restructuration du coeur de l'empire, sans changement visible (7 onglets identiques au banc d'affichage) : magasin de donnees separe des evenements, acces en lecture regroupes, registre des types pour recreer les objets sauvegardes. Dependances circulaires : 16 -> 6.
+
 ## 2.37
 
 Nettoyage, sans changement visible (7 onglets identiques au banc d'affichage) : 3 fonctions jamais utilisees et du code commente retires ; updateCurrentCity declaree (etait une variable globale implicite).

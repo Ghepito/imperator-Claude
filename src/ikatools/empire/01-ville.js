@@ -967,3 +967,7 @@
                 // fin Patch Rendre isMaxLevel safe
 
             });
+
+            _impTypes.city = City;
+            _impTypes.building = City.Building;
+            _impTypes.cityResource = City.Resource;

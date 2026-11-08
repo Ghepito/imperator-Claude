@@ -167,3 +167,7 @@
                     return this.type;
                 },
             });
+
+            _impTypes.military = Military;
+            _impTypes.militaryUnits = MilitaryUnits;
+            _impTypes.trainingBatch = TrainingBatch;

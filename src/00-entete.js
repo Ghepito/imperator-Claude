@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.37
-// @version        2.37
+// @name           Imperator v2.38
+// @version        2.38
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.38 Restructuration du coeur de l'empire, sans changement visible (7 onglets identiques au banc d'affichage) : magasin de donnees separe des evenements, acces en lecture regroupes, registre des types pour recreer les objets sauvegardes. Dependances circulaires : 16 -> 6.
 // @history        2.37 Nettoyage, sans changement visible (7 onglets identiques au banc d'affichage) : 3 fonctions jamais utilisees et du code commente retires ; updateCurrentCity declaree (etait une variable globale implicite).
 // @history        2.36 Reglages > Debug > Exporter mes donnees : telecharge un fichier JSON avec les donnees gardees par Imperator (empire, espionnage, aide des batiments, options), pour le banc d'affichage hors jeu. Rien n'est envoye.
 // @history        2.35 Allegement : sauvegarde de l'empire regroupee (une ecriture par rafale, videe a la fermeture de la page) au lieu d'une ecriture complete a chaque reponse du jeu ; surlignage des ameliorations recalcule a l'ouverture, apres un changement ou toutes les 10 s (au lieu de 1,2 s) ; biens culturels reperes dans les reponses du jeu au lieu d'un observateur de toute la page ; rien ne tourne quand l'onglet du navigateur est cache.

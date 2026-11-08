@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.37
-// @version        2.37
+// @name           Imperator v2.38
+// @version        2.38
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.38 Restructuration du coeur de l'empire, sans changement visible (7 onglets identiques au banc d'affichage) : magasin de donnees separe des evenements, acces en lecture regroupes, registre des types pour recreer les objets sauvegardes. Dependances circulaires : 16 -> 6.
 // @history        2.37 Nettoyage, sans changement visible (7 onglets identiques au banc d'affichage) : 3 fonctions jamais utilisees et du code commente retires ; updateCurrentCity declaree (etait une variable globale implicite).
 // @history        2.36 Reglages > Debug > Exporter mes donnees : telecharge un fichier JSON avec les donnees gardees par Imperator (empire, espionnage, aide des batiments, options), pour le banc d'affichage hors jeu. Rien n'est envoye.
 // @history        2.35 Allegement : sauvegarde de l'empire regroupee (une ecriture par rafale, videe a la fermeture de la page) au lieu d'une ecriture complete a chaque reponse du jeu ; surlignage des ameliorations recalcule a l'ouverture, apres un changement ou toutes les 10 s (au lieu de 1,2 s) ; biens culturels reperes dans les reponses du jeu au lieu d'un observateur de toute la page ; rien ne tourne quand l'onglet du navigateur est cache.
@@ -3249,6 +3250,11 @@ if (typeof IkaTools == 'undefined') {
         };
 
         var EmpireData = function() {
+            // v2.38 : registre des types du modèle. Chaque fichier du modèle y inscrit ses classes ;
+            // le magasin (03-donnees) s'en sert pour recréer les objets sauvegardés, sans dépendre
+            // directement des fichiers du modèle (plus de dépendance circulaire).
+            var _impTypes = {};
+
             function Military(city) {
                 this._ikaToolsType = 'military';
 
@@ -3418,6 +3424,10 @@ if (typeof IkaTools == 'undefined') {
                     return this.type;
                 },
             });
+
+            _impTypes.military = Military;
+            _impTypes.militaryUnits = MilitaryUnits;
+            _impTypes.trainingBatch = TrainingBatch;
 
             // v2.24 : signature des entrepôts/dépôts, pour savoir si la capacité lue est encore valable
             function _impWarehouseSig(city) {
@@ -4388,6 +4398,10 @@ if (typeof IkaTools == 'undefined') {
 
             });
 
+            _impTypes.city = City;
+            _impTypes.building = City.Building;
+            _impTypes.cityResource = City.Resource;
+
             var CivilizationData = function CivilizationData() {
                 this._ikaToolsType = 'civilizationData';
 
@@ -4831,28 +4845,26 @@ if (typeof IkaTools == 'undefined') {
                 }
             });
 
+            _impTypes.civilizationData = CivilizationData;
+            _impTypes.movement = Movement;
+
+            // v2.38 : magasin de l'empire (données sauvegardées) et accès en lecture.
+            // Les parseurs et le modèle passent par ici au lieu d'aller chercher dans 04-suivi.
+
             var empireData = new Data.Value(
                 'empireData',
 
                 {
                     cities: {},
                     cityOrder: [],
-                    civilizationData: new CivilizationData(),
+                    civilizationData: new _impTypes.civilizationData(),
                 },
                 {
                     reviver: function empireDataReviver(key, value) {
                         if (value && value._ikaToolsType) {
-                            var obj;
-                            switch(value._ikaToolsType) {
-                                case 'city': obj = new City(); break;
-                                case 'building': obj = new City.Building; break;
-                                case 'cityResource': obj = new City.Resource(); break;
-                                case 'military': obj = new Military(); break;
-                                case 'militaryUnits': obj = new MilitaryUnits(); break;
-                                case 'trainingBatch': obj = new TrainingBatch(); break;
-                                case 'civilizationData': obj = new CivilizationData(); break;
-                                case 'movement': obj = new Movement(); break;
-                            }
+                            // v2.38 : type retrouvé dans le registre (00-types)
+                            var Type = _impTypes[value._ikaToolsType];
+                            var obj = Type ? new Type() : undefined;
                             $.extend(obj, value);
                             if (obj._postLoad) {
                                 obj._postLoad();
@@ -4867,6 +4879,43 @@ if (typeof IkaTools == 'undefined') {
                     },
                 });
 
+            var TRADE_GOOD_LOOKUP = {
+                "1": Constants.Resources.WINE,
+                "2": Constants.Resources.MARBLE,
+                "3": Constants.Resources.GLASS,
+                "4": Constants.Resources.SULFUR,
+            };
+
+            function getCity(id) {
+                return empireData.get().cities[id];
+            };
+
+            var coordsRegex = /\[(\d+):(\d+)\]/;
+            function parseCoordinates(coords) {
+                var match = coords.match(coordsRegex);
+                return [parseInt(match[1]), parseInt(match[2])];
+            }
+
+            function getCities() {
+                var data = empireData.get();
+                var cities = [];
+                for (var i = 0; i < data.cityOrder.length; i++) {
+                    cities.push(data.cities[data.cityOrder[i]]);
+                }
+                return cities;
+            }
+
+            function getOwnCities() {
+                return getCities().filter(function(city) {
+                    return city.isOwn();
+                });
+            }
+
+            function getCivilizationData() {
+                return empireData.get().civilizationData;
+            }
+
+            // Événements de l'empire (abonnements et annonces), sans dépendance au modèle.
             function raiseCivilizationDataChanged(changes) {
                 if (changes.length) {
                     civilizationDataChangedEvent().send(changes);
@@ -4939,13 +4988,6 @@ if (typeof IkaTools == 'undefined') {
                 return militaryChangedEvent().addListener(callback);
             };
 
-            var TRADE_GOOD_LOOKUP = {
-                "1": Constants.Resources.WINE,
-                "2": Constants.Resources.MARBLE,
-                "3": Constants.Resources.GLASS,
-                "4": Constants.Resources.SULFUR,
-            };
-
             // Gold event
             var goldChangedEvent = Utils.thunk(function() { return new Utils.EventDispatcher(); });
             function raiseGoldChanged() { goldChangedEvent().send(); }
@@ -4957,15 +4999,6 @@ if (typeof IkaTools == 'undefined') {
             function registerShrineChangedHandler(callback) { return shrineChangedEvent().addListener(callback); }
 
 
-            function getCity(id) {
-                return empireData.get().cities[id];
-            };
-
-            var coordsRegex = /\[(\d+):(\d+)\]/;
-            function parseCoordinates(coords) {
-                var match = coords.match(coordsRegex);
-                return [parseInt(match[1]), parseInt(match[2])];
-            }
 
             function processTransportForm(form) {
                 var city = View.getCurrentCity();
@@ -7024,25 +7057,6 @@ if (typeof IkaTools == 'undefined') {
         },
         { method: 'GET' });
 }
-
-            function getCities() {
-                var data = empireData.get();
-                var cities = [];
-                for (var i = 0; i < data.cityOrder.length; i++) {
-                    cities.push(data.cities[data.cityOrder[i]]);
-                }
-                return cities;
-            }
-
-            function getOwnCities() {
-                return getCities().filter(function(city) {
-                    return city.isOwn();
-                });
-            }
-
-            function getCivilizationData() {
-                return empireData.get().civilizationData;
-            }
 
             function getDebugString(includePrivateData) {
                 return JSON.stringify(empireData.get(), function debugStringify(name, value) {

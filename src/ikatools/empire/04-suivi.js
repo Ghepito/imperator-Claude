@@ -580,25 +580,6 @@
         { method: 'GET' });
 }
 
-            function getCities() {
-                var data = empireData.get();
-                var cities = [];
-                for (var i = 0; i < data.cityOrder.length; i++) {
-                    cities.push(data.cities[data.cityOrder[i]]);
-                }
-                return cities;
-            }
-
-            function getOwnCities() {
-                return getCities().filter(function(city) {
-                    return city.isOwn();
-                });
-            }
-
-            function getCivilizationData() {
-                return empireData.get().civilizationData;
-            }
-
             function getDebugString(includePrivateData) {
                 return JSON.stringify(empireData.get(), function debugStringify(name, value) {
                     if (name === 'name' || name === 'islandCoordinates') {

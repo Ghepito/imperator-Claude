@@ -12,9 +12,11 @@ ikatools/06-ui.js
 ikatools/07-settings.js
 ikatools/constants.js
 ikatools/empire/00-ouverture.js
+ikatools/empire/00-types.js
 ikatools/empire/00-armee.js
 ikatools/empire/01-ville.js
 ikatools/empire/02-civilisation-mouvements.js
+ikatools/empire/03-donnees.js
 ikatools/empire/03-evenements.js
 ikatools/empire/parseurs/formulaires.js
 ikatools/empire/parseurs/armee.js

@@ -22,7 +22,9 @@ sinon l'assembleur refuse de travailler (pour qu'aucun fichier ne soit oublié e
 | `ikatools/empire/00-armee.js` | Armée d'une ville, unités, lots en formation |
 | `ikatools/empire/01-ville.js` | Ville : ressources, capacité d'entrepôt, bâtiments, population |
 | `ikatools/empire/02-civilisation-mouvements.js` | Données de l'empire, temps de trajet, mouvements |
-| `ikatools/empire/03-evenements.js` | Sauvegarde du modèle, événements (ressources, bâtiments, armée, or…) |
+| `ikatools/empire/00-types.js` | Registre des types du modèle (pour recréer les objets sauvegardés) |
+| `ikatools/empire/03-donnees.js` | Magasin de l'empire (données sauvegardées) et accès en lecture : villes, civilisation |
+| `ikatools/empire/03-evenements.js` | Événements : ressources, bâtiments, armée, mouvements, or, sanctuaire |
 | `ikatools/empire/parseurs/` | **Un fichier par vue du jeu** : formulaires d'envoi, armée (troupes, caserne, chantier naval), ville (Hôtel de Ville, académie, palais, temple), finances (Bilan), sanctuaire, amélioration de bâtiment, aide des bâtiments (coûts exacts), conseiller militaire |
 | `ikatools/empire/04-suivi.js` | Branchement sur les réponses du jeu, rafraîchissements |
 | `ikatools/espionnage.js` | Cibles, joueurs, alliances, rapports, combats |

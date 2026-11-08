@@ -442,3 +442,6 @@
                 }
             });
 
+            _impTypes.civilizationData = CivilizationData;
+            _impTypes.movement = Movement;
+

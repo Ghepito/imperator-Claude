@@ -16,21 +16,23 @@ Les fichiers *ouverture* / *fermeture* sont des enveloppes (ils ouvrent ou ferme
 | `ikatools/06-ui` | UI | `ikatools/00-ouverture` : IkaTools<br>`ikatools/02-utils` : Utils<br>`ikatools/01-logging` : Logging<br>`ikatools/constants` : Constants<br>`ikatools/07-settings` : Settings |
 | `ikatools/07-settings` | Settings | `ikatools/05-data` : Data |
 | `ikatools/constants` | Constants | – |
-| `ikatools/empire/00-armee` | Military, MilitaryUnits, TrainingBatch | `ikatools/02-utils` : Utils<br>`ikatools/04-view` : View<br>`ikatools/constants` : Constants<br>`ikatools/empire/03-evenements` : empireData, militaryChangedEvent |
-| `ikatools/empire/01-ville` | _impWarehouseSig, City | `ikatools/constants` : Constants<br>`ikatools/empire/00-armee` : Military<br>`ikatools/empire/03-evenements` : buildingsChangedEvent, empireData, raiseBuildingsChanged, raiseResourcesChanged<br>`ikatools/04-view` : View<br>`ikatools/empire/04-suivi` : getCivilizationData, getOwnCities<br>`ikatools/00-ouverture` : IkaTools<br>`ikatools/02-utils` : Utils<br>`ikatools/empire/parseurs/aide-batiments` : getHelpCost |
-| `ikatools/empire/02-civilisation-mouvements` | CivilizationData, calculateTravelTime, Movement | `ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/03-evenements` : empireData, getCity, movementsChangedEvent, raiseMilitaryChanged, raiseResourcesChanged<br>`ikatools/empire/04-suivi` : getCivilizationData |
-| `ikatools/empire/03-evenements` | empireData, raiseCivilizationDataChanged, civilizationDataChangedEvent, registerCivilizationDataChangedHandler, raiseMovementsChanged, movementsChangedEvent, registerMovementsChangedHandler, raiseResourcesChanged … (26) | `ikatools/05-data` : Data<br>`ikatools/empire/02-civilisation-mouvements` : CivilizationData, Movement<br>`ikatools/empire/01-ville` : City<br>`ikatools/empire/00-armee` : Military, MilitaryUnits, TrainingBatch<br>`ikatools/empire/04-suivi` : getCivilizationData<br>`ikatools/02-utils` : Utils<br>`ikatools/constants` : Constants |
-| `ikatools/empire/parseurs/formulaires` | processTransportForm, coordinatesEqual, processDeploymentForm, processPlunderForm | `ikatools/04-view` : View<br>`ikatools/constants` : Constants<br>`ikatools/empire/02-civilisation-mouvements` : Movement<br>`ikatools/empire/00-armee` : MilitaryUnits<br>`ikatools/02-utils` : Utils<br>`ikatools/empire/04-suivi` : getCivilizationData<br>`ikatools/empire/03-evenements` : getCity, raiseMilitaryChanged, raiseMovementsChanged |
-| `ikatools/empire/parseurs/armee` | _impReadCityMilitary, processCityMilitaryView, processRelatedCitiesView, parseMilitaryUnitsFromPending, parseTrainingBatches, computeTrainingTime, _IMP_BARRACKS_ORDER, _IMP_SHIPYARD_ORDER … (13) | `ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/03-evenements` : empireData, getCity, raiseMilitaryChanged<br>`ikatools/empire/00-armee` : MilitaryUnits, TrainingBatch |
-| `ikatools/empire/parseurs/ville` | processAcademyView, processSetScientistsForm, processPalaceView, processTownHallView, processTempleView, processResearchAdvisorView | `ikatools/04-view` : View<br>`ikatools/empire/03-evenements` : empireData, getCity, raiseCivilizationDataChanged, raiseResourcesChanged<br>`ikatools/02-utils` : Utils<br>`ikatools/constants` : Constants<br>`ikatools/empire/04-suivi` : getCivilizationData |
-| `ikatools/empire/parseurs/finances` | _bilanLastParsed, parseBilanDomIfVisible, processFinancesView | `ikatools/empire/04-suivi` : getCivilizationData, getOwnCities<br>`ikatools/constants` : Constants<br>`ikatools/empire/03-evenements` : raiseGoldChanged, raiseResourcesChanged |
-| `ikatools/empire/parseurs/sanctuaire` | _shrineLastParsed, SHRINE_GOD_NAMES, SHRINE_GOD_CLASS, parseShrineDuration, processShrineView | `ikatools/empire/04-suivi` : getCivilizationData, getOwnCities<br>`ikatools/empire/03-evenements` : empireData, raiseGoldChanged, raiseShrineChanged |
-| `ikatools/empire/parseurs/amelioration` | processBuildingUpgradeView | `ikatools/empire/parseurs/conseiller-militaire` : _impParseDurationMs<br>`ikatools/empire/03-evenements` : empireData, getCity |
+| `ikatools/empire/00-types` | _impTypes | – |
+| `ikatools/empire/00-armee` | Military, MilitaryUnits, TrainingBatch | `ikatools/02-utils` : Utils<br>`ikatools/04-view` : View<br>`ikatools/constants` : Constants<br>`ikatools/empire/03-evenements` : militaryChangedEvent<br>`ikatools/empire/03-donnees` : empireData<br>`ikatools/empire/00-types` : _impTypes |
+| `ikatools/empire/01-ville` | _impWarehouseSig, City | `ikatools/constants` : Constants<br>`ikatools/empire/00-armee` : Military<br>`ikatools/empire/03-evenements` : buildingsChangedEvent, raiseBuildingsChanged, raiseResourcesChanged<br>`ikatools/04-view` : View<br>`ikatools/empire/03-donnees` : empireData, getCivilizationData, getOwnCities<br>`ikatools/00-ouverture` : IkaTools<br>`ikatools/02-utils` : Utils<br>`ikatools/empire/parseurs/aide-batiments` : getHelpCost<br>`ikatools/empire/00-types` : _impTypes |
+| `ikatools/empire/02-civilisation-mouvements` | CivilizationData, calculateTravelTime, Movement | `ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/03-donnees` : empireData, getCity, getCivilizationData<br>`ikatools/empire/03-evenements` : movementsChangedEvent, raiseMilitaryChanged, raiseResourcesChanged<br>`ikatools/empire/00-types` : _impTypes |
+| `ikatools/empire/03-donnees` | empireData, TRADE_GOOD_LOOKUP, getCity, coordsRegex, parseCoordinates, getCities, getOwnCities, getCivilizationData | `ikatools/05-data` : Data<br>`ikatools/empire/00-types` : _impTypes<br>`ikatools/constants` : Constants |
+| `ikatools/empire/03-evenements` | raiseCivilizationDataChanged, civilizationDataChangedEvent, registerCivilizationDataChangedHandler, raiseMovementsChanged, movementsChangedEvent, registerMovementsChangedHandler, raiseResourcesChanged, resourcesChangedEvent … (21) | `ikatools/02-utils` : Utils |
+| `ikatools/empire/parseurs/formulaires` | processTransportForm, coordinatesEqual, processDeploymentForm, processPlunderForm | `ikatools/04-view` : View<br>`ikatools/constants` : Constants<br>`ikatools/empire/02-civilisation-mouvements` : Movement<br>`ikatools/empire/00-armee` : MilitaryUnits<br>`ikatools/02-utils` : Utils<br>`ikatools/empire/03-donnees` : getCity, getCivilizationData<br>`ikatools/empire/03-evenements` : raiseMilitaryChanged, raiseMovementsChanged |
+| `ikatools/empire/parseurs/armee` | _impReadCityMilitary, processCityMilitaryView, processRelatedCitiesView, parseMilitaryUnitsFromPending, parseTrainingBatches, computeTrainingTime, _IMP_BARRACKS_ORDER, _IMP_SHIPYARD_ORDER … (13) | `ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/03-donnees` : empireData, getCity<br>`ikatools/empire/03-evenements` : raiseMilitaryChanged<br>`ikatools/empire/00-armee` : MilitaryUnits, TrainingBatch |
+| `ikatools/empire/parseurs/ville` | processAcademyView, processSetScientistsForm, processPalaceView, processTownHallView, processTempleView, processResearchAdvisorView | `ikatools/04-view` : View<br>`ikatools/empire/03-evenements` : raiseCivilizationDataChanged, raiseResourcesChanged<br>`ikatools/02-utils` : Utils<br>`ikatools/constants` : Constants<br>`ikatools/empire/03-donnees` : empireData, getCity, getCivilizationData |
+| `ikatools/empire/parseurs/finances` | _bilanLastParsed, parseBilanDomIfVisible, processFinancesView | `ikatools/empire/03-donnees` : getCivilizationData, getOwnCities<br>`ikatools/constants` : Constants<br>`ikatools/empire/03-evenements` : raiseGoldChanged, raiseResourcesChanged |
+| `ikatools/empire/parseurs/sanctuaire` | _shrineLastParsed, SHRINE_GOD_NAMES, SHRINE_GOD_CLASS, parseShrineDuration, processShrineView | `ikatools/empire/03-donnees` : empireData, getCivilizationData, getOwnCities<br>`ikatools/empire/03-evenements` : raiseGoldChanged, raiseShrineChanged |
+| `ikatools/empire/parseurs/amelioration` | processBuildingUpgradeView | `ikatools/empire/parseurs/conseiller-militaire` : _impParseDurationMs<br>`ikatools/empire/03-donnees` : empireData, getCity |
 | `ikatools/empire/parseurs/aide-batiments` | _IMP_HELP_COLUMNS, _IMP_HELP_RESOURCES, buildingHelpData, _impHelpInt, parseBuildingDetailHtml, processBuildingDetailView, getHelpCost | `ikatools/05-data` : Data<br>`ikatools/constants` : Constants |
-| `ikatools/empire/parseurs/conseiller-militaire` | _impParseDurationMs, _impRefineWithClock, processMilitaryAdvisorView | `ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/04-suivi` : getCivilizationData<br>`ikatools/empire/00-armee` : MilitaryUnits<br>`ikatools/empire/02-civilisation-mouvements` : Movement<br>`ikatools/empire/03-evenements` : empireData, raiseMovementsChanged |
-| `ikatools/empire/04-suivi` | updateCurrentCity, refreshFinancesAndShrine, processPremiumView, updateEmpireDataFromGlobalData, updateAndStartTracking, updateMovements, getCities, getOwnCities … (11) | `ikatools/empire/03-evenements` : TRADE_GOOD_LOOKUP, empireData, parseCoordinates, raiseCivilizationDataChanged, raiseGoldChanged<br>`ikatools/02-utils` : Utils<br>`ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/parseurs/finances` : processFinancesView<br>`ikatools/empire/parseurs/sanctuaire` : processShrineView<br>`ikatools/empire/01-ville` : City<br>`ikatools/01-logging` : Logging<br>`ikatools/00-ouverture` : IkaTools<br>`ikatools/empire/parseurs/armee` : processBarracksView, processCityMilitaryView, processRelatedCitiesView, processShipyardView<br>`ikatools/empire/parseurs/ville` : processAcademyView, processPalaceView, processResearchAdvisorView, processSetScientistsForm, processTempleView, processTownHallView<br>`ikatools/empire/parseurs/conseiller-militaire` : processMilitaryAdvisorView<br>`ikatools/empire/parseurs/aide-batiments` : processBuildingDetailView<br>`ikatools/empire/parseurs/amelioration` : processBuildingUpgradeView<br>`ikatools/empire/parseurs/formulaires` : processDeploymentForm, processPlunderForm, processTransportForm |
-| `ikatools/espionnage` | Espionage | `ikatools/empire/00-armee` : MilitaryUnits<br>`ikatools/04-view` : View<br>`ikatools/constants` : Constants<br>`ikatools/empire/03-evenements` : TRADE_GOOD_LOOKUP<br>`ikatools/05-data` : Data<br>`ikatools/02-utils` : Utils<br>`ikatools/00-ouverture` : IkaTools |
-| `ikatools/empire/98-retour` | – | `ikatools/01-logging` : Logging<br>`ikatools/empire/04-suivi` : getCities, getCivilizationData, getDebugString, getOwnCities, refreshFinancesAndShrine, resetData, updateAndStartTracking, updateMovements<br>`ikatools/empire/02-civilisation-mouvements` : calculateTravelTime<br>`ikatools/empire/03-evenements` : getCity, raiseResourcesChanged, registerBuildingsChangedHandler, registerCivilizationDataChangedHandler, registerGoldChangedHandler, registerMilitaryChangedHandler, registerMovementsChangedHandler, registerResourcesChangedHandler, registerShrineChangedHandler<br>`ikatools/espionnage` : Espionage |
+| `ikatools/empire/parseurs/conseiller-militaire` | _impParseDurationMs, _impRefineWithClock, processMilitaryAdvisorView | `ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/03-donnees` : empireData, getCivilizationData<br>`ikatools/empire/00-armee` : MilitaryUnits<br>`ikatools/empire/02-civilisation-mouvements` : Movement<br>`ikatools/empire/03-evenements` : raiseMovementsChanged |
+| `ikatools/empire/04-suivi` | updateCurrentCity, refreshFinancesAndShrine, processPremiumView, updateEmpireDataFromGlobalData, updateAndStartTracking, updateMovements, getDebugString, resetData | `ikatools/empire/03-donnees` : TRADE_GOOD_LOOKUP, empireData, getCivilizationData, getOwnCities, parseCoordinates<br>`ikatools/empire/03-evenements` : raiseCivilizationDataChanged, raiseGoldChanged<br>`ikatools/02-utils` : Utils<br>`ikatools/constants` : Constants<br>`ikatools/04-view` : View<br>`ikatools/empire/parseurs/finances` : processFinancesView<br>`ikatools/empire/parseurs/sanctuaire` : processShrineView<br>`ikatools/empire/01-ville` : City<br>`ikatools/01-logging` : Logging<br>`ikatools/00-ouverture` : IkaTools<br>`ikatools/empire/parseurs/armee` : processBarracksView, processCityMilitaryView, processRelatedCitiesView, processShipyardView<br>`ikatools/empire/parseurs/ville` : processAcademyView, processPalaceView, processResearchAdvisorView, processSetScientistsForm, processTempleView, processTownHallView<br>`ikatools/empire/parseurs/conseiller-militaire` : processMilitaryAdvisorView<br>`ikatools/empire/parseurs/aide-batiments` : processBuildingDetailView<br>`ikatools/empire/parseurs/amelioration` : processBuildingUpgradeView<br>`ikatools/empire/parseurs/formulaires` : processDeploymentForm, processPlunderForm, processTransportForm |
+| `ikatools/espionnage` | Espionage | `ikatools/empire/00-armee` : MilitaryUnits<br>`ikatools/04-view` : View<br>`ikatools/constants` : Constants<br>`ikatools/empire/03-donnees` : TRADE_GOOD_LOOKUP<br>`ikatools/05-data` : Data<br>`ikatools/02-utils` : Utils<br>`ikatools/00-ouverture` : IkaTools |
+| `ikatools/empire/98-retour` | – | `ikatools/01-logging` : Logging<br>`ikatools/empire/04-suivi` : getDebugString, refreshFinancesAndShrine, resetData, updateAndStartTracking, updateMovements<br>`ikatools/empire/02-civilisation-mouvements` : calculateTravelTime<br>`ikatools/empire/03-donnees` : getCities, getCity, getCivilizationData, getOwnCities<br>`ikatools/empire/03-evenements` : raiseResourcesChanged, registerBuildingsChangedHandler, registerCivilizationDataChangedHandler, registerGoldChangedHandler, registerMilitaryChangedHandler, registerMovementsChangedHandler, registerResourcesChangedHandler, registerShrineChangedHandler<br>`ikatools/espionnage` : Espionage |
 | `ikatools/98-retour` | processAnchor, initialize | `ikatools/04-view` : View<br>`ikatools/00-ouverture` : IkaTools<br>`ikatools/constants` : Constants<br>`ikatools/01-logging` : Logging<br>`ikatools/02-utils` : Utils<br>`ikatools/05-data` : Data<br>`ikatools/empire/00-ouverture` : EmpireData<br>`ikatools/06-ui` : UI<br>`ikatools/07-settings` : Settings |
 | `03-attente-donnees` | – | `ikatools/00-ouverture` : IkaTools |
 | `imperator/localisations` | localizations | – |
@@ -52,6 +54,15 @@ Les fichiers *ouverture* / *fermeture* sont des enveloppes (ils ouvrent ou ferme
 | `modules/capture-vues` | – | `ikatools/00-ouverture` : IkaTools |
 | `modules/surlignage-ameliorations` | – | `ikatools/00-ouverture` : IkaTools |
 | `99-demarrage` | – | `ikatools/00-ouverture` : IkaTools<br>`imperator/00-ouverture` : Imperator |
+
+## Dépendances circulaires (6)
+
+- `ikatools/01-logging <-> ikatools/02-utils`
+- `ikatools/01-logging <-> ikatools/05-data`
+- `imperator/onglets/boissons <-> imperator/onglets/chantiers`
+- `imperator/onglets/99-popup-menu <-> imperator/onglets/batiments`
+- `imperator/onglets/99-popup-menu <-> imperator/onglets/chantiers`
+- `imperator/initialisation <-> imperator/reglages`
 
 ## Graphe
 
@@ -77,56 +88,59 @@ flowchart LR
   ikatools_empire_00_armee["ikatools/empire/00-armee"] --> ikatools_04_view["ikatools/04-view"]
   ikatools_empire_00_armee["ikatools/empire/00-armee"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_00_armee["ikatools/empire/00-armee"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
+  ikatools_empire_00_armee["ikatools/empire/00-armee"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
+  ikatools_empire_00_armee["ikatools/empire/00-armee"] --> ikatools_empire_00_types["ikatools/empire/00-types"]
   ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_empire_00_armee["ikatools/empire/00-armee"]
   ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
   ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_04_view["ikatools/04-view"]
-  ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
+  ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_02_utils["ikatools/02-utils"]
   ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_empire_parseurs_aide_batiments["ikatools/empire/parseurs/aide-batiments"]
+  ikatools_empire_01_ville["ikatools/empire/01-ville"] --> ikatools_empire_00_types["ikatools/empire/00-types"]
   ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"] --> ikatools_04_view["ikatools/04-view"]
+  ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
-  ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
-  ikatools_empire_03_evenements["ikatools/empire/03-evenements"] --> ikatools_05_data["ikatools/05-data"]
-  ikatools_empire_03_evenements["ikatools/empire/03-evenements"] --> ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"]
-  ikatools_empire_03_evenements["ikatools/empire/03-evenements"] --> ikatools_empire_01_ville["ikatools/empire/01-ville"]
-  ikatools_empire_03_evenements["ikatools/empire/03-evenements"] --> ikatools_empire_00_armee["ikatools/empire/00-armee"]
-  ikatools_empire_03_evenements["ikatools/empire/03-evenements"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
+  ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"] --> ikatools_empire_00_types["ikatools/empire/00-types"]
+  ikatools_empire_03_donnees["ikatools/empire/03-donnees"] --> ikatools_05_data["ikatools/05-data"]
+  ikatools_empire_03_donnees["ikatools/empire/03-donnees"] --> ikatools_empire_00_types["ikatools/empire/00-types"]
+  ikatools_empire_03_donnees["ikatools/empire/03-donnees"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_03_evenements["ikatools/empire/03-evenements"] --> ikatools_02_utils["ikatools/02-utils"]
-  ikatools_empire_03_evenements["ikatools/empire/03-evenements"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_04_view["ikatools/04-view"]
   ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"]
   ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_empire_00_armee["ikatools/empire/00-armee"]
   ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_02_utils["ikatools/02-utils"]
-  ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
+  ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_parseurs_formulaires["ikatools/empire/parseurs/formulaires"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
   ikatools_empire_parseurs_armee["ikatools/empire/parseurs/armee"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_parseurs_armee["ikatools/empire/parseurs/armee"] --> ikatools_04_view["ikatools/04-view"]
+  ikatools_empire_parseurs_armee["ikatools/empire/parseurs/armee"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_parseurs_armee["ikatools/empire/parseurs/armee"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
   ikatools_empire_parseurs_armee["ikatools/empire/parseurs/armee"] --> ikatools_empire_00_armee["ikatools/empire/00-armee"]
   ikatools_empire_parseurs_ville["ikatools/empire/parseurs/ville"] --> ikatools_04_view["ikatools/04-view"]
   ikatools_empire_parseurs_ville["ikatools/empire/parseurs/ville"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
   ikatools_empire_parseurs_ville["ikatools/empire/parseurs/ville"] --> ikatools_02_utils["ikatools/02-utils"]
   ikatools_empire_parseurs_ville["ikatools/empire/parseurs/ville"] --> ikatools_constants["ikatools/constants"]
-  ikatools_empire_parseurs_ville["ikatools/empire/parseurs/ville"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
-  ikatools_empire_parseurs_finances["ikatools/empire/parseurs/finances"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
+  ikatools_empire_parseurs_ville["ikatools/empire/parseurs/ville"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
+  ikatools_empire_parseurs_finances["ikatools/empire/parseurs/finances"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_parseurs_finances["ikatools/empire/parseurs/finances"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_parseurs_finances["ikatools/empire/parseurs/finances"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
-  ikatools_empire_parseurs_sanctuaire["ikatools/empire/parseurs/sanctuaire"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
+  ikatools_empire_parseurs_sanctuaire["ikatools/empire/parseurs/sanctuaire"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_parseurs_sanctuaire["ikatools/empire/parseurs/sanctuaire"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
   ikatools_empire_parseurs_amelioration["ikatools/empire/parseurs/amelioration"] --> ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"]
-  ikatools_empire_parseurs_amelioration["ikatools/empire/parseurs/amelioration"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
+  ikatools_empire_parseurs_amelioration["ikatools/empire/parseurs/amelioration"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_parseurs_aide_batiments["ikatools/empire/parseurs/aide-batiments"] --> ikatools_05_data["ikatools/05-data"]
   ikatools_empire_parseurs_aide_batiments["ikatools/empire/parseurs/aide-batiments"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"] --> ikatools_constants["ikatools/constants"]
   ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"] --> ikatools_04_view["ikatools/04-view"]
-  ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
+  ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"] --> ikatools_empire_00_armee["ikatools/empire/00-armee"]
   ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"] --> ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"]
   ikatools_empire_parseurs_conseiller_militaire["ikatools/empire/parseurs/conseiller-militaire"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
+  ikatools_empire_04_suivi["ikatools/empire/04-suivi"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_04_suivi["ikatools/empire/04-suivi"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
   ikatools_empire_04_suivi["ikatools/empire/04-suivi"] --> ikatools_02_utils["ikatools/02-utils"]
   ikatools_empire_04_suivi["ikatools/empire/04-suivi"] --> ikatools_constants["ikatools/constants"]
@@ -145,13 +159,14 @@ flowchart LR
   ikatools_espionnage["ikatools/espionnage"] --> ikatools_empire_00_armee["ikatools/empire/00-armee"]
   ikatools_espionnage["ikatools/espionnage"] --> ikatools_04_view["ikatools/04-view"]
   ikatools_espionnage["ikatools/espionnage"] --> ikatools_constants["ikatools/constants"]
-  ikatools_espionnage["ikatools/espionnage"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
+  ikatools_espionnage["ikatools/espionnage"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_espionnage["ikatools/espionnage"] --> ikatools_05_data["ikatools/05-data"]
   ikatools_espionnage["ikatools/espionnage"] --> ikatools_02_utils["ikatools/02-utils"]
   ikatools_espionnage["ikatools/espionnage"] --> ikatools_00_ouverture["ikatools/00-ouverture"]
   ikatools_empire_98_retour["ikatools/empire/98-retour"] --> ikatools_01_logging["ikatools/01-logging"]
   ikatools_empire_98_retour["ikatools/empire/98-retour"] --> ikatools_empire_04_suivi["ikatools/empire/04-suivi"]
   ikatools_empire_98_retour["ikatools/empire/98-retour"] --> ikatools_empire_02_civilisation_mouvements["ikatools/empire/02-civilisation-mouvements"]
+  ikatools_empire_98_retour["ikatools/empire/98-retour"] --> ikatools_empire_03_donnees["ikatools/empire/03-donnees"]
   ikatools_empire_98_retour["ikatools/empire/98-retour"] --> ikatools_empire_03_evenements["ikatools/empire/03-evenements"]
   ikatools_empire_98_retour["ikatools/empire/98-retour"] --> ikatools_espionnage["ikatools/espionnage"]
   ikatools_98_retour["ikatools/98-retour"] --> ikatools_04_view["ikatools/04-view"]
