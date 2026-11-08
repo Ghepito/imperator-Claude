@@ -447,18 +447,47 @@
                                         $('#tabSafehouse li.city a').each(function(index, item) {
                                             var cityId = parseInt(Utils.parseUrlParams($(item).attr('href'))['cityId']);
                                             if (!cityId) return;
-                                            if (getTarget(cityId)) return;
-                                            var t = new Target(cityId);
-                                            t.name = $(item).text().trim().split('(')[0].trim();
-                                            var coordMatch = $(item).text().match(/\[(\d+)\s*:\s*(\d+)\]/);
-                                            t.coords = coordMatch ? [parseInt(coordMatch[1]), parseInt(coordMatch[2])] : [0, 0];
-                                            t.tradeGoodType = 'wood';
-                                            t.islandId = 0;
-                                            t.townLevel = 0;
-                                            t.wallLevel = 0;
-                                            t.warehouseLevel = 0;
-                                            espionageData.get().targets[cityId] = t;
-                                            newTargets.push(t);
+                                            // v2.34 : le jeu écrit « Polis (37:63) » ici (parenthèses), « [37:63] » ailleurs
+                                            var coordMatch = $(item).text().match(/[\[(]\s*(\d+)\s*:\s*(\d+)\s*[\])]/);
+                                            var t = getTarget(cityId);
+                                            var isNew = !t;
+                                            if (isNew) {
+                                                t = new Target(cityId);
+                                                t.name = $(item).text().trim().split(/[\[(]/)[0].trim();
+                                                t.tradeGoodType = 'wood';
+                                                t.islandId = 0;
+                                                t.townLevel = 0;
+                                                t.wallLevel = 0;
+                                                t.warehouseLevel = 0;
+                                                espionageData.get().targets[cityId] = t;
+                                            }
+                                            var changed = isNew;
+                                            if (coordMatch && (!t.coords || !t.coords[0])) {
+                                                t.coords = [parseInt(coordMatch[1]), parseInt(coordMatch[2])];
+                                                changed = true;
+                                            } else if (!t.coords) {
+                                                t.coords = [0, 0];
+                                            }
+                                            // v2.34 : joueur et alliance, affichés dans la même fiche de la Cachette
+                                            var $info = $(item).closest('div.spyinfo');
+                                            var $user = $info.find('li.user a[href*="avatarProfile"]').first();
+                                            var playerId = $user.length ?
+                                                parseInt(Utils.parseUrlParams($user.attr('href'))['avatarId']) : 0;
+                                            if (playerId) {
+                                                var players = espionageData.get().players;
+                                                if (t.playerId < 0 && t.playerId !== playerId) delete players[t.playerId];
+                                                var $ally = $info.find('li.user a[href*="allyPage"]').first();
+                                                var allyId = $ally.length ?
+                                                    (parseInt(Utils.parseUrlParams($ally.attr('href'))['allyId']) || 0) : 0;
+                                                var known = players[playerId];
+                                                updateOrAddPlayer(playerId, $user.text().trim(),
+                                                                  (known && known.getState()) || '', allyId,
+                                                                  allyId ? $ally.text().trim() : '',
+                                                                  known ? known.getMilitaryScore() : undefined);
+                                                t.playerId = playerId;
+                                                changed = true;
+                                            }
+                                            if (changed) newTargets.push(t);
                                         });
                                         if (newTargets.length > 0) {
                                             espionageData.saveAsync();
