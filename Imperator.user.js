@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v2.39
-// @version        2.39
+// @name           Imperator v2.40
+// @version        2.40
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        2.40 Infobulles de la recherche (onglet Ressources) : icone de l'ampoule retablie (ancien chemin relatif skin/layout/... remplace par celui de l'en-tete de colonne, /cdn/all/both/layout/bulb-on.png). Signale par Ghepito.
 // @history        2.39 Restructuration, sans changement visible : la brique des vues (View) ne depend plus du modele de l'empire (c'est le modele qui lui indique comment retrouver la ville active) ; la bibliotheque n'utilise plus le nom global IkaTools pour joindre ses propres modules. Regle des couches verifiee par les tests.
 // @history        2.38 Restructuration du coeur de l'empire, sans changement visible (7 onglets identiques au banc d'affichage) : magasin de donnees separe des evenements, acces en lecture regroupes, registre des types pour recreer les objets sauvegardes. Dependances circulaires : 16 -> 6.
 // @history        2.37 Nettoyage, sans changement visible (7 onglets identiques au banc d'affichage) : 3 fonctions jamais utilisees et du code commente retires ; updateCurrentCity declaree (etait une variable globale implicite).
@@ -10946,7 +10947,7 @@ min-width: 851px !important; \
 
 
                         toolTips.registerSimple(link.getId(),
-                                                makeResourceUseToolTip('skin/layout/bulb-on.png',
+                                                makeResourceUseToolTip('/cdn/all/both/layout/bulb-on.png',
                                                                        [makeResourceUseTableRow('+', research)]));
                         toolTips.registerSimple(percentBarId,
                                                 ('<table><tbody>' +
@@ -11321,7 +11322,7 @@ min-width: 851px !important; \
                         // Total des recherches
                         toolTips.registerSimple('ResearchTotal',
                                                 makeResourceUseToolTip(
-                            'skin/layout/bulb-on.png', rows, footer));
+                            '/cdn/all/both/layout/bulb-on.png', rows, footer));
 
                         let formattedTotal = Math.floor(total + culturalGoods).toLocaleString();
                         return '<td id="ResearchTotal" class="research imperator_tool_tip">' + formattedTotal + '</td>';

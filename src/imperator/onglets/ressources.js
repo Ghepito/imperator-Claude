@@ -383,7 +383,7 @@
 
 
                         toolTips.registerSimple(link.getId(),
-                                                makeResourceUseToolTip('skin/layout/bulb-on.png',
+                                                makeResourceUseToolTip('/cdn/all/both/layout/bulb-on.png',
                                                                        [makeResourceUseTableRow('+', research)]));
                         toolTips.registerSimple(percentBarId,
                                                 ('<table><tbody>' +
@@ -758,7 +758,7 @@
                         // Total des recherches
                         toolTips.registerSimple('ResearchTotal',
                                                 makeResourceUseToolTip(
-                            'skin/layout/bulb-on.png', rows, footer));
+                            '/cdn/all/both/layout/bulb-on.png', rows, footer));
 
                         let formattedTotal = Math.floor(total + culturalGoods).toLocaleString();
                         return '<td id="ResearchTotal" class="research imperator_tool_tip">' + formattedTotal + '</td>';
