@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.3
+// @version        3.4
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.4 Infobulles en bas de fenetre : la hauteur est mesuree sur le contenu de l'infobulle (la boite qui le porte n'a pas de hauteur), elles passent donc bien au-dessus du curseur ; fenetre visible lue directement (zoom du navigateur compris).
 // @history        3.3 Colonne Recherche : apres confirmation du nombre de chercheurs a l'academie, la recherche/h de la ville est mise a jour aussitot (estimee, puis lue dans l'academie). Infobulles : affichees au-dessus du curseur quand elles depasseraient le bas de la fenetre (total de la recherche notamment).
 // @history        3.2 Colonne Recherche (onglet Ressources) : la barre de progression est remplacee par un anneau de remplissage de l'academie, le nombre de chercheurs et leur cout en or par heure ; ville sans academie : tiret ; case grisee si l'academie n'a pas ete revue depuis 24 h. Infobulle : chercheurs/max, places libres, cout direct, manque a gagner, or net de la ville, or par point, anciennete du releve. Total : chercheurs et cout de l'empire (rouge si le solde d'or est negatif), detail par heure, jour et semaine. Le nombre de chercheurs lu a l'academie n'est plus ecrase par une estimation du Bilan.
 // @history        3.1 Historique des alertes : chaque alerte de bureau (ou celle qui n'a pas pu s'afficher) est notee avec son heure ; les 50 dernieres se consultent par l'entree Alertes du menu de gauche (cloche, nombre de non lues, bouton Vider).
@@ -1761,10 +1762,12 @@ if (typeof IkaTools == 'undefined') {
                 _fitInViewport: function _fitInViewport() {
                     var y = this._lastPageY;
                     if (y === undefined) return;
-                    var win = $(window);
-                    var height = this.toolTipContainer.outerHeight();
-                    var viewTop = win.scrollTop();
-                    var viewBottom = viewTop + win.height();
+                    // v3.4 : le contenu (classe tool_tip_container) est en position absolue ; la
+                    // boîte qui le porte a donc une hauteur nulle : on mesure le contenu.
+                    var height = Math.max(this.toolTipContainer.outerHeight() || 0,
+                                          $(this.options.toolTipContainer).outerHeight() || 0);
+                    var viewTop = window.pageYOffset || $(window).scrollTop() || 0;
+                    var viewBottom = viewTop + (window.innerHeight || $(window).height());
                     if (y + this.options.offsetY + height > viewBottom) {
                         this.toolTipContainer.css('top',
                             Math.max(viewTop, y - height - 10) + 'px');

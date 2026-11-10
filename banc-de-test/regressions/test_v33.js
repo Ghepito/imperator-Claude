@@ -37,9 +37,13 @@ w.eval('window.__fit = {' + s.slice(f0, f1) + '};');
 const fit = w.__fit._fitInViewport;
 const $ = w.jQuery;
 const box = $('<div style="position:absolute"/>').appendTo(w.document.body);
-const h = { toolTipContainer: box, options: { offsetY: 20 } };
+const inner = $('<div class="tool_tip_container" style="position:absolute"/>').appendTo(box);
+const h = { toolTipContainer: box, options: { offsetY: 20, toolTipContainer: inner } };
 Object.defineProperty(w.document.documentElement, 'clientHeight', { value: 600 });
-box.outerHeight = () => 200;
+w.innerHeight = 600;
+box.outerHeight = () => 0;            // v3.4 : la boîte porteuse n'a pas de hauteur (contenu en absolu)
+inner.outerHeight = () => 200;
+w.jQuery.fn.outerHeight = function () { return this[0] === inner[0] ? 200 : 0; };
 h._lastPageY = 100; box.css('top', '120px'); fit.call(h);
 t('en haut de la fenêtre : sous le curseur', box.css('top') === '120px', box.css('top'));
 h._lastPageY = 550; box.css('top', '570px'); fit.call(h);

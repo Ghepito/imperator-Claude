@@ -56,10 +56,12 @@
                 _fitInViewport: function _fitInViewport() {
                     var y = this._lastPageY;
                     if (y === undefined) return;
-                    var win = $(window);
-                    var height = this.toolTipContainer.outerHeight();
-                    var viewTop = win.scrollTop();
-                    var viewBottom = viewTop + win.height();
+                    // v3.4 : le contenu (classe tool_tip_container) est en position absolue ; la
+                    // boîte qui le porte a donc une hauteur nulle : on mesure le contenu.
+                    var height = Math.max(this.toolTipContainer.outerHeight() || 0,
+                                          $(this.options.toolTipContainer).outerHeight() || 0);
+                    var viewTop = window.pageYOffset || $(window).scrollTop() || 0;
+                    var viewBottom = viewTop + (window.innerHeight || $(window).height());
                     if (y + this.options.offsetY + height > viewBottom) {
                         this.toolTipContainer.css('top',
                             Math.max(viewTop, y - height - 10) + 'px');

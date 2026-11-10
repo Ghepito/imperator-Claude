@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.4
+
+Infobulles en bas de fenêtre : la hauteur est mesurée sur le contenu de l'infobulle (la boîte qui le porte n'a pas de hauteur), elles passent donc bien au-dessus du curseur ; fenêtre visible lue directement (zoom du navigateur compris).
+
 ## 3.3
 
 Colonne Recherche : après confirmation du nombre de chercheurs à l'académie, la recherche/h de la ville est mise à jour aussitôt (estimée, puis lue dans l'académie). Infobulles : affichées au-dessus du curseur quand elles dépasseraient le bas de la fenêtre (total de la recherche notamment).
