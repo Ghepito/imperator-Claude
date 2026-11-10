@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.12
-// @version        3.12
+// @name           Imperator v3.13
+// @version        3.13
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.13 Popup Planifier l'amelioration : il n'apparait plus pres de la case pendant l'ouverture de la fenetre du batiment ; il s'affiche directement en bandeau sur la fenetre (ou pres de la case si aucune fenetre ne s'ouvre en 3 s).
 // @history        3.12 Espionnage : les liens vers l'ile d'une cible (coordonnees, pillage, blocus, occupation) donnent aussi l'ile au jeu ; depuis une autre ile, on change bien d'ile au lieu de voir seulement la fiche du joueur.
 // @history        3.11 Onglet Espionnage : traits entre les colonnes, comme dans les autres onglets (colonnes declarees).
 // @history        3.10 Fenetre d'Imperator : meme espace libre a droite qu'a gauche, noms des onglets centres dans la hauteur. Tableaux : couleur de fond et bordures fusionnees enfin appliquees (point-virgule manquant dans le style).

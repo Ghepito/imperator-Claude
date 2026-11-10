@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.13
+
+Popup Planifier l'amelioration : il n'apparait plus pres de la case pendant l'ouverture de la fenetre du batiment ; il s'affiche directement en bandeau sur la fenetre (ou pres de la case si aucune fenetre ne s'ouvre en 3 s).
+
 ## 3.12
 
 Espionnage : les liens vers l'ile d'une cible (coordonnees, pillage, blocus, occupation) donnent aussi l'ile au jeu ; depuis une autre ile, on change bien d'ile au lieu de voir seulement la fiche du joueur.

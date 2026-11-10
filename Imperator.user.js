@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.12
-// @version        3.12
+// @name           Imperator v3.13
+// @version        3.13
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.13 Popup Planifier l'amelioration : il n'apparait plus pres de la case pendant l'ouverture de la fenetre du batiment ; il s'affiche directement en bandeau sur la fenetre (ou pres de la case si aucune fenetre ne s'ouvre en 3 s).
 // @history        3.12 Espionnage : les liens vers l'ile d'une cible (coordonnees, pillage, blocus, occupation) donnent aussi l'ile au jeu ; depuis une autre ile, on change bien d'ile au lieu de voir seulement la fiche du joueur.
 // @history        3.11 Onglet Espionnage : traits entre les colonnes, comme dans les autres onglets (colonnes declarees).
 // @history        3.10 Fenetre d'Imperator : meme espace libre a droite qu'a gauche, noms des onglets centres dans la hauteur. Tableaux : couleur de fond et bordures fusionnees enfin appliquees (point-virgule manquant dans le style).
@@ -159,7 +160,7 @@
     closePopover();
     var tgt = parseTarget(cell);
     var pop = document.createElement('div');
-    pop.className = 'imp-cr-pop';
+    pop.className = 'imp-cr-pop imp-cr-wait';   // v3.13 : invisible tant que la fenêtre n'est pas ouverte
     pop.innerHTML =
       '<div class="imp-cr-pt">Planifier l\u2019am\u00e9lioration</div>' +
       '<div class="imp-cr-line">Cit\u00e9 <b>' + esc(tgt.cityId) + '</b> \u00b7 emplacement <b>' + esc(tgt.position) + '</b></div>' +
@@ -169,6 +170,18 @@
     document.body.appendChild(pop);
     positionNear(pop, cell);
     dockWhenWindowOpens(pop);   // v2.42 : rejoint le haut de la fenêtre du bâtiment
+    // v3.13 : le popup n'apparaît plus près de la case avant l'ouverture de la fenêtre.
+    // Si aucune fenêtre ne s'ouvre (3 s), il s'affiche près de la case, si elle est encore là ;
+    // sinon il est retiré.
+    pop._fallback = setTimeout(function () {
+      if (!pop.parentNode || !pop.classList.contains('imp-cr-wait')) return;
+      if (cell.isConnected && cell.getClientRects().length) {
+        positionNear(pop, cell);
+        pop.classList.remove('imp-cr-wait');
+      } else {
+        closePopover();
+      }
+    }, 3000);
 
     // v2.43 : les clics dans le popup ne vont jamais au jeu
     ['mousedown', 'mouseup', 'click'].forEach(function (t) {
@@ -190,6 +203,7 @@
     if (p._outside) document.removeEventListener('mousedown', p._outside, true);
     if (p._observer) p._observer.disconnect();
     if (p._follow) clearInterval(p._follow);
+    if (p._fallback) clearTimeout(p._fallback);
     p.remove();
   }
 
@@ -235,6 +249,7 @@
     try {
       if (!pop.parentNode) return;   // déjà fermé
       pop.classList.add('imp-cr-dock');
+      pop.classList.remove('imp-cr-wait');   // v3.13 : apparaît directement sur la fenêtre
       var place = function () {
         if (!pop.parentNode) { clearInterval(pop._follow); return; }
         if (!box.isConnected) return;   // fenêtre fermée : le bandeau reste où il est
@@ -277,6 +292,7 @@
       '.imp-cr-cancel{background:#EFDEB2;border:1px solid #B4914E;color:#8A6D39}' +
       '.imp-cr-plan{background:#D8B871;border:1px solid #8A6D39;color:#5A3E1B;font-weight:600}' +
       // v2.42 : bandeau compact au sommet de la fenêtre du bâtiment
+      '.imp-cr-pop.imp-cr-wait{visibility:hidden !important}' +
       '.imp-cr-pop.imp-cr-dock{position:fixed;box-sizing:border-box;padding:6px 10px;display:grid;' +
       'grid-template-columns:auto auto 1fr 190px;column-gap:14px;row-gap:2px;align-items:center;text-align:left}' +
       '.imp-cr-dock .imp-cr-pt{grid-column:1 / span 2;grid-row:1;margin:0}' +
