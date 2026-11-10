@@ -47,13 +47,13 @@ t('actif terminé : terminé (rechargement inconnu)', S(now - 1000, 0, false) ==
 t('rechargement fini : à activer', S(0, now - 1000, false) === 'ready / à activer');
 // --- Répartition
 const res = $('<div>' + api.impMiracleChips(now, false) + '</div>'), arm = $('<table>' + api.impMiracleMilitaryCaption() + '<tbody></tbody></table>');
-t('Ressources : Poséidon seul', res.find('.imp-miracle-chip').length === 1 && /^Poséidon \[51:54\] actif 3h 56m$/.test(res.text()), res.text());
+t('Ressources : Poséidon seul', res.find('.imp-miracle-chip').length === 1 && /^Poséidon actif 3h 56m$/.test(res.text()), res.text()); // v3.16 : plus de coordonnées sur la pastille
 t('Armée : Héphaïstos seul, à activer, voyant orange', arm.find('.imp-miracle-chip.imp-miracle-ready').closest('caption.imp-miracle-cap').length === 1 &&
-  /Héphaïstos \[50:52\] à activer/.test(arm.text()), arm.text());
+  /Héphaïstos à activer/.test(arm.text()), arm.text());
 store[501].activeEnd = now - 1000;
 const res2 = $('<div>' + api.impMiracleChips(now, false) + '</div>');
 t('Poséidon terminé : toujours affiché, en orange', res2.find('.imp-miracle-chip.imp-miracle-ended').length === 1 && /terminé/.test(res2.text()));
 t('Armée : le tableau reçoit la barre', /try \{ miracleCaption = impMiracleMilitaryCaption\(\); \}/.test(s) && /return miracleCaption \+ '%s%s%s<thead>/.test(s));
 t('Armée : redessinée quand un Temple est relu', /registerShrineChangedHandler\(function\(\) \{\s*tab\.maybeRedraw\(true\);\s*\}\);/.test(s.slice(s.indexOf("var tab = new Tab('military'"))));
-t('décompte : l\'état change sans redessiner', /var st = impMiracleState\(parseInt\(\$e\.attr\('data-imp-miracle-end'\)/.test(s));
+t('décompte : l\'état change sans redessiner', /\$\('\[data-imp-miracle-end\]'\)\.each/.test(s) && /removeClass\('imp-miracle-active imp-miracle-cooldown imp-miracle-ready imp-miracle-ended'\)/.test(s));
 console.log(`\n${ok} réussis, ${ko} échoués`); process.exit(ko ? 1 : 0);

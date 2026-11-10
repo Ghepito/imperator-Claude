@@ -325,28 +325,56 @@
             list.sort(function(a, b) { return impMiracleGod(a.m.name).localeCompare(impMiracleGod(b.m.name)); });
             return list;
         }
-        function impMiracleChips(now, military) {
-            return $.map(impMiracleList(military), function(x) {
-                var co = x.city.getIslandCoordinates ? x.city.getIslandCoordinates() : null;
-                var coords = co ? '[' + co[0] + ':' + co[1] + ']' : '';
+        // v3.16 : un miracle actif vaut pour toutes les îles du joueur. Une seule pastille par miracle,
+        // qui fait la synthèse de ses Temples : actif (fin la plus lointaine) > à activer > rechargement
+        // (reprise la plus proche) > terminé. Le détail île par île est dans l'infobulle.
+        function impMiracleSynth(group, now) {
+            var best = null, rank = { active: 0, ready: 1, cooldown: 2, ended: 3 };
+            $.each(group, function(i, x) {
                 var st = impMiracleState(x.m.activeEnd, x.m.cooldownEnd, x.m.canActivate, now);
-                var names = $.map(x.cities, function(c) { return c.getName(); }).join(', ');
-                var when = function(t) { return new Date(t).toLocaleString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }); };
-                var lines = [x.m.name + (x.m.level ? ' (niveau ' + x.m.level + ')' : '') + ' ' + coords];
-                if (x.m.activeEnd) lines.push((x.m.activeEnd > now ? 'Actif jusqu\'à ' : 'Terminé depuis ') + when(x.m.activeEnd));
-                if (x.m.cooldownEnd) lines.push('Rechargement jusqu\'à ' + when(x.m.cooldownEnd));
+                var key = st.state === 'active' ? -(x.m.activeEnd || 0) : (st.state === 'cooldown' ? (x.m.cooldownEnd || 0) : 0);
+                if (!best || rank[st.state] < rank[best.st.state] || (rank[st.state] === rank[best.st.state] && key < best.key)) {
+                    best = { x: x, st: st, key: key };
+                }
+            });
+            return best;
+        }
+        function impMiracleChips(now, military) {
+            var groups = {}, order = [];
+            $.each(impMiracleList(military), function(i, x) {
+                var god = impMiracleGod(x.m.name);
+                if (!groups[god]) { groups[god] = []; order.push(god); }
+                groups[god].push(x);
+            });
+            var when = function(t) { return new Date(t).toLocaleString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }); };
+            return $.map(order, function(god) {
+                var group = groups[god], best = impMiracleSynth(group, now), x = best.x;
+                var lines = [group[0].m.name + (x.m.level ? ' (niveau ' + x.m.level + ')' : '') +
+                             ' \u2014 ' + group.length + ' Temple' + (group.length > 1 ? 's' : '')];
+                $.each(group, function(i, y) {
+                    var co = y.city.getIslandCoordinates ? y.city.getIslandCoordinates() : null;
+                    var st = impMiracleState(y.m.activeEnd, y.m.cooldownEnd, y.m.canActivate, now);
+                    var detail = st.label;
+                    if (st.state === 'active') detail += ' (jusqu\'à ' + when(y.m.activeEnd) + ')';
+                    if (st.state === 'cooldown') detail += ' (jusqu\'à ' + when(y.m.cooldownEnd) + ')';
+                    lines.push('\u2022 ' + (co ? '[' + co[0] + ':' + co[1] + '] ' : '') + y.city.getName() + ' : ' + detail +
+                               ' \u2014 lu ' + impBlessFmtAgo(y.m.readAt));
+                });
                 if (x.m.durationText) lines.push(x.m.durationText);
                 if (x.m.cooldownText) lines.push(x.m.cooldownText);
-                lines.push('Villes sur l\'île : ' + names);
-                lines.push('Relevé au Temple ' + impBlessFmtAgo(x.m.readAt) + ' \u2014 clic : ouvrir le Temple');
-                return '<a href="javascript:void(0);" class="imp-miracle-chip imp-miracle-' + st.state + '"' +
+                lines.push('Clic : ouvrir le Temple de ' + x.city.getName());
+                // Le décompte suit le Temple retenu ; les autres sont rangés pour la relève (data-imp-miracle-alt).
+                var alt = $.map(group, function(y) {
+                    return y === x ? null : (y.m.activeEnd || 0) + ',' + (y.m.cooldownEnd || 0) + ',' + (y.m.canActivate ? 1 : 0);
+                }).join(';');
+                return '<a href="javascript:void(0);" class="imp-miracle-chip imp-miracle-' + best.st.state + '"' +
                        ' data-imp-miracle-end="' + (x.m.activeEnd || 0) + '" data-imp-miracle-cd="' + (x.m.cooldownEnd || 0) + '"' +
-                       ' data-imp-miracle-can="' + (x.m.canActivate ? 1 : 0) + '"' +
+                       ' data-imp-miracle-can="' + (x.m.canActivate ? 1 : 0) + '" data-imp-miracle-alt="' + alt + '"' +
                        ' data-imp-miracle-city="' + x.city.getId() + '"' +
                        (x.m.position !== null && x.m.position !== undefined ? ' data-imp-miracle-pos="' + x.m.position + '"' : '') +
                        ' title="' + __impH(lines.join('\n')) + '"><span class="imp-miracle-dot"></span>' +
-                       __impH(impMiracleGod(x.m.name)) + ' ' + coords +
-                       ' <span class="imp-miracle-rem">' + __impH(st.label) + '</span></a>';
+                       __impH(god) + (group.length > 1 ? ' (' + group.length + ')' : '') +
+                       ' <span class="imp-miracle-rem">' + __impH(best.st.label) + '</span></a>';
             }).join('');
         }
         function impMiracleBar(now, military) {
@@ -482,9 +510,14 @@
                     // v3.15 : état et décompte des miracles (actif -> terminé, recharge -> à activer)
                     $('[data-imp-miracle-end]').each(function() {
                         var $e = $(this);
-                        var st = impMiracleState(parseInt($e.attr('data-imp-miracle-end'), 10) || 0,
-                                                 parseInt($e.attr('data-imp-miracle-cd'), 10) || 0,
-                                                 $e.attr('data-imp-miracle-can') === '1', now);
+                        var group = [{ m: { activeEnd: parseInt($e.attr('data-imp-miracle-end'), 10) || 0,
+                                            cooldownEnd: parseInt($e.attr('data-imp-miracle-cd'), 10) || 0,
+                                            canActivate: $e.attr('data-imp-miracle-can') === '1' } }];
+                        $.each(String($e.attr('data-imp-miracle-alt') || '').split(';'), function(i, a) {
+                            var v = a.split(',');
+                            if (v.length === 3) group.push({ m: { activeEnd: +v[0], cooldownEnd: +v[1], canActivate: v[2] === '1' } });
+                        });
+                        var st = impMiracleSynth(group, now).st;   // v3.16
                         $e.removeClass('imp-miracle-active imp-miracle-cooldown imp-miracle-ready imp-miracle-ended')
                           .addClass('imp-miracle-' + st.state);
                         $e.find('.imp-miracle-rem').text(st.label);
