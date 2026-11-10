@@ -1,21 +1,43 @@
 
 
+            // v3.2 : recherche/h affichée par l'académie (séparateurs de milliers ignorés)
+            function readAcademyResearchValue() {
+                var el = $('#valueResearch');
+                if (!el.length) return NaN;
+                var digits = el.text().replace(/[^0-9]/g, '');
+                return digits ? parseInt(digits, 10) : NaN;
+            }
+
+            // v3.2 : recherche/h estimée après un changement du nombre de chercheurs, en attendant
+            // la valeur du jeu : même rendement par chercheur qu'avant, sinon celui des autres villes.
+            function estimateResearchPerHour(city, oldScientists, oldResearch, newScientists) {
+                if (!(newScientists > 0)) return 0;
+                if (oldScientists > 0 && oldResearch > 0) {
+                    return Math.round(oldResearch / oldScientists * newScientists);
+                }
+                var points = 0, count = 0;
+                $.each(getOwnCities(), function(i, c) {
+                    if (!c || c === city || c.researchPerHour == null) return;
+                    var sc = Number(c.getScientists()) || 0;
+                    if (sc > 0 && c.researchPerHour > 0) { points += c.researchPerHour; count += sc; }
+                });
+                return count > 0 ? Math.round(points / count * newScientists) : null;
+            }
+
             function processAcademyView(data) {
                 var changes = [];
                 var city = View.getCurrentCity();
                 var scientists = parseInt(data['js_academy_research_tooltip_basic_production'].text);
                 city._updateScientists(scientists, changes);
                 if (!isNaN(scientists)) city._markScientistsRead(); // v3.2
-                var researchEl = $('#valueResearch');
-                if (researchEl.length) {
-                    var total = parseInt(researchEl.text());
-                    if (!isNaN(total)) city._updateResearchPerHour(total, changes);
-                }
+                var total = readAcademyResearchValue();
+                if (!isNaN(total)) city._updateResearchPerHour(total, changes);
                 raiseResourcesChanged(changes);
             }
 
             function processSetScientistsForm(form) {
                 var scientists = parseInt($('#inputScientists').val());
+                var shownBefore = readAcademyResearchValue(); // v3.2
 
                 View.registerNextIkariamAjaxRequestCallback(function saveScientstsData(response) {
                     Utils.iterateIkariamAjaxResponse(response,
@@ -23,9 +45,24 @@
                         if (name == Constants.IkariamAjaxResponseType.PROVIDE_FEEDBACK &&
                             data[0].type == 10) {
                             var changes = [];
-                            View.getCurrentCity()._updateScientists(scientists, changes);
-                            View.getCurrentCity()._markScientistsRead(); // v3.2
+                            var city = View.getCurrentCity();
+                            // v3.2 : la recherche/h suit tout de suite le nouveau nombre de chercheurs
+                            var oldScientists = Number(city.getScientists()) || 0;
+                            city._updateResearchPerHour(estimateResearchPerHour(
+                                city, oldScientists, city.researchPerHour, scientists), changes);
+                            city._updateScientists(scientists, changes);
+                            city._markScientistsRead(); // v3.2
                             raiseResourcesChanged(changes);
+                            // puis la valeur exacte, dès que l'académie l'affiche
+                            setTimeout(function readExactResearch() {
+                                var shown = readAcademyResearchValue();
+                                if (isNaN(shown) || (shown === shownBefore && scientists !== oldScientists)) return;
+                                if (shown === city.researchPerHour) return;
+                                var exact = [];
+                                city._updateResearchPerHour(shown, exact);
+                                exact.push({ city: city, type: Constants.Resources.SCIENTISTS, value: scientists });
+                                raiseResourcesChanged(exact);
+                            }, 600);
                         }
                     });
                 });

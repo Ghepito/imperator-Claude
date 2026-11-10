@@ -41,6 +41,6 @@ t('ville sans académie : tiret', /<td class="research"><span class="imp_rs_none
 t('plus de barre de progression dans la colonne Recherche', !/research_percent_bar/.test(s));
 t('case de total : coût en rouge si le solde d\'or est négatif', /goldNegative \? ' imp_rs_negative' : ''/.test(s) &&
   /registerGoldChangedHandler\(function\(\) \{\n\s+var gd = IkaTools\.EmpireData\.getCivilizationData\(\)\.getGoldData\(\);/.test(s));
-t('relevé de l\'académie daté', /city\._markScientistsRead\(\); \/\/ v3\.2/.test(s) && /View\.getCurrentCity\(\)\._markScientistsRead\(\); \/\/ v3\.2/.test(s));
+t('relevé de l\'académie daté', (s.match(/\._markScientistsRead\(\); \/\/ v3\.2/g) || []).length >= 2);
 t('le Bilan n\'écrase plus un relevé de l\'académie', /\$cells\.length >= 3 && !city\.getScientistsReadAt\(\)/.test(s));
 console.log(`\n${ok} réussis, ${ko} échoués`); process.exit(ko ? 1 : 0);

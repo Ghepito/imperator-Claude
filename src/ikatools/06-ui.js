@@ -49,6 +49,20 @@
                         this.activeToolTip = toolTipInfo.contentCreator($(this.activeToolTipElement));
                         this.options.toolTipContainer.append(this.activeToolTip);
                         this.toolTipContainer.show();
+                        this._fitInViewport();
+                    }
+                },
+                // v3.2 : une infobulle qui dépasserait le bas de la fenêtre s'affiche au-dessus du curseur
+                _fitInViewport: function _fitInViewport() {
+                    var y = this._lastPageY;
+                    if (y === undefined) return;
+                    var win = $(window);
+                    var height = this.toolTipContainer.outerHeight();
+                    var viewTop = win.scrollTop();
+                    var viewBottom = viewTop + win.height();
+                    if (y + this.options.offsetY + height > viewBottom) {
+                        this.toolTipContainer.css('top',
+                            Math.max(viewTop, y - height - 10) + 'px');
                     }
                 },
                 _mouseOver: function _mouseOver(e) {
@@ -61,6 +75,7 @@
 
                     if (toolTipElement.length > 0) {
                         this.activeToolTipElement = toolTipElement[0];
+                        this._lastPageY = e.pageY;
                         this.toolTipContainer.css({
                             left: (e.pageX + this.options.offsetX) + 'px',
                             top: (e.pageY + this.options.offsetY) + 'px',
@@ -82,6 +97,7 @@
                 },
                 _mouseMove: function _mouseMove(e) {
                     if (this.activeToolTipElement && !this.activeToolTip) {
+                        this._lastPageY = e.pageY;
                         this.toolTipContainer.css({
                             left: (e.pageX + this.options.offsetX)+ 'px',
                             top: (e.pageY + this.options.offsetY) + 'px',
