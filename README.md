@@ -62,6 +62,7 @@ comme ci-dessus si Tampermonkey ne l'intercepte pas).
 
 | Version | Installer | Code |
 |---|---|---|
+| v3.2 | [installer](https://github.com/Ghepito/imperator-Claude/raw/ea33cf724f9847e468dc43e8bdffed02670a1a6a/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/ea33cf724f9847e468dc43e8bdffed02670a1a6a/Imperator.user.js) |
 | v3.1 | [installer](https://github.com/Ghepito/imperator-Claude/raw/9e583cd4fe41d38f4e3f890c88cc675c5a44197e/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/9e583cd4fe41d38f4e3f890c88cc675c5a44197e/Imperator.user.js) |
 | **v3.0** | [installer](https://github.com/Ghepito/imperator-Claude/raw/6f5746d652acc1a5bd541c3ec1e8746db99691da/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/6f5746d652acc1a5bd541c3ec1e8746db99691da/Imperator.user.js) |
 | v2.44 | [installer](https://github.com/Ghepito/imperator-Claude/raw/29193696dc45e7b472be88a067fb177ae7ccc878/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/29193696dc45e7b472be88a067fb177ae7ccc878/Imperator.user.js) |
