@@ -173,6 +173,15 @@
                 _updateAcademyData: function _updateAcademyData(upd) {
                     $.extend(this.getAcademyData(), upd, { updated: Date.now() });
                 },
+                // v3.6 : conseiller en recherches : points accumulés, points/h, coût de la prochaine
+                // recherche de chaque domaine ({ name, cost }, cost 0 = maximum atteint).
+                getResearchAdvisorData: function getResearchAdvisorData() {
+                    if (!this.researchAdvisorData) this.researchAdvisorData = { points: 0, perHour: 0, domains: [], updated: 0 };
+                    return this.researchAdvisorData;
+                },
+                _updateResearchAdvisorData: function _updateResearchAdvisorData(upd) {
+                    $.extend(this.getResearchAdvisorData(), upd);
+                },
                 // v2.07 : accès aux données Sanctuaire
                 getShrineData: function getShrineData() {
                     if (!this.shrineData) this.shrineData = { favor: 0, updated: 0 };

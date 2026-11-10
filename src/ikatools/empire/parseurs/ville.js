@@ -78,6 +78,9 @@
                     if (!city) return;
                     city._markExperimentLaunched(launchedAt + EXPERIMENT_COOLDOWN);
                     if (withScroll) getCivilizationData()._updateAcademyData({ hasAthenaScroll: null });
+                    // v3.6 : les 300 000 points de l'expérience s'ajoutent aux points accumulés
+                    var advisor = getCivilizationData().getResearchAdvisorData();
+                    if (advisor.updated) getCivilizationData()._updateResearchAdvisorData({ points: advisor.points + 300000 });
                     raiseResourcesChanged([{ city: city, type: Constants.Resources.SCIENTISTS,
                                              value: city.getScientists() }]);
                 });
@@ -303,5 +306,36 @@
 
                     civData._updateResearch(id, level, changes);
                 });
+                // v3.6 : points accumulés, points/h et coût de la prochaine recherche par domaine
+                try {
+                    var advisor = readResearchAdvisorNumbers(data);
+                    if (advisor) civData._updateResearchAdvisorData(advisor);
+                } catch (eAdv) {}
                 raiseCivilizationDataChanged(changes);
+            }
+
+            // v3.6 : nombre du jeu (« 3 360 298 », « 1 081,84 ») ; NaN si absent
+            function parseGameNumber(value) {
+                if (value && typeof value === 'object') value = value.text;
+                if (value === undefined || value === null) return NaN;
+                var s = String(value).replace(/[\s\u00a0\u202f]/g, '');
+                if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');      // 1.081,84
+                else if (/\.\d{1,2}$/.test(s)) s = s.replace(/,/g, '');                  // 1,081.84
+                else s = s.replace(/[.,]/g, '');                                         // 3.360.298
+                return /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN;
+            }
+
+            function readResearchAdvisorNumbers(data) {
+                var points = parseGameNumber(data['js_researchAdvisorPoints']);
+                var perHour = parseGameNumber(data['js_researchAdvisorTime']);
+                if (isNaN(points)) return null;
+                var domains = [];
+                for (var i = 0; i < 10; i++) {
+                    if (!(('js_researchAdvisorNextResearchCost' + i) in data)) break;
+                    var cost = parseGameNumber(data['js_researchAdvisorNextResearchCost' + i]);
+                    var name = data['js_researchAdvisorNextResearchName' + i] || '';
+                    var domain = data['js_researchAdvisorChangeResearchTypeTxt' + i] || '';
+                    domains.push({ domain: String(domain), name: String(name), cost: isNaN(cost) ? 0 : cost });
+                }
+                return { points: points, perHour: isNaN(perHour) ? 0 : perHour, domains: domains, updated: Date.now() };
             }

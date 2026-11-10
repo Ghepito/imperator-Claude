@@ -371,6 +371,8 @@ color: #5A3A1A; \
 #ImperatorOverviewResourceTable th.research .imp_rs_head_ready { color: #2E9E2E; } \
 #ImperatorOverviewResourceTable th.research .imp_rs_head_scroll { color: #D9822B; } \
 .imp_rs_tip tr.imp_rs_xp_ready { color: #2E7D2E; font-weight: bold; } \
+.imp_rs_tip .imp_rs_tip_next { margin-top: 4px; border-top: 1px solid #CB9B6A; } \
+.imp_rs_tip .imp_rs_next_first { color: #2E5E9E; } \
 .imp_rs_tip tr.imp_rs_xp_scroll { color: #B8650F; font-weight: bold; } \
 .imp_rs_tip tr.imp_rs_xp_blocked { color: #C0392B; } \
 .imp_rs_tip .imp_rs_tip_title { \

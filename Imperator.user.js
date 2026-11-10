@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.5
+// @version        3.6
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.6 Colonne Recherche : infobulle d'une ville, delai avant que le cristal suffise (orange dans ~, vert dans ~) d'apres sa production. Infobulle du total : points de recherche accumules et, pour chaque domaine, points manquants pour la prochaine recherche, delai estime et nombre d'experiences qui suffiraient (donnees du conseiller en recherches, points estimes a l'instant ; +300 000 a chaque experience lancee).
 // @history        3.5 Colonne Recherche : voyant d'experience devant la recherche/h (vert : possible, orange : possible avec le parchemin d'Athena, rouge : cristal insuffisant, pas de parchemin ou labo en remise en etat), clic = academie de la ville. Lancement detecte (bouton de l'academie) : labo indisponible 4 h, decompte dans l'infobulle, le voyant clignote a la fin et le titre de l'onglet affiche le nombre de labos redevenus disponibles. En-tete : nombre d'experiences possibles (vert · orange). Cout d'un chercheur et points par chercheur lus dans l'academie ; presence du parchemin lue dans l'academie.
 // @history        3.4 Infobulles en bas de fenetre : la hauteur est mesuree sur le contenu de l'infobulle (la boite qui le porte n'a pas de hauteur), elles passent donc bien au-dessus du curseur ; fenetre visible lue directement (zoom du navigateur compris).
 // @history        3.3 Colonne Recherche : apres confirmation du nombre de chercheurs a l'academie, la recherche/h de la ville est mise a jour aussitot (estimee, puis lue dans l'academie). Infobulles : affichees au-dessus du curseur quand elles depasseraient le bas de la fenetre (total de la recherche notamment).
@@ -4712,6 +4713,15 @@ if (typeof IkaTools == 'undefined') {
                 _updateAcademyData: function _updateAcademyData(upd) {
                     $.extend(this.getAcademyData(), upd, { updated: Date.now() });
                 },
+                // v3.6 : conseiller en recherches : points accumulés, points/h, coût de la prochaine
+                // recherche de chaque domaine ({ name, cost }, cost 0 = maximum atteint).
+                getResearchAdvisorData: function getResearchAdvisorData() {
+                    if (!this.researchAdvisorData) this.researchAdvisorData = { points: 0, perHour: 0, domains: [], updated: 0 };
+                    return this.researchAdvisorData;
+                },
+                _updateResearchAdvisorData: function _updateResearchAdvisorData(upd) {
+                    $.extend(this.getResearchAdvisorData(), upd);
+                },
                 // v2.07 : accès aux données Sanctuaire
                 getShrineData: function getShrineData() {
                     if (!this.shrineData) this.shrineData = { favor: 0, updated: 0 };
@@ -5691,6 +5701,9 @@ if (typeof IkaTools == 'undefined') {
                     if (!city) return;
                     city._markExperimentLaunched(launchedAt + EXPERIMENT_COOLDOWN);
                     if (withScroll) getCivilizationData()._updateAcademyData({ hasAthenaScroll: null });
+                    // v3.6 : les 300 000 points de l'expérience s'ajoutent aux points accumulés
+                    var advisor = getCivilizationData().getResearchAdvisorData();
+                    if (advisor.updated) getCivilizationData()._updateResearchAdvisorData({ points: advisor.points + 300000 });
                     raiseResourcesChanged([{ city: city, type: Constants.Resources.SCIENTISTS,
                                              value: city.getScientists() }]);
                 });
@@ -5916,7 +5929,38 @@ if (typeof IkaTools == 'undefined') {
 
                     civData._updateResearch(id, level, changes);
                 });
+                // v3.6 : points accumulés, points/h et coût de la prochaine recherche par domaine
+                try {
+                    var advisor = readResearchAdvisorNumbers(data);
+                    if (advisor) civData._updateResearchAdvisorData(advisor);
+                } catch (eAdv) {}
                 raiseCivilizationDataChanged(changes);
+            }
+
+            // v3.6 : nombre du jeu (« 3 360 298 », « 1 081,84 ») ; NaN si absent
+            function parseGameNumber(value) {
+                if (value && typeof value === 'object') value = value.text;
+                if (value === undefined || value === null) return NaN;
+                var s = String(value).replace(/[\s\u00a0\u202f]/g, '');
+                if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');      // 1.081,84
+                else if (/\.\d{1,2}$/.test(s)) s = s.replace(/,/g, '');                  // 1,081.84
+                else s = s.replace(/[.,]/g, '');                                         // 3.360.298
+                return /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN;
+            }
+
+            function readResearchAdvisorNumbers(data) {
+                var points = parseGameNumber(data['js_researchAdvisorPoints']);
+                var perHour = parseGameNumber(data['js_researchAdvisorTime']);
+                if (isNaN(points)) return null;
+                var domains = [];
+                for (var i = 0; i < 10; i++) {
+                    if (!(('js_researchAdvisorNextResearchCost' + i) in data)) break;
+                    var cost = parseGameNumber(data['js_researchAdvisorNextResearchCost' + i]);
+                    var name = data['js_researchAdvisorNextResearchName' + i] || '';
+                    var domain = data['js_researchAdvisorChangeResearchTypeTxt' + i] || '';
+                    domains.push({ domain: String(domain), name: String(name), cost: isNaN(cost) ? 0 : cost });
+                }
+                return { points: points, perHour: isNaN(perHour) ? 0 : perHour, domains: domains, updated: Date.now() };
             }
 
             // Parser le Bilan depuis le DOM live (fallback si AJAX non intercepté)
@@ -8215,6 +8259,14 @@ var Imperator = function Imperator() {
                 rs_xp_crystal: 'crystal %s / %s',
                 rs_xp_noscroll: 'no Athena\'s scroll (crystal %s / %s)',
                 rs_xp_header: 'Experiments possible: %s, with scroll: %s',
+                rs_xp_eta_scroll: 'orange in ~%s',
+                rs_xp_eta_ready: 'green in ~%s',
+                rs_days: '%s d',
+                rs_points: 'Research points',
+                rs_next: '%s: %s points missing, ~%s (or %s experiments)',
+                rs_next_ready: '%s: enough points',
+                rs_advisor_age: 'Research advisor read %s ago',
+                rs_advisor_never: 'Open the research advisor to estimate the next research',
 
                 satisfaction: 'Satisfaction',
                 tavern_wine_serving_level: 'Tavern Level',
@@ -8484,6 +8536,14 @@ var Imperator = function Imperator() {
                 rs_xp_crystal: 'cristal %s / %s',
                 rs_xp_noscroll: 'pas de parchemin d\'Athéna (cristal %s / %s)',
                 rs_xp_header: 'Expériences possibles : %s, avec parchemin : %s',
+                rs_xp_eta_scroll: 'orange dans ~%s',
+                rs_xp_eta_ready: 'vert dans ~%s',
+                rs_days: '%s j',
+                rs_points: 'Points de recherche',
+                rs_next: '%s : %s points manquants, ~%s (ou %s expériences)',
+                rs_next_ready: '%s : points suffisants',
+                rs_advisor_age: 'Conseiller en recherches lu il y a %s',
+                rs_advisor_never: 'Ouvrir le conseiller en recherches pour estimer la prochaine recherche',
 
                 satisfaction: 'Satisfaction',
                 tavern_wine_serving_level: 'Niveau de la Taverne',
@@ -9065,6 +9125,8 @@ color: #5A3A1A; \
 #ImperatorOverviewResourceTable th.research .imp_rs_head_ready { color: #2E9E2E; } \
 #ImperatorOverviewResourceTable th.research .imp_rs_head_scroll { color: #D9822B; } \
 .imp_rs_tip tr.imp_rs_xp_ready { color: #2E7D2E; font-weight: bold; } \
+.imp_rs_tip .imp_rs_tip_next { margin-top: 4px; border-top: 1px solid #CB9B6A; } \
+.imp_rs_tip .imp_rs_next_first { color: #2E5E9E; } \
 .imp_rs_tip tr.imp_rs_xp_scroll { color: #B8650F; font-weight: bold; } \
 .imp_rs_tip tr.imp_rs_xp_blocked { color: #C0392B; } \
 .imp_rs_tip .imp_rs_tip_title { \
@@ -11692,6 +11754,33 @@ min-width: 851px !important; \
                      missing: IMP_XP_SCROLL_COST - crystal };
         }
 
+        // v3.6 : temps (ms) pour qu'un stock atteigne un seuil à un débit donné (par heure).
+        // 0 si déjà atteint, Infinity si le débit est nul.
+        function impTimeToReach(current, target, perHour) {
+            current = Number(current) || 0;
+            perHour = Number(perHour) || 0;
+            if (current >= target) return 0;
+            if (perHour <= 0) return Infinity;
+            return (target - current) / perHour * 3600000;
+        }
+
+        // v3.6 : prochaines recherches. points : points accumulés (estimés à maintenant),
+        // perHour : points/h, domains : [{ domain, name, cost }]. Domaines au maximum (coût 0) ignorés.
+        // Pour chacun : points manquants, délai (ms), nombre d'expériences qui suffiraient.
+        function impNextResearches(points, perHour, domains) {
+            var list = [];
+            for (var i = 0; i < (domains || []).length; i++) {
+                var d = domains[i];
+                if (!(d.cost > 0)) continue;
+                var missing = Math.max(0, d.cost - points);
+                list.push({ domain: d.domain, name: d.name, cost: d.cost, missing: missing,
+                            time: impTimeToReach(points, d.cost, perHour),
+                            experiments: Math.ceil(missing / IMP_XP_COST) });
+            }
+            list.sort(function (a, b) { return a.missing - b.missing; });
+            return list;
+        }
+
         function makeResourceTab() {
             function makeResourceUseTableRow(displaySign, usePerHour, usePerDay, usePerWeek) {
                 return makeResourceUseTableRowRaw(
@@ -12095,19 +12184,48 @@ min-width: 851px !important; \
                     return impExperimentState(crystal, city.getExperimentReadyAt(), Date.now(), hasScroll);
                 }
 
-                function describeExperimentState(xp) {
+                // v3.6 : durée longue arrondie (« ~12 j ») ou précise sous 2 jours (« 5h 12m »)
+                function formatDuration(ms) {
+                    if (!isFinite(ms)) return '&infin;';
+                    var days = ms / IkaTools.Constants.Time.MILLIS_PER_DAY;
+                    if (days >= 2) {
+                        return localizer.localize('misc','rs_days').format(IkaTools.Intl.formatInteger(Math.round(days)));
+                    }
+                    return IkaTools.Intl.formatRemainingTime(ms, '', 2);
+                }
+
+                // v3.6 : délais avant orange / vert, d'après la production de cristal de la ville
+                function experimentEta(city, xp) {
+                    var glass = city.getResource(IkaTools.Constants.Resources.GLASS);
+                    var production = glass && glass.getProduction ? Number(glass.getProduction()) || 0 : 0;
+                    var perHour = production * IkaTools.Constants.Time.SECONDS_PER_HOUR;
+                    if (perHour <= 0) return '';
+                    var parts = [];
+                    if (xp.state == 'blocked' && xp.reason == 'crystal' && civData.getAcademyData().hasAthenaScroll !== false) {
+                        parts.push(localizer.localize('misc','rs_xp_eta_scroll').format(
+                            formatDuration(impTimeToReach(xp.crystal, IMP_XP_SCROLL_COST, perHour))));
+                    }
+                    if (xp.state != 'ready' && xp.reason != 'cooldown') {
+                        parts.push(localizer.localize('misc','rs_xp_eta_ready').format(
+                            formatDuration(impTimeToReach(xp.crystal, IMP_XP_COST, perHour))));
+                    }
+                    return parts.length ? ' — ' + parts.join(', ') : '';
+                }
+
+                function describeExperimentState(xp, city) {
+                    var eta = city ? experimentEta(city, xp) : '';
                     if (xp.state == 'ready') return localizer.localize('misc','rs_xp_ready');
-                    if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll');
+                    if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll') + eta;
                     if (xp.reason == 'cooldown') {
                         return localizer.localize('misc','rs_xp_cooldown').format(
                             IkaTools.Intl.formatRemainingTime(xp.remaining, '', 2));
                     }
                     if (xp.reason == 'noscroll') {
                         return localizer.localize('misc','rs_xp_noscroll').format(
-                            IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_COST));
+                            IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_COST)) + eta;
                     }
                     return localizer.localize('misc','rs_xp_crystal').format(
-                        IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_SCROLL_COST));
+                        IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_SCROLL_COST)) + eta;
                 }
 
                 function formatGoldPerHour(value) {
@@ -12146,7 +12264,7 @@ min-width: 851px !important; \
                     }
                     // v3.5 : état de l'expérience
                     var xp = getExperimentState(city);
-                    rows.push(row(localizer.localize('misc','rs_xp'), describeExperimentState(xp),
+                    rows.push(row(localizer.localize('misc','rs_xp'), describeExperimentState(xp, city),
                                   'imp_rs_xp_' + xp.state));
                     var readAt = city.getScientistsReadAt();
                     var age = readAt ?
@@ -12546,6 +12664,32 @@ min-width: 851px !important; \
                                 -consumption * IkaTools.Constants.Time.SECONDS_PER_HOUR) : '');
                     }
 
+                    // v3.6 : prochaines recherches (conseiller en recherches), points estimés à maintenant
+                    function makeNextResearchBlock(totalPerHour) {
+                        var advisor = civData.getResearchAdvisorData();
+                        if (!advisor.updated) {
+                            return '<div class="imp_rs_tip_age">%s</div>'.format(
+                                localizer.localize('misc','rs_advisor_never'));
+                        }
+                        var perHour = advisor.perHour > 0 ? advisor.perHour : totalPerHour;
+                        var elapsed = Math.max(0, Date.now() - advisor.updated);
+                        var points = advisor.points + perHour * elapsed / IkaTools.Constants.Time.MILLIS_PER_HOUR;
+                        var lines = ['<div class="imp_rs_tip_title">%s : %s</div>'.format(
+                            localizer.localize('misc','rs_points'), IkaTools.Intl.formatInteger(points))];
+                        $.each(impNextResearches(points, perHour, advisor.domains), function(index, next) {
+                            var label = '<b>%s</b>'.format(next.name || next.domain);
+                            lines.push('<div class="%s">%s</div>'.format(index == 0 ? 'imp_rs_next_first' : 'imp_rs_next',
+                                next.missing > 0 ?
+                                localizer.localize('misc','rs_next').format(label,
+                                    IkaTools.Intl.formatInteger(next.missing), formatDuration(next.time),
+                                    IkaTools.Intl.formatInteger(next.experiments)) :
+                                localizer.localize('misc','rs_next_ready').format(label)));
+                        });
+                        lines.push('<div class="imp_rs_tip_age">%s</div>'.format(
+                            localizer.localize('misc','rs_advisor_age').format(formatDuration(elapsed))));
+                        return '<div class="imp_rs_tip_next">' + lines.join('') + '</div>';
+                    }
+
                     function makeResearchCell(cities) {
                         var total = 0;
                         var culturalGoods = 0;
@@ -12589,6 +12733,7 @@ min-width: 851px !important; \
                              '<div class="imp_rs_tip_age">%s : %s</div>'.format(
                                  localizer.localize('misc','rs_gold_per_point'),
                                  IkaTools.Intl.formatDecimal(totals.goldPerPoint, 1)) : '') +
+                            makeNextResearchBlock(total) +
                             (goldNegative ?
                              '<div class="imp_rs_tip_alert">%s</div>'.format(
                                  localizer.localize('misc','rs_empire_gold_negative')) : '') +

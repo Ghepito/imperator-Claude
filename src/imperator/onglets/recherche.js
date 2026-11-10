@@ -103,3 +103,30 @@
             return { state: 'blocked', reason: 'crystal', crystal: crystal,
                      missing: IMP_XP_SCROLL_COST - crystal };
         }
+
+        // v3.6 : temps (ms) pour qu'un stock atteigne un seuil à un débit donné (par heure).
+        // 0 si déjà atteint, Infinity si le débit est nul.
+        function impTimeToReach(current, target, perHour) {
+            current = Number(current) || 0;
+            perHour = Number(perHour) || 0;
+            if (current >= target) return 0;
+            if (perHour <= 0) return Infinity;
+            return (target - current) / perHour * 3600000;
+        }
+
+        // v3.6 : prochaines recherches. points : points accumulés (estimés à maintenant),
+        // perHour : points/h, domains : [{ domain, name, cost }]. Domaines au maximum (coût 0) ignorés.
+        // Pour chacun : points manquants, délai (ms), nombre d'expériences qui suffiraient.
+        function impNextResearches(points, perHour, domains) {
+            var list = [];
+            for (var i = 0; i < (domains || []).length; i++) {
+                var d = domains[i];
+                if (!(d.cost > 0)) continue;
+                var missing = Math.max(0, d.cost - points);
+                list.push({ domain: d.domain, name: d.name, cost: d.cost, missing: missing,
+                            time: impTimeToReach(points, d.cost, perHour),
+                            experiments: Math.ceil(missing / IMP_XP_COST) });
+            }
+            list.sort(function (a, b) { return a.missing - b.missing; });
+            return list;
+        }

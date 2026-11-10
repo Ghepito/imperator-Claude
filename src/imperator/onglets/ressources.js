@@ -402,19 +402,48 @@
                     return impExperimentState(crystal, city.getExperimentReadyAt(), Date.now(), hasScroll);
                 }
 
-                function describeExperimentState(xp) {
+                // v3.6 : durée longue arrondie (« ~12 j ») ou précise sous 2 jours (« 5h 12m »)
+                function formatDuration(ms) {
+                    if (!isFinite(ms)) return '&infin;';
+                    var days = ms / IkaTools.Constants.Time.MILLIS_PER_DAY;
+                    if (days >= 2) {
+                        return localizer.localize('misc','rs_days').format(IkaTools.Intl.formatInteger(Math.round(days)));
+                    }
+                    return IkaTools.Intl.formatRemainingTime(ms, '', 2);
+                }
+
+                // v3.6 : délais avant orange / vert, d'après la production de cristal de la ville
+                function experimentEta(city, xp) {
+                    var glass = city.getResource(IkaTools.Constants.Resources.GLASS);
+                    var production = glass && glass.getProduction ? Number(glass.getProduction()) || 0 : 0;
+                    var perHour = production * IkaTools.Constants.Time.SECONDS_PER_HOUR;
+                    if (perHour <= 0) return '';
+                    var parts = [];
+                    if (xp.state == 'blocked' && xp.reason == 'crystal' && civData.getAcademyData().hasAthenaScroll !== false) {
+                        parts.push(localizer.localize('misc','rs_xp_eta_scroll').format(
+                            formatDuration(impTimeToReach(xp.crystal, IMP_XP_SCROLL_COST, perHour))));
+                    }
+                    if (xp.state != 'ready' && xp.reason != 'cooldown') {
+                        parts.push(localizer.localize('misc','rs_xp_eta_ready').format(
+                            formatDuration(impTimeToReach(xp.crystal, IMP_XP_COST, perHour))));
+                    }
+                    return parts.length ? ' — ' + parts.join(', ') : '';
+                }
+
+                function describeExperimentState(xp, city) {
+                    var eta = city ? experimentEta(city, xp) : '';
                     if (xp.state == 'ready') return localizer.localize('misc','rs_xp_ready');
-                    if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll');
+                    if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll') + eta;
                     if (xp.reason == 'cooldown') {
                         return localizer.localize('misc','rs_xp_cooldown').format(
                             IkaTools.Intl.formatRemainingTime(xp.remaining, '', 2));
                     }
                     if (xp.reason == 'noscroll') {
                         return localizer.localize('misc','rs_xp_noscroll').format(
-                            IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_COST));
+                            IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_COST)) + eta;
                     }
                     return localizer.localize('misc','rs_xp_crystal').format(
-                        IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_SCROLL_COST));
+                        IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_SCROLL_COST)) + eta;
                 }
 
                 function formatGoldPerHour(value) {
@@ -453,7 +482,7 @@
                     }
                     // v3.5 : état de l'expérience
                     var xp = getExperimentState(city);
-                    rows.push(row(localizer.localize('misc','rs_xp'), describeExperimentState(xp),
+                    rows.push(row(localizer.localize('misc','rs_xp'), describeExperimentState(xp, city),
                                   'imp_rs_xp_' + xp.state));
                     var readAt = city.getScientistsReadAt();
                     var age = readAt ?
@@ -853,6 +882,32 @@
                                 -consumption * IkaTools.Constants.Time.SECONDS_PER_HOUR) : '');
                     }
 
+                    // v3.6 : prochaines recherches (conseiller en recherches), points estimés à maintenant
+                    function makeNextResearchBlock(totalPerHour) {
+                        var advisor = civData.getResearchAdvisorData();
+                        if (!advisor.updated) {
+                            return '<div class="imp_rs_tip_age">%s</div>'.format(
+                                localizer.localize('misc','rs_advisor_never'));
+                        }
+                        var perHour = advisor.perHour > 0 ? advisor.perHour : totalPerHour;
+                        var elapsed = Math.max(0, Date.now() - advisor.updated);
+                        var points = advisor.points + perHour * elapsed / IkaTools.Constants.Time.MILLIS_PER_HOUR;
+                        var lines = ['<div class="imp_rs_tip_title">%s : %s</div>'.format(
+                            localizer.localize('misc','rs_points'), IkaTools.Intl.formatInteger(points))];
+                        $.each(impNextResearches(points, perHour, advisor.domains), function(index, next) {
+                            var label = '<b>%s</b>'.format(next.name || next.domain);
+                            lines.push('<div class="%s">%s</div>'.format(index == 0 ? 'imp_rs_next_first' : 'imp_rs_next',
+                                next.missing > 0 ?
+                                localizer.localize('misc','rs_next').format(label,
+                                    IkaTools.Intl.formatInteger(next.missing), formatDuration(next.time),
+                                    IkaTools.Intl.formatInteger(next.experiments)) :
+                                localizer.localize('misc','rs_next_ready').format(label)));
+                        });
+                        lines.push('<div class="imp_rs_tip_age">%s</div>'.format(
+                            localizer.localize('misc','rs_advisor_age').format(formatDuration(elapsed))));
+                        return '<div class="imp_rs_tip_next">' + lines.join('') + '</div>';
+                    }
+
                     function makeResearchCell(cities) {
                         var total = 0;
                         var culturalGoods = 0;
@@ -896,6 +951,7 @@
                              '<div class="imp_rs_tip_age">%s : %s</div>'.format(
                                  localizer.localize('misc','rs_gold_per_point'),
                                  IkaTools.Intl.formatDecimal(totals.goldPerPoint, 1)) : '') +
+                            makeNextResearchBlock(total) +
                             (goldNegative ?
                              '<div class="imp_rs_tip_alert">%s</div>'.format(
                                  localizer.localize('misc','rs_empire_gold_negative')) : '') +

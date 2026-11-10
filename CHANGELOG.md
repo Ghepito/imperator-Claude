@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.6
+
+Colonne Recherche : dans l'infobulle d'une ville, délai avant que le cristal suffise (« orange dans ~10 j, vert dans ~13 j ») d'après sa production. Infobulle du total : points de recherche accumulés et, pour chaque domaine, points manquants pour la prochaine recherche, délai estimé et nombre d'expériences qui suffiraient (données du conseiller en recherches, points estimés à l'instant ; +300 000 à chaque expérience lancée).
+
 ## 3.5
 
 Colonne Recherche : voyant d'expérience devant la recherche/h (vert : possible, orange : possible avec le parchemin d'Athéna, rouge : cristal insuffisant, pas de parchemin ou labo en remise en état), clic = académie de la ville. Lancement détecté (boutons de l'académie) : labo indisponible 4 h, décompte dans l'infobulle, le voyant clignote à la fin et le titre de l'onglet du navigateur affiche le nombre de labos redevenus disponibles. En-tête : nombre d'expériences possibles (vert · orange). Coût d'un chercheur, points par chercheur et présence du parchemin lus dans l'académie.
