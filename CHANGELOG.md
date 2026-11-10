@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.10
+
+Fenêtre d'Imperator : même espace libre à droite qu'à gauche, noms des onglets centrés dans la hauteur. Tableaux : couleur de fond et bordures fusionnées enfin appliquées (point-virgule manquant dans le style). Signalé par Ghepito.
+
 ## 3.9
 
 Fenêtre d'Imperator : marge à droite pour la barre de défilement du jeu (le texte « Sanctuaire lu il y a … » et la dernière colonne ne butent plus dessus) ; onglets étirés sur toute la largeur du tableau. Signalé par Ghepito.

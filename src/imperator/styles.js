@@ -33,7 +33,7 @@ white-space: nowrap; \
 width: auto !important; \
 min-width: 851px !important; \
 margin-bottom: 3px; \
-background-color: #FAF3D7 \
+background-color: #FAF3D7; /* v3.10 : point-virgule manquant */ \
 border-collapse: collapse; \
 border: 1px solid #E4B873; \
 color: #542C0F; \
@@ -1208,13 +1208,13 @@ min-width: 851px !important; \
 /* v3.9 : marge a droite pour la barre de defilement du jeu (le texte ne bute plus dessus) */ \
 #cityBuildings .imperator_overview { \
 box-sizing: border-box; \
-padding-right: 22px; \
+padding-right: 14px; /* v3.10 : meme espace qu a gauche */ \
 } \
 /* v3.9 : onglets etires sur toute la largeur du tableau */ \
 #cityBuildings ul.tabmenu { \
 display: flex !important; \
 width: auto !important; \
-margin-right: 22px !important; \
+margin-right: 14px !important; \
 } \
 #cityBuildings ul.tabmenu > li.tab { \
 flex: 1 1 0; \
@@ -1224,6 +1224,18 @@ min-width: 0; \
 text-align: center; \
 white-space: nowrap; \
 background-size: 100% 100% !important; \
+display: flex !important; \
+align-items: center; \
+justify-content: center; \
+padding-top: 0 !important; \
+padding-bottom: 0 !important; \
+} \
+/* v3.10 : nom de l onglet centre dans la hauteur */ \
+#cityBuildings ul.tabmenu > li.tab > b { \
+display: block; \
+margin: 0 !important; \
+padding: 0 !important; \
+line-height: normal !important; \
 } \
 '
                    );
