@@ -24,6 +24,7 @@
                 registerGoldChangedHandler: registerGoldChangedHandler,
                 registerShrineChangedHandler: registerShrineChangedHandler, // v2.12
                 refreshFinancesAndShrine: refreshFinancesAndShrine, // v2.07
+                getIslandMiracles: getIslandMiracles, // v3.14
 
                 Espionage:Espionage,
             };

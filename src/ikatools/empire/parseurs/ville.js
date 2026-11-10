@@ -286,6 +286,52 @@
                 View.getCurrentCity()._updatePriests(
                     parseInt(data['js_TempleSlider'].slider.ini_value), changes);
                 raiseResourcesChanged(changes);
+                // v3.14 : miracle de l'île (actif jusqu'à…, rechargement jusqu'à…)
+                try {
+                    var city = View.getCurrentCity();
+                    var m = readTempleMiracle(data);
+                    if (m && city && city.getIslandId()) {
+                        var store = islandMiracleData.get();
+                        m.cityId = city.getId();
+                        m.readAt = Date.now();
+                        store[city.getIslandId()] = m;
+                        islandMiracleData.saveAsync();
+                        raiseShrineChanged();   // la barre des bénédictions se redessine
+                    }
+                } catch (eMir) {}
+            }
+
+            // v3.14 : miracles par île, relevés au Temple.
+            // { <islandId>: { name, activeEnd, cooldownEnd, position, cityId, readAt } } ; heures locales en ms.
+            var islandMiracleData = new Data.Value('islandMiracles', {}, { version: 1 });
+
+            // Le jeu donne la fin en secondes serveur (enddate) avec l'heure serveur (currentdate) :
+            // on garde l'écart, ajouté à l'heure locale, pour ne pas dépendre du réglage de l'horloge.
+            function _impCountdownEnd(entry) {
+                var c = entry && entry.countdown;
+                if (!c || !c.enddate || !c.currentdate) return null;
+                var left = (parseInt(c.enddate, 10) - parseInt(c.currentdate, 10)) * 1000;
+                return left > 0 ? Date.now() + left : null;
+            }
+
+            function readTempleMiracle(data) {
+                if (!data) return null;
+                var name = data['js_WonderTextHead'];
+                if (name && typeof name === 'object') name = name.text;
+                name = $.trim(String(name || ''));
+                if (!name) return null;
+                var activeEnd = _impCountdownEnd(data['js_WonderTextDuration']);
+                var cooldownEnd = _impCountdownEnd(data['js_WonderTextCooldown']);
+                var position = null;
+                var req = data['js_WonderTextDuration'] && data['js_WonderTextDuration'].countdown &&
+                          data['js_WonderTextDuration'].countdown.timeout_ajaxrequest;
+                var pm = /position=(\d+)/.exec(String(req || ''));
+                if (pm) position = parseInt(pm[1], 10);
+                return { name: name, activeEnd: activeEnd, cooldownEnd: cooldownEnd, position: position };
+            }
+
+            function getIslandMiracles() {
+                return islandMiracleData.get();
             }
 
             function processResearchAdvisorView(data) {

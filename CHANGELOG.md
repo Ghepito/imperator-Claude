@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.14
+
+Miracles : a la lecture du Temple, le miracle de l'ile et sa fin exacte sont retenus. Les miracles actifs s'affichent a droite de la barre des benedictions (dieu, ile, temps restant, decompte) ; les autres ne sont pas montres. Clic : Temple de la ville.
+
 ## 3.13
 
 Popup Planifier l'amelioration : il n'apparait plus pres de la case pendant l'ouverture de la fenetre du batiment ; il s'affiche directement en bandeau sur la fenetre (ou pres de la case si aucune fenetre ne s'ouvre en 3 s).

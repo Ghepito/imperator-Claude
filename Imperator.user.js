@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.13
-// @version        3.13
+// @name           Imperator v3.14
+// @version        3.14
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.14 Miracles : a la lecture du Temple, le miracle de l'ile et sa fin exacte sont retenus. Les miracles actifs s'affichent a droite de la barre des benedictions (dieu, ile, temps restant, decompte) ; les autres ne sont pas montres. Clic : Temple de la ville.
 // @history        3.13 Popup Planifier l'amelioration : il n'apparait plus pres de la case pendant l'ouverture de la fenetre du batiment ; il s'affiche directement en bandeau sur la fenetre (ou pres de la case si aucune fenetre ne s'ouvre en 3 s).
 // @history        3.12 Espionnage : les liens vers l'ile d'une cible (coordonnees, pillage, blocus, occupation) donnent aussi l'ile au jeu ; depuis une autre ile, on change bien d'ile au lieu de voir seulement la fiche du joueur.
 // @history        3.11 Onglet Espionnage : traits entre les colonnes, comme dans les autres onglets (colonnes declarees).
@@ -5953,6 +5954,52 @@ if (typeof IkaTools == 'undefined') {
                 View.getCurrentCity()._updatePriests(
                     parseInt(data['js_TempleSlider'].slider.ini_value), changes);
                 raiseResourcesChanged(changes);
+                // v3.14 : miracle de l'île (actif jusqu'à…, rechargement jusqu'à…)
+                try {
+                    var city = View.getCurrentCity();
+                    var m = readTempleMiracle(data);
+                    if (m && city && city.getIslandId()) {
+                        var store = islandMiracleData.get();
+                        m.cityId = city.getId();
+                        m.readAt = Date.now();
+                        store[city.getIslandId()] = m;
+                        islandMiracleData.saveAsync();
+                        raiseShrineChanged();   // la barre des bénédictions se redessine
+                    }
+                } catch (eMir) {}
+            }
+
+            // v3.14 : miracles par île, relevés au Temple.
+            // { <islandId>: { name, activeEnd, cooldownEnd, position, cityId, readAt } } ; heures locales en ms.
+            var islandMiracleData = new Data.Value('islandMiracles', {}, { version: 1 });
+
+            // Le jeu donne la fin en secondes serveur (enddate) avec l'heure serveur (currentdate) :
+            // on garde l'écart, ajouté à l'heure locale, pour ne pas dépendre du réglage de l'horloge.
+            function _impCountdownEnd(entry) {
+                var c = entry && entry.countdown;
+                if (!c || !c.enddate || !c.currentdate) return null;
+                var left = (parseInt(c.enddate, 10) - parseInt(c.currentdate, 10)) * 1000;
+                return left > 0 ? Date.now() + left : null;
+            }
+
+            function readTempleMiracle(data) {
+                if (!data) return null;
+                var name = data['js_WonderTextHead'];
+                if (name && typeof name === 'object') name = name.text;
+                name = $.trim(String(name || ''));
+                if (!name) return null;
+                var activeEnd = _impCountdownEnd(data['js_WonderTextDuration']);
+                var cooldownEnd = _impCountdownEnd(data['js_WonderTextCooldown']);
+                var position = null;
+                var req = data['js_WonderTextDuration'] && data['js_WonderTextDuration'].countdown &&
+                          data['js_WonderTextDuration'].countdown.timeout_ajaxrequest;
+                var pm = /position=(\d+)/.exec(String(req || ''));
+                if (pm) position = parseInt(pm[1], 10);
+                return { name: name, activeEnd: activeEnd, cooldownEnd: cooldownEnd, position: position };
+            }
+
+            function getIslandMiracles() {
+                return islandMiracleData.get();
             }
 
             function processResearchAdvisorView(data) {
@@ -8123,6 +8170,7 @@ if (typeof IkaTools == 'undefined') {
                 registerGoldChangedHandler: registerGoldChangedHandler,
                 registerShrineChangedHandler: registerShrineChangedHandler, // v2.12
                 refreshFinancesAndShrine: refreshFinancesAndShrine, // v2.07
+                getIslandMiracles: getIslandMiracles, // v3.14
 
                 Espionage:Espionage,
             };
@@ -11041,6 +11089,49 @@ line-height: normal !important; \
         }
 
         // Bandeau de pastilles au-dessus du tableau (rendu dans un <caption>)
+        // v3.14 : miracles actifs (relevés au Temple), un par île. Les autres ne sont pas montrés.
+        function impMiracleGod(name) {
+            var m = /(?:\sde\s|\sd['\u2019`])\s*(\S+)\s*$/.exec(String(name || ''));
+            return m ? m[1] : String(name || '');
+        }
+        function impMiracleActive(now) {
+            var list = [];
+            try {
+                var store = (IkaTools.EmpireData.getIslandMiracles && IkaTools.EmpireData.getIslandMiracles()) || {};
+                var mine = {};
+                $.each(IkaTools.EmpireData.getOwnCities(), function(i, c) {
+                    var id = c.getIslandId();
+                    (mine[id] = mine[id] || []).push(c);
+                });
+                $.each(store, function(islandId, m) {
+                    if (!m || !m.activeEnd || m.activeEnd <= now || !mine[islandId]) return;
+                    var cities = mine[islandId];
+                    var city = null;
+                    $.each(cities, function(i, c) { if (c.getId() == m.cityId) city = c; });
+                    city = city || cities[0];
+                    list.push({ islandId: islandId, m: m, city: city, cities: cities });
+                });
+            } catch (e) {}
+            list.sort(function(a, b) { return a.m.activeEnd - b.m.activeEnd; });
+            return list;
+        }
+        function impMiracleChips(now) {
+            return $.map(impMiracleActive(now), function(x) {
+                var co = x.city.getIslandCoordinates ? x.city.getIslandCoordinates() : null;
+                var coords = co ? '[' + co[0] + ':' + co[1] + ']' : '';
+                var names = $.map(x.cities, function(c) { return c.getName(); }).join(', ');
+                var title = x.m.name + ' ' + coords + ' \u2014 actif jusqu\'à ' +
+                    new Date(x.m.activeEnd).toLocaleString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) +
+                    '\nVilles sur l\'île : ' + names + '\nRelevé au Temple ' + impBlessFmtAgo(x.m.readAt) +
+                    '\nClic : ouvrir le Temple';
+                return '<a href="javascript:void(0);" class="imp-miracle-chip" data-imp-miracle-end="' + x.m.activeEnd + '"' +
+                       ' data-imp-miracle-city="' + x.city.getId() + '"' +
+                       (x.m.position !== null && x.m.position !== undefined ? ' data-imp-miracle-pos="' + x.m.position + '"' : '') +
+                       ' title="' + __impH(title) + '">' + __impH(impMiracleGod(x.m.name)) + ' ' + coords +
+                       ' <span class="imp-miracle-rem">' + impBlessFmtRemaining(x.m.activeEnd - now) + '</span></a>';
+            }).join('');
+        }
+
         function impBlessMakeCaption() {
             var sd = impBlessShrine();
             var ref = impBlessRefBonus();
@@ -11052,8 +11143,9 @@ line-height: normal !important; \
                 if (info.weakFlag) weakByGod[info.godId] = true;
             });
             var ids = $.map(counts, function(v, k) { return k; });
-            if (!ids.length) return '';
             var now = Date.now();
+            var miracles = impMiracleChips(now);   // v3.14
+            if (!ids.length && !miracles) return '';
             var rank = { floor:0, weak:1, soon:2, max:3 };
             var toGive = 0, unknownGive = false;
             var rows = $.map(ids, function(gid) {
@@ -11090,7 +11182,9 @@ line-height: normal !important; \
             return '<caption class="imp-bless-bar">' +
                    '<span class="imp-bless-bar-label">Bénédictions</span>' + chips + give +
                    '<span class="imp-bless-bar-upd' + (stale ? ' is-stale' : '') + '">Sanctuaire lu ' +
-                   impBlessFmtAgo(sd.godsUpdated) + '</span></caption>';
+                   impBlessFmtAgo(sd.godsUpdated) + '</span>' +
+                   (miracles ? '<span class="imp-miracle-bar"><span class="imp-bless-bar-label">Miracles</span>' + miracles + '</span>' : '') +
+                   '</caption>';
         }
 
         // CSS + ticker + clic des pastilles : installés une seule fois
@@ -11122,6 +11216,10 @@ line-height: normal !important; \
                 '.imp-bless-bar-give { margin-left:6px; }' +
                 '.imp-bless-bar-upd { float:right; color:#8a6d39; font-style:italic; }' +
                 '.imp-bless-bar-upd.is-stale { color:#c0392b; font-style:normal; font-weight:bold; }' +
+                '.imp-miracle-bar { float:right; margin-right:14px; }' +
+                '.imp-miracle-chip { display:inline-block; margin:1px 0 1px 5px; padding:1px 7px; border-radius:9px; background:#e7f1fb; border:1px solid #4a7fb5; color:#5a3e1b !important; text-decoration:none !important; cursor:pointer; }' +
+                '.imp-miracle-chip:hover { background:#fff8e1; }' +
+                '.imp-miracle-chip .imp-miracle-rem { font-weight:bold; }' +
                 '.imp-bless-tt { margin-top:4px; padding:4px 6px; border-top:1px solid #d8b871; font-size:11px; line-height:1.45; color:#5a3e1b; min-width:190px; }' +
                 '.imp-bless-tt-head { font-weight:bold; }' +
                 '.imp-bless-tt-state { font-weight:normal; font-size:10px; margin-left:4px; padding:0 4px; border-radius:6px; color:#fff; }' +
@@ -11145,8 +11243,36 @@ line-height: normal !important; \
                         $e.removeClass('imp-bless-max imp-bless-soon imp-bless-weak imp-bless-floor').addClass('imp-bless-' + state);
                         $e.find('.imp-bless-rem').text(impBlessChipLabel(state, end, favor, now));
                     });
+                    // v3.14 : décompte des miracles ; un miracle terminé disparaît
+                    $('[data-imp-miracle-end]').each(function() {
+                        var $e = $(this), left = (parseInt($e.attr('data-imp-miracle-end'), 10) || 0) - now;
+                        if (left <= 0) {
+                            var $bar = $e.closest('.imp-miracle-bar');
+                            $e.remove();
+                            if (!$bar.find('.imp-miracle-chip').length) $bar.remove();
+                        } else {
+                            $e.find('.imp-miracle-rem').text(impBlessFmtRemaining(left));
+                        }
+                    });
                 } catch (e) {}
             }, 30000);
+
+            // v3.14 : clic sur un miracle -> Temple de la ville où il a été relevé
+            $(document).on('click', '.imp-miracle-chip', function(ev) {
+                ev.preventDefault();
+                try {
+                    var city = IkaTools.EmpireData.getCity(parseInt($(this).attr('data-imp-miracle-city'), 10));
+                    if (!city) return;
+                    var pos = $(this).attr('data-imp-miracle-pos');
+                    if (pos === undefined) {
+                        var b = city.getBuildingByType ? city.getBuildingByType(IkaTools.Constants.Buildings.TEMPLE) : null;
+                        pos = b && b.getPosition ? b.getPosition() : undefined;
+                    }
+                    var params = { cityId: city.getId() };
+                    if (pos !== undefined && pos !== null) params.position = pos;
+                    IkaTools.View.goToCityView(city, IkaTools.Constants.Buildings.TEMPLE, params);
+                } catch (e) {}
+            });
 
             // Clic sur une pastille -> Sanctuaire divin, onglet Vue générale
             $(document).on('click', '.imp-bless-chip', function(ev) {
