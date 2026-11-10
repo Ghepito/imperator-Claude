@@ -4,7 +4,7 @@ Script Tampermonkey qui ajoute à Ikariam des tableaux de synthèse de l'empire 
 ressources, bâtiments, armée, espionnage, tableau de bord financier, bénédictions divines,
 mouvements de troupes et de flottes.
 
-Version actuelle : **v3.8** (version stable depuis la v3.0) (testée sur le serveur français, jeu 17.6.1,
+Version actuelle : **v3.9** (version stable depuis la v3.0) (testée sur le serveur français, jeu 17.6.1,
 Chrome + Tampermonkey 5.5.1).
 
 ## Ce qu'apporte la v3.0 par rapport à l'Imperator d'origine

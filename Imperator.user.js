@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.8
+// @version        3.9
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.9 Fenetre d'Imperator : marge a droite pour la barre de defilement du jeu (le texte "Sanctuaire lu il y a ..." et la derniere colonne ne butent plus dessus) ; onglets etires sur toute la largeur du tableau.
 // @history        3.8 Infobulles : gardees entieres dans la fenetre de tous les cotes. Bord droit : affichees a gauche du curseur (ou calees contre le bord) ; bas : au-dessus ; jamais au-dela du haut ni du bord gauche ; position revue quand une infobulle rafraichie change de taille.
 // @history        3.7 Colonne Recherche : les durees de moins d'une heure s'affichent (minutes, secondes) : anciennete du releve de l'academie ("Releve il y a" restait vide), temps restant du labo, anciennete du conseiller en recherches.
 // @history        3.6 Colonne Recherche : infobulle d'une ville, delai avant que le cristal suffise (orange dans ~, vert dans ~) d'apres sa production. Infobulle du total : points de recherche accumules et, pour chaque domaine, points manquants pour la prochaine recherche, delai estime et nombre d'experiences qui suffiraient (donnees du conseiller en recherches, points estimes a l'instant ; +300 000 a chaque experience lancee).
@@ -9982,6 +9983,26 @@ overflow-x: auto !important; \
 .imperator_overview table.overview { \
 width: 100% !important; \
 min-width: 851px !important; \
+} \
+/* v3.9 : marge a droite pour la barre de defilement du jeu (le texte ne bute plus dessus) */ \
+#cityBuildings .imperator_overview { \
+box-sizing: border-box; \
+padding-right: 22px; \
+} \
+/* v3.9 : onglets etires sur toute la largeur du tableau */ \
+#cityBuildings ul.tabmenu { \
+display: flex !important; \
+width: auto !important; \
+margin-right: 22px !important; \
+} \
+#cityBuildings ul.tabmenu > li.tab { \
+flex: 1 1 0; \
+float: none !important; \
+width: auto !important; \
+min-width: 0; \
+text-align: center; \
+white-space: nowrap; \
+background-size: 100% 100% !important; \
 } \
 '
                    );

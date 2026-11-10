@@ -1205,6 +1205,26 @@ overflow-x: auto !important; \
 width: 100% !important; \
 min-width: 851px !important; \
 } \
+/* v3.9 : marge a droite pour la barre de defilement du jeu (le texte ne bute plus dessus) */ \
+#cityBuildings .imperator_overview { \
+box-sizing: border-box; \
+padding-right: 22px; \
+} \
+/* v3.9 : onglets etires sur toute la largeur du tableau */ \
+#cityBuildings ul.tabmenu { \
+display: flex !important; \
+width: auto !important; \
+margin-right: 22px !important; \
+} \
+#cityBuildings ul.tabmenu > li.tab { \
+flex: 1 1 0; \
+float: none !important; \
+width: auto !important; \
+min-width: 0; \
+text-align: center; \
+white-space: nowrap; \
+background-size: 100% 100% !important; \
+} \
 '
                    );
     }
