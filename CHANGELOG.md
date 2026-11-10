@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.12
+
+Espionnage : les liens vers l'ile d'une cible (coordonnees, pillage, blocus, occupation) donnent aussi l'ile au jeu ; depuis une autre ile, on change bien d'ile au lieu de voir seulement la fiche du joueur.
+
 ## 3.11
 
 Onglet Espionnage : traits entre les colonnes, comme dans les autres onglets (colonnes déclarées). Signalé par Ghepito.

@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.1
-// @version        3.11
+// @name           Imperator v3.12
+// @version        3.12
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.12 Espionnage : les liens vers l'ile d'une cible (coordonnees, pillage, blocus, occupation) donnent aussi l'ile au jeu ; depuis une autre ile, on change bien d'ile au lieu de voir seulement la fiche du joueur.
 // @history        3.11 Onglet Espionnage : traits entre les colonnes, comme dans les autres onglets (colonnes declarees).
 // @history        3.10 Fenetre d'Imperator : meme espace libre a droite qu'a gauche, noms des onglets centres dans la hauteur. Tableaux : couleur de fond et bordures fusionnees enfin appliquees (point-virgule manquant dans le style).
 // @history        3.9 Fenetre d'Imperator : marge a droite pour la barre de defilement du jeu (le texte "Sanctuaire lu il y a ..." et la derniere colonne ne butent plus dessus) ; onglets etires sur toute la largeur du tableau.

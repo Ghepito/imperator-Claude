@@ -64,8 +64,15 @@
                         __impH(player.getName()),
                         allianceLinkHtml);
 
+                    // v3.12 : l'île de la cible est donnée au jeu (islandId). Sans elle, depuis une
+                    // autre île, le jeu restait sur l'île en cours et n'affichait que la fiche du joueur.
+                    var islandViewParams = { view: IkaTools.Constants.BaseView.ISLAND, cityId: target.getId() };
+                    if (target.getIslandId() > 0) {
+                        islandViewParams = { view: IkaTools.Constants.BaseView.ISLAND,
+                                             islandId: target.getIslandId(), cityId: target.getId() };
+                    }
                     var islandLink = new Link('EspionageIslandLink_%s'.format(target.getId()))
-                    .toIkariamPage({ view: IkaTools.Constants.BaseView.ISLAND, cityId: target.getId() });
+                    .toIkariamPage(islandViewParams);
                     var islandLinkHtml = ('<a id="%s" class="imperator_link espionage_to_island_view" ' +
                                           'title="%s" href="javascript:void(0);">[%s:%s]</a>').format(
                         islandLink.getId(),
@@ -84,7 +91,7 @@
 
                     var pillageLink = new Link('EspionagePillageLink_%s'.format(target.getId()))
                     .toIkariamPage(
-                        { view: IkaTools.Constants.BaseView.ISLAND, cityId: target.getId() },
+                        islandViewParams,
                         IkaTools.View.makeIkariamLoadLocalPageAnchor(
                             { view: IkaTools.Constants.View.PILLAGE, destinationCityId: target.getId() }, true));
                     var pillageLinkHtml = ('<a id="%s" class="imperator_link pillage_mission" ' +
@@ -94,7 +101,7 @@
 
                     var blockadeLink = new Link('EspionageBlockageLink_%s'.format(target.getId()))
                     .toIkariamPage(
-                        { view: IkaTools.Constants.BaseView.ISLAND, cityId: target.getId() },
+                        islandViewParams,
                         IkaTools.View.makeIkariamLoadLocalPageAnchor(
                             { view: IkaTools.Constants.View.BLOCKADE, destinationCityId: target.getId() }, true));
                     var blockadeLinkHtml = ('<a id="%s" class="imperator_link blockade_mission" ' +
@@ -112,7 +119,7 @@
 
                     var occupyLink = new Link('EspionageOccupyLink_%s'.format(target.getId()))
                     .toIkariamPage(
-                        { view: IkaTools.Constants.BaseView.ISLAND, cityId: target.getId() },
+                        islandViewParams,
                         IkaTools.View.makeIkariamLoadLocalPageAnchor(
                             { view: IkaTools.Constants.View.OCCUPY, destinationCityId: target.getId() }, true));
                     var occupyLinkHtml = ('<a id="%s" class="imperator_link occupy_mission" ' +
