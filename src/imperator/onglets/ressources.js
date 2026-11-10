@@ -364,54 +364,121 @@
                         consumptionContent);
                 }
 
-                // Calcul Recherche par ville
+                // v3.2 : colonne Recherche. Ligne 1 : recherche/h (lien vers l'académie).
+                // Ligne 2 : anneau de remplissage + chercheurs, coût direct en or/h.
+                var researchUnitCostCache;
+                function getResearchUnitCost() {
+                    if (researchUnitCostCache === undefined) {
+                        var totalScientists = 0;
+                        $.each(IkaTools.EmpireData.getOwnCities(), function(index, c) {
+                            totalScientists += Number(c.getScientists()) || 0;
+                        });
+                        var fallback = civData.hasResearched(
+                            IkaTools.Constants.Research.Science.LETTER_CHUTE) ? 3 : 6;
+                        researchUnitCostCache = impResearchUnitCost(
+                            civData.getGoldData().scientists, totalScientists, fallback);
+                    }
+                    return researchUnitCostCache;
+                }
+
+                function getResearchStats(city) {
+                    var academy = city.getBuildingByType(IkaTools.Constants.Buildings.ACADEMY);
+                    if (!academy) return null;
+                    var maxScientists = impResearchMaxScientists(IkaTools.Constants.BuildingData[
+                        IkaTools.Constants.Buildings.ACADEMY].maxScientists, academy.getLevel());
+                    var stats = impResearchCityStats(city.getScientists(), maxScientists,
+                                                     city.getResearch(), getResearchUnitCost());
+                    stats.academy = academy;
+                    return stats;
+                }
+
+                function formatGoldPerHour(value) {
+                    return IkaTools.Intl.formatInteger(-Math.round(value)) +
+                        ' ' + localizer.localize('misc','rs_per_hour');
+                }
+
+                function makeResearchCityToolTip(city, stats) {
+                    function row(label, value, cls) {
+                        return '<tr%s><td>%s :</td><td class="imp_rs_val">%s</td></tr>'.format(
+                            cls ? ' class="' + cls + '"' : '', label, value);
+                    }
+                    var rows = [];
+                    rows.push(row(localizer.localize('misc','rs_scientists'),
+                                  IkaTools.Intl.formatInteger(stats.scientists) + ' / ' +
+                                  IkaTools.Intl.formatInteger(stats.max)));
+                    if (stats.free > 0) {
+                        rows.push(row(localizer.localize('misc','rs_free'),
+                                      IkaTools.Intl.formatInteger(stats.free), 'imp_rs_warn'));
+                    }
+                    rows.push(row(localizer.localize('misc','research'),
+                                  IkaTools.Intl.formatInteger(stats.research, true) + ' ' +
+                                  localizer.localize('misc','rs_per_hour')));
+                    rows.push(row(localizer.localize('misc','rs_direct_cost'),
+                                  formatGoldPerHour(stats.directCost), 'imp_rs_gold'));
+                    rows.push(row(localizer.localize('misc','rs_lost_tax'),
+                                  formatGoldPerHour(stats.lostTax), 'imp_rs_muted'));
+                    if (city.cityGoldNetUpdated > 0) {
+                        rows.push(row(localizer.localize('misc','rs_city_gold_net'),
+                                      IkaTools.Intl.formatInteger(city.cityGoldNet) + ' ' +
+                                      localizer.localize('misc','rs_per_hour')));
+                    }
+                    if (isFinite(stats.goldPerPoint)) {
+                        rows.push(row(localizer.localize('misc','rs_gold_per_point'),
+                                      IkaTools.Intl.formatDecimal(stats.goldPerPoint, 1)));
+                    }
+                    var readAt = city.getScientistsReadAt();
+                    var age = readAt ?
+                        localizer.localize('misc','rs_read_ago').format(
+                            IkaTools.Intl.formatRemainingTime(Date.now() - readAt, '', 2)) :
+                        localizer.localize('misc','rs_never_read');
+                    return ('<div class="imp_rs_tip">' +
+                            '<div class="imp_rs_tip_title">%s</div>' +
+                            '<table><tbody>%s</tbody></table>' +
+                            '%s' +
+                            '<div class="imp_rs_tip_age">%s</div>' +
+                            '</div>').format(
+                        localizer.localize('misc','rs_academy_level').format(stats.academy.getLevel()),
+                        rows.join(''),
+                        makeResourceUseToolTip('/cdn/all/both/layout/bulb-on.png', [
+                            makeResourceUseTableRow('+', stats.research),
+                            makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -stats.directCost),
+                            makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -stats.totalCost)]),
+                        age);
+                }
 
                 function makeResearchCell(city) {
-                    var scientists = city.getScientists();
-                    var academy = city.getBuildingByType('academy');
-                    if (academy) {
-                        // ajout de 5% pour simuler La technocratie
-                        var research = city.getResearch();
-                        var link = new Link('ResearchTableAcademy_%s'.format(city.getId()))
-                        .toCityView(city, IkaTools.Constants.Buildings.ACADEMY,
-                                    { position: academy.getPosition(), cityId: city.getId() });
-                        var maxScientists = IkaTools.Constants.BuildingData[
-                            IkaTools.Constants.Buildings.ACADEMY].maxScientists[academy.getLevel()];
-
-                        var percent = scientists / maxScientists * 100;
-                        var percentBarId = IkaTools.Utils.nextId('research_percent_bar');
-
-
-                        toolTips.registerSimple(link.getId(),
-                                                makeResourceUseToolTip('/cdn/all/both/layout/bulb-on.png',
-                                                                       [makeResourceUseTableRow('+', research)]));
-                        toolTips.registerSimple(percentBarId,
-                                                ('<table><tbody>' +
-                                                 '<tr><td>%s:</td><td>%s</td></tr>' +
-                                                 '<tr><td>%s:</td><td>%s</td></tr>' +
-                                                 '</tbody></table>').format(
-                            localizer.localize('misc','employed'),
-                            scientists,
-                            localizer.localize('misc','maximum_capacity'),
-                            maxScientists));
-
-                        return ('<td class="research">' +
-                                '<div>' +
-                                '<a id="%s" href="javascript:void(0)" ' +
-                                'class="imperator_link imperator_tool_tip">%s</a>' +
-                                '</div>' +
-                                '<div id ="%s" class="percent_bar imperator_tool_tip percent_bar_desire_filled %s">' +
-                                '<div class="percent_bar_active" style="width: %s%;" />' +
-                                '</div>' +
-                                '</td>').format(
-                            link.getId(),
-                            IkaTools.Intl.formatInteger(research, true),
-                            percentBarId,
-                            percent == 100 ? 'percent_bar_filled' : '',
-                            percent);
+                    var stats = getResearchStats(city);
+                    if (!stats) {
+                        return '<td class="research"><span class="imp_rs_none">&mdash;</span></td>';
                     }
+                    var link = new Link('ResearchTableAcademy_%s'.format(city.getId()))
+                    .toCityView(city, IkaTools.Constants.Buildings.ACADEMY,
+                                { position: stats.academy.getPosition(), cityId: city.getId() });
+                    var detailsId = 'ResearchTableDetails_%s'.format(city.getId());
+                    var tip = makeResearchCityToolTip(city, stats);
+                    toolTips.registerSimple(link.getId(), tip);
+                    toolTips.registerSimple(detailsId, tip);
 
-                    return '<td class="research"></td>';
+                    var readAt = city.getScientistsReadAt();
+                    var stale = readAt && Date.now() - readAt > 24 * IkaTools.Constants.Time.MILLIS_PER_HOUR;
+
+                    return ('<td class="research%s">' +
+                            '<div class="imp_rs_l1">' +
+                            '<a id="%s" href="javascript:void(0)" ' +
+                            'class="imperator_link imperator_tool_tip">%s</a>' +
+                            '</div>' +
+                            '<div id="%s" class="imp_rs_l2 imperator_tool_tip">' +
+                            '<span class="imp_rs_sci">%s%s</span>' +
+                            '<span class="imp_rs_cost">%s</span>' +
+                            '</div>' +
+                            '</td>').format(
+                        stale ? ' imp_rs_stale' : '',
+                        link.getId(),
+                        IkaTools.Intl.formatInteger(stats.research, true),
+                        detailsId,
+                        impResearchRingSvg(stats.ratio, stats.full),
+                        IkaTools.Intl.formatInteger(stats.scientists),
+                        IkaTools.Intl.formatInteger(-Math.round(stats.directCost)));
                 }
 
                 //   ICI
@@ -742,31 +809,61 @@
                         var culturalGoods = 0;
                         var isDemocracy = IkaTools.Constants.Government.DEMOCRACY ==
                             IkaTools.EmpireData.getCivilizationData().getGovernment();
+                        var statsList = [];
 
                         $.each(cities, function(index, city) {
                             total += city.getResearch() || 0;
                             if (isDemocracy) {
                                 culturalGoods += city.getCulturalGoods();
                             }
+                            var stats = getResearchStats(city);
+                            if (stats) statsList.push(stats);
                         });
+                        // v3.2 : chercheurs et coût en or de tout l'empire
+                        var totals = impResearchTotals(statsList);
+                        var goldData = civData.getGoldData();
+                        var goldNegative = goldData.incomeUpdated > 0 && goldData.net < 0;
 
                         var rows = [makeResourceUseTableRow('+', total)];
-                        var footer = undefined;
+                        var footer = [];
                         if (isDemocracy) {
                             rows.push(makeResourceUseTableRow(
                                 '<img src="/cdn/all/both/museum/icon32_culturalgood.png" height="10"/>', culturalGoods));
-                            footer = [makeResourceUseTableRow('&sum;', total + culturalGoods)];
+                            footer.push(makeResourceUseTableRow('&sum;', total + culturalGoods));
                         }
+                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -totals.directCost));
+                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_lost_tax'), -totals.lostTax));
+                        footer.push(makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -totals.totalCost));
 
                         // Total des recherches
                         toolTips.registerSimple('ResearchTotal',
-                                                makeResourceUseToolTip(
-                            '/cdn/all/both/layout/bulb-on.png', rows, footer));
+                            '<div class="imp_rs_tip">' +
+                            '<div class="imp_rs_tip_title">%s : %s</div>'.format(
+                                localizer.localize('misc','rs_scientists'),
+                                IkaTools.Intl.formatInteger(totals.scientists)) +
+                            makeResourceUseToolTip(
+                            '/cdn/all/both/layout/bulb-on.png', rows, footer) +
+                            (isFinite(totals.goldPerPoint) ?
+                             '<div class="imp_rs_tip_age">%s : %s</div>'.format(
+                                 localizer.localize('misc','rs_gold_per_point'),
+                                 IkaTools.Intl.formatDecimal(totals.goldPerPoint, 1)) : '') +
+                            (goldNegative ?
+                             '<div class="imp_rs_tip_alert">%s</div>'.format(
+                                 localizer.localize('misc','rs_empire_gold_negative')) : '') +
+                            '</div>');
 
                         let formattedTotal = Math.floor(total + culturalGoods).toLocaleString();
-                        return '<td id="ResearchTotal" class="research imperator_tool_tip">' + formattedTotal + '</td>';
-
-
+                        return ('<td id="ResearchTotal" class="research imperator_tool_tip">' +
+                                '<div class="imp_rs_l1">%s</div>' +
+                                '<div class="imp_rs_l2">' +
+                                '<span class="imp_rs_sci">%s</span>' +
+                                '<span class="imp_rs_cost%s">%s</span>' +
+                                '</div>' +
+                                '</td>').format(
+                            formattedTotal,
+                            IkaTools.Intl.formatInteger(totals.scientists),
+                            goldNegative ? ' imp_rs_negative' : '',
+                            IkaTools.Intl.formatInteger(-Math.round(totals.directCost)));
                     }
 
                     function makePopulationCells(cities) {
@@ -963,6 +1060,16 @@
                         }
                     });
                     tab.maybeRedraw(redraw);
+                });
+                // v3.2 : la case de total passe en rouge si le solde d'or de l'empire devient négatif
+                var lastGoldNegative = null;
+                IkaTools.EmpireData.registerGoldChangedHandler(function() {
+                    var gd = IkaTools.EmpireData.getCivilizationData().getGoldData();
+                    var negative = gd.incomeUpdated > 0 && gd.net < 0;
+                    if (lastGoldNegative !== null && negative !== lastGoldNegative) {
+                        tab.maybeRedraw(true);
+                    }
+                    lastGoldNegative = negative;
                 });
                 // v2.12 : affectations / bienveillances relues au Sanctuaire
                 IkaTools.EmpireData.registerShrineChangedHandler(function() {

@@ -48,6 +48,20 @@
                 safe_capacity: 'Safe',
                 employed: 'Employed',
 
+                // v3.2 : colonne Recherche
+                rs_scientists: 'Scientists',
+                rs_free: 'Free places',
+                rs_academy_level: 'Academy level %s',
+                rs_direct_cost: 'Direct cost',
+                rs_lost_tax: 'Lost taxes',
+                rs_total_cost: 'Total cost',
+                rs_city_gold_net: 'City net gold',
+                rs_gold_per_point: 'Gold per research point',
+                rs_read_ago: 'Read %s ago',
+                rs_never_read: 'Academy not visited yet',
+                rs_empire_gold_negative: 'Empire gold balance is negative',
+                rs_per_hour: '/h',
+
                 satisfaction: 'Satisfaction',
                 tavern_wine_serving_level: 'Tavern Level',
                 cultural_goods: 'Cultural Goods',
@@ -295,6 +309,20 @@
                 maximum_capacity: 'Capacité',
                 safe_capacity: 'Sécurisé',
                 employed: 'Utilisé',
+
+                // v3.2 : colonne Recherche
+                rs_scientists: 'Chercheurs',
+                rs_free: 'Places libres',
+                rs_academy_level: 'Académie niveau %s',
+                rs_direct_cost: 'Coût direct',
+                rs_lost_tax: 'Manque à gagner',
+                rs_total_cost: 'Coût total',
+                rs_city_gold_net: 'Or net de la ville',
+                rs_gold_per_point: 'Or par point de recherche',
+                rs_read_ago: 'Relevé il y a %s',
+                rs_never_read: 'Académie pas encore visitée',
+                rs_empire_gold_negative: 'Solde d\'or de l\'empire négatif',
+                rs_per_hour: '/h',
 
                 satisfaction: 'Satisfaction',
                 tavern_wine_serving_level: 'Niveau de la Taverne',

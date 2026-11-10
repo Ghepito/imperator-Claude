@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.2
+
+Colonne Recherche (onglet Ressources) : la barre de progression est remplacée par un anneau de remplissage de l'académie, le nombre de chercheurs et leur coût en or par heure ; ville sans académie : tiret ; case grisée si l'académie n'a pas été revue depuis 24 h. Infobulle : chercheurs/max, places libres, coût direct, manque à gagner, or net de la ville, or par point, ancienneté du relevé. Total : chercheurs et coût de l'empire (rouge si le solde d'or est négatif), détail par heure, jour et semaine. Le nombre de chercheurs lu à l'académie n'est plus écrasé par une estimation du Bilan.
+
 ## 3.1
 
 Historique des alertes : chaque alerte de bureau (ou celle qui n'a pas pu s'afficher) est notee avec son heure ; les 50 dernieres se consultent par l'entree Alertes du menu de gauche (cloche, nombre de non lues, bouton Vider).

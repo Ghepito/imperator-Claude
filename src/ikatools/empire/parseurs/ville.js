@@ -3,9 +3,9 @@
             function processAcademyView(data) {
                 var changes = [];
                 var city = View.getCurrentCity();
-                city._updateScientists(
-                    parseInt(data['js_academy_research_tooltip_basic_production'].text),
-                    changes);
+                var scientists = parseInt(data['js_academy_research_tooltip_basic_production'].text);
+                city._updateScientists(scientists, changes);
+                if (!isNaN(scientists)) city._markScientistsRead(); // v3.2
                 var researchEl = $('#valueResearch');
                 if (researchEl.length) {
                     var total = parseInt(researchEl.text());
@@ -24,6 +24,7 @@
                             data[0].type == 10) {
                             var changes = [];
                             View.getCurrentCity()._updateScientists(scientists, changes);
+                            View.getCurrentCity()._markScientistsRead(); // v3.2
                             raiseResourcesChanged(changes);
                         }
                     });

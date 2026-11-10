@@ -43,6 +43,7 @@ imperator/composants.js
 imperator/onglets/00-ouverture.js
 imperator/onglets/00-cadre-benedictions.js
 imperator/onglets/00-transports.js
+imperator/onglets/recherche.js
 imperator/onglets/ressources.js
 imperator/onglets/tableau-de-bord.js
 imperator/onglets/batiments.js

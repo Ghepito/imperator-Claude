@@ -108,7 +108,10 @@
                                         city.cityGoldNetUpdated = Date.now();
                                     }
                                     // Scientifiques (3ème colonne, valeur négative)
-                                    if ($cells.length >= 3) {
+                                    // v3.2 : seulement si l'académie n'a jamais été lue. Le coût d'un
+                                    // chercheur varie (recherches, forme de gouvernement) : un nombre
+                                    // déduit du coût peut être faux et ne doit pas écraser un relevé.
+                                    if ($cells.length >= 3 && !city.getScientistsReadAt()) {
                                         var sciCost = cellVal($($cells[2]));
                                         if (!isNaN(sciCost) && sciCost < 0) {
                                             var sciCount = Math.round(-sciCost / scientistCost);

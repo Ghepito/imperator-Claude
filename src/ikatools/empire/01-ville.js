@@ -266,6 +266,14 @@
                     }
                     this.scientists = scientists;
                 },
+                // v3.2 : heure du dernier relevé fiable du nombre de chercheurs (académie ou
+                // formulaire de l'académie). 0 = jamais relevé (nombre déduit ou inconnu).
+                _markScientistsRead: function markScientistsRead() {
+                    this.scientistsReadAt = Date.now();
+                },
+                getScientistsReadAt: function getScientistsReadAt() {
+                    return this.scientistsReadAt || 0;
+                },
 
                 _updateResearchPerHour: function updateResearchPerHour(value, changedAccumulator) {
                     this.researchPerHour = value;

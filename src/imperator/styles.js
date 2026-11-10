@@ -308,6 +308,64 @@ white-space: nowrap; \
 text-align: center;; \
 } \
 \
+/* v3.2 : colonne Recherche */ \
+#ImperatorOverviewResourceTable td.research .imp_rs_l1 { \
+font-weight: bold; \
+white-space: nowrap; \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_l2 { \
+display: flex; \
+justify-content: space-between; \
+align-items: center; \
+gap: 4px; \
+font-size: 10px; \
+white-space: nowrap; \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_sci { \
+display: inline-flex; \
+align-items: center; \
+gap: 2px; \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_ring { \
+display: block; \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_cost { \
+color: #8A5A00; \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_cost.imp_rs_negative { \
+color: #C0392B; \
+font-weight: bold; \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_none { \
+color: #B9A27E; \
+} \
+#ImperatorOverviewResourceTable td.research.imp_rs_stale { \
+opacity: 0.55; \
+} \
+.imp_rs_tip .imp_rs_tip_title { \
+font-weight: bold; \
+margin-bottom: 2px; \
+} \
+.imp_rs_tip td.imp_rs_val { \
+text-align: right; \
+white-space: nowrap; \
+} \
+.imp_rs_tip tr.imp_rs_warn { \
+color: #C0392B; \
+} \
+.imp_rs_tip tr.imp_rs_gold { \
+color: #8A5A00; \
+} \
+.imp_rs_tip tr.imp_rs_muted, \
+.imp_rs_tip .imp_rs_tip_age { \
+color: #8C7355; \
+font-size: 10px; \
+} \
+.imp_rs_tip .imp_rs_tip_alert { \
+color: #C0392B; \
+font-weight: bold; \
+} \
+\
 #ImperatorOverviewResourceTable td.population_growth_icon img { \
 width: 18px; \
 } \

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.1
+// @version        3.2
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.2 Colonne Recherche (onglet Ressources) : la barre de progression est remplacee par un anneau de remplissage de l'academie, le nombre de chercheurs et leur cout en or par heure ; ville sans academie : tiret ; case grisee si l'academie n'a pas ete revue depuis 24 h. Infobulle : chercheurs/max, places libres, cout direct, manque a gagner, or net de la ville, or par point, anciennete du releve. Total : chercheurs et cout de l'empire (rouge si le solde d'or est negatif), detail par heure, jour et semaine. Le nombre de chercheurs lu a l'academie n'est plus ecrase par une estimation du Bilan.
 // @history        3.1 Historique des alertes : chaque alerte de bureau (ou celle qui n'a pas pu s'afficher) est notee avec son heure ; les 50 dernieres se consultent par l'entree Alertes du menu de gauche (cloche, nombre de non lues, bouton Vider).
 // @history        3.0 Version stable (sortie de la beta). Aucun changement de code par rapport a la 2.44 : code restructure (58 fichiers, aucune dependance circulaire, couches verifiees), toutes les fonctions courantes validees en jeu. Limites connues dans le README.
 // @history        2.44 Popup Planifier : le clic ne passe plus a l'image publicitaire de la fenetre du jeu (le bandeau reste hors de la fenetre, au-dessus, et retient ses clics) ; Planifier repond a chaque clic.

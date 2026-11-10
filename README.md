@@ -4,7 +4,7 @@ Script Tampermonkey qui ajoute à Ikariam des tableaux de synthèse de l'empire 
 ressources, bâtiments, armée, espionnage, tableau de bord financier, bénédictions divines,
 mouvements de troupes et de flottes.
 
-Version actuelle : **v3.1** (version stable depuis la v3.0) (testée sur le serveur français, jeu 17.6.1,
+Version actuelle : **v3.2** (version stable depuis la v3.0) (testée sur le serveur français, jeu 17.6.1,
 Chrome + Tampermonkey 5.5.1).
 
 ## Ce qu'apporte la v3.0 par rapport à l'Imperator d'origine
@@ -20,6 +20,9 @@ Chrome + Tampermonkey 5.5.1).
   Spartiate reconnu.
 - **Espionnage** : joueur, alliance et coordonnées tirés de la Cachette et de l'île, sans
   requêtes en arrière-plan ; mur et entrepôt des cibles pris en compte.
+- **Recherche** (v3.2) : par ville, anneau de remplissage de l'académie, chercheurs et coût
+  en or par heure ; infobulle détaillée (places libres, manque à gagner, or par point) ; total
+  de l'empire par heure, jour et semaine, en rouge si le solde d'or est négatif.
 - **Alertes de bureau** (fin de chargement, de construction…), avec leur historique (v3.1,
   entrée « Alertes » du menu de gauche), et mises à jour automatiques par Tampermonkey.
 - **Plus léger et plus sûr** : français et anglais uniquement, sauvegarde regroupée, erreurs
