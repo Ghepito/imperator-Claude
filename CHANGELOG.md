@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.17
+
+Donnees suivant les reponses du serveur : ressources, production, vin consomme et points d'action lus aussi dans headerData (format des reponses du jeu) ; une action acceptee (amelioration, envoi...) se voit tout de suite. Or : le montant de la reponse passe avant celui, fige, du chargement de la page.
+
 ## 3.16
 
 Miracles : une seule pastille par miracle (un miracle actif vaut pour toutes les iles), synthese de ses Temples : actif (fin la plus lointaine), sinon a activer, sinon rechargement (reprise la plus proche), sinon termine. Nombre de Temples entre parentheses, detail ile par ile au survol.

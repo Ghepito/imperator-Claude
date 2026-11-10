@@ -424,18 +424,26 @@
                                 console.warn('[Imperator][SAFE] updateEmpireDataFromGlobalData a échoué:', e);
                             }
                             // Capturer l'or actuel (priorité : dataSetForView > model > DOM)
+                            var responseGold = parseInt(globalData.headerData && globalData.headerData.gold) || 0; // v3.17
                             setTimeout(function captureCurrentGold() {
                                 try {
                                     var g = 0;
-                                    // 1. dataSetForView (données serveur, le plus fiable)
-                                    var dsv = unsafeWindow.dataSetForView || {};
-                                    g = parseInt(dsv.currentGold)||parseInt(dsv.gold)||parseInt(dsv.goldAmount)||0;
-                                    // 2. Modèle Ikariam
+                                    // v3.17 : 1. l'or envoyé par le jeu dans CETTE réponse. Avant, dataSetForView
+                                    // passait en premier : c'est la page du chargement, figée, qui pouvait
+                                    // remettre un ancien montant après chaque action.
+                                    g = responseGold > 1000 ? responseGold : 0;
+                                    // 2. Modèle Ikariam (tenu à jour par le jeu)
                                     if (!g) {
                                         var model = unsafeWindow.ikariam && unsafeWindow.ikariam.model;
-                                        if (model) g = parseInt(model.currentGold)||parseInt(model.gold)||parseInt(model.goldAmount)||0;
+                                        if (model) g = parseInt(model.currentGold)||parseInt(model.gold)||parseInt(model.goldAmount)||
+                                                       parseInt(model.headerData && model.headerData.gold)||0;
                                     }
-                                    // 3. DOM : seulement si la valeur dépasse 100k (sinon risque de bruit)
+                                    // 3. dataSetForView (page du chargement)
+                                    if (!g) {
+                                        var dsv = unsafeWindow.dataSetForView || {};
+                                        g = parseInt(dsv.currentGold)||parseInt(dsv.gold)||parseInt(dsv.goldAmount)||0;
+                                    }
+                                    // 4. DOM : seulement si la valeur dépasse 100k (sinon risque de bruit)
                                     if (!g) {
                                         var sels = ['#js_GlobalMenu_itemGoldValue','#goldValue','[id$="GoldValue"]'];
                                         for (var si=0; si<sels.length; si++) {

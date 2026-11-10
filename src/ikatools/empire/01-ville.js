@@ -68,7 +68,13 @@
                 },
                 _updateFromGlobalData: function _updateFromGlobalData(data, correctWineConsumption) {
                     var changes = [];
-                    var ap = data.maxActionPoints;
+                    // v3.17 : au chargement de la page, les valeurs sont à plat (dataSetForView) ;
+                    // dans les réponses du jeu (updateGlobalData), elles sont dans headerData.
+                    // Avant, seules les premières étaient lues : les ressources ne suivaient
+                    // une action acceptée (amélioration, envoi…) qu'au rechargement suivant.
+                    var header = data.headerData || {};
+                    var read = function(key) { return data[key] !== undefined ? data[key] : header[key]; };
+                    var ap = read('maxActionPoints');
                     if (ap == null) {
                         ap = parseInt($('#js_GlobalMenu_maxActionPoints').text());
                     }
@@ -77,8 +83,8 @@
                     }
 
                     if (this.isOwn()) {
-                        var wineConsumption = data.wineSpendings;
-                        var baseWineConsumption = data.wineSpendings;
+                        var wineConsumption = read('wineSpendings');
+                        var baseWineConsumption = wineConsumption;
 
                         var winePress = this.getBuildingByType(Constants.Buildings.WINE_PRESS);
                         if (correctWineConsumption) {
@@ -106,10 +112,10 @@
                             this._updateTavernWineLevel(wineLevel, changes);
                         }
 
-                        this._updateResources(data.currentResources,
-                                              data.maxResources || (data.headerData && data.headerData.maxResources), // v2.24
-                                              data.resourceProduction,
-                                              data.tradegoodProduction,
+                        this._updateResources(read('currentResources'),
+                                              read('maxResources'), // v2.24
+                                              read('resourceProduction'),
+                                              read('tradegoodProduction'),
                                               wineConsumption / Constants.Time.SECONDS_PER_HOUR,
                                               changes);
                     }
