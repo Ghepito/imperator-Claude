@@ -559,6 +559,8 @@
                             processPlunderForm(form);
                         } else if (form.id == 'setScientists') {
                             processSetScientistsForm(form);
+                        } else if (form.id == 'accelResearchForm') {
+                            processExperimentForm(form); // v3.5
                         }
                     });
             }

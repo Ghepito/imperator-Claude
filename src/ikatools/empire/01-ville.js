@@ -274,6 +274,27 @@
                 getScientistsReadAt: function getScientistsReadAt() {
                     return this.scientistsReadAt || 0;
                 },
+                // v3.5 : expérience de l'académie. Heure à laquelle le labo redevient utilisable
+                // (lancement + 4 h), et « vu » une fois l'académie revisitée après cette heure.
+                _markExperimentLaunched: function markExperimentLaunched(readyAt) {
+                    this.experimentReadyAt = readyAt;
+                    this.experimentAck = false;
+                },
+                _ackExperiment: function ackExperiment() {
+                    if (this.experimentReadyAt && this.experimentReadyAt <= Date.now()) {
+                        this.experimentAck = true;
+                    }
+                },
+                getExperimentReadyAt: function getExperimentReadyAt() {
+                    return this.experimentReadyAt || 0;
+                },
+                isExperimentAcknowledged: function isExperimentAcknowledged() {
+                    return !!this.experimentAck;
+                },
+                // v3.5 : points de recherche par chercheur, lus dans l'académie
+                _updateResearchFactor: function updateResearchFactor(factor) {
+                    if (factor > 0) this.researchFactor = factor;
+                },
 
                 _updateResearchPerHour: function updateResearchPerHour(value, changedAccumulator) {
                     this.researchPerHour = value;

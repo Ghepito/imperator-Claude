@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.5
+
+Colonne Recherche : voyant d'expérience devant la recherche/h (vert : possible, orange : possible avec le parchemin d'Athéna, rouge : cristal insuffisant, pas de parchemin ou labo en remise en état), clic = académie de la ville. Lancement détecté (boutons de l'académie) : labo indisponible 4 h, décompte dans l'infobulle, le voyant clignote à la fin et le titre de l'onglet du navigateur affiche le nombre de labos redevenus disponibles. En-tête : nombre d'expériences possibles (vert · orange). Coût d'un chercheur, points par chercheur et présence du parchemin lus dans l'académie.
+
 ## 3.4
 
 Infobulles en bas de fenêtre : la hauteur est mesurée sur le contenu de l'infobulle (la boîte qui le porte n'a pas de hauteur), elles passent donc bien au-dessus du curseur ; fenêtre visible lue directement (zoom du navigateur compris).

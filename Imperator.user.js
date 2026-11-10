@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.4
+// @version        3.5
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.5 Colonne Recherche : voyant d'experience devant la recherche/h (vert : possible, orange : possible avec le parchemin d'Athena, rouge : cristal insuffisant, pas de parchemin ou labo en remise en etat), clic = academie de la ville. Lancement detecte (bouton de l'academie) : labo indisponible 4 h, decompte dans l'infobulle, le voyant clignote a la fin et le titre de l'onglet affiche le nombre de labos redevenus disponibles. En-tete : nombre d'experiences possibles (vert · orange). Cout d'un chercheur et points par chercheur lus dans l'academie ; presence du parchemin lue dans l'academie.
 // @history        3.4 Infobulles en bas de fenetre : la hauteur est mesuree sur le contenu de l'infobulle (la boite qui le porte n'a pas de hauteur), elles passent donc bien au-dessus du curseur ; fenetre visible lue directement (zoom du navigateur compris).
 // @history        3.3 Colonne Recherche : apres confirmation du nombre de chercheurs a l'academie, la recherche/h de la ville est mise a jour aussitot (estimee, puis lue dans l'academie). Infobulles : affichees au-dessus du curseur quand elles depasseraient le bas de la fenetre (total de la recherche notamment).
 // @history        3.2 Colonne Recherche (onglet Ressources) : la barre de progression est remplacee par un anneau de remplissage de l'academie, le nombre de chercheurs et leur cout en or par heure ; ville sans academie : tiret ; case grisee si l'academie n'a pas ete revue depuis 24 h. Infobulle : chercheurs/max, places libres, cout direct, manque a gagner, or net de la ville, or par point, anciennete du releve. Total : chercheurs et cout de l'empire (rouge si le solde d'or est negatif), detail par heure, jour et semaine. Le nombre de chercheurs lu a l'academie n'est plus ecrase par une estimation du Bilan.
@@ -3810,6 +3811,27 @@ if (typeof IkaTools == 'undefined') {
                 getScientistsReadAt: function getScientistsReadAt() {
                     return this.scientistsReadAt || 0;
                 },
+                // v3.5 : expérience de l'académie. Heure à laquelle le labo redevient utilisable
+                // (lancement + 4 h), et « vu » une fois l'académie revisitée après cette heure.
+                _markExperimentLaunched: function markExperimentLaunched(readyAt) {
+                    this.experimentReadyAt = readyAt;
+                    this.experimentAck = false;
+                },
+                _ackExperiment: function ackExperiment() {
+                    if (this.experimentReadyAt && this.experimentReadyAt <= Date.now()) {
+                        this.experimentAck = true;
+                    }
+                },
+                getExperimentReadyAt: function getExperimentReadyAt() {
+                    return this.experimentReadyAt || 0;
+                },
+                isExperimentAcknowledged: function isExperimentAcknowledged() {
+                    return !!this.experimentAck;
+                },
+                // v3.5 : points de recherche par chercheur, lus dans l'académie
+                _updateResearchFactor: function updateResearchFactor(factor) {
+                    if (factor > 0) this.researchFactor = factor;
+                },
 
                 _updateResearchPerHour: function updateResearchPerHour(value, changedAccumulator) {
                     this.researchPerHour = value;
@@ -4679,6 +4701,16 @@ if (typeof IkaTools == 'undefined') {
                     if (upd.net === undefined && gd.incomeUpdated > 0) {
                         gd.net = (gd.revenue||0)+(gd.gods||0)+(gd.scientists||0)+(gd.upkeep||0)+(gd.premium||0);
                     }
+                },
+                // v3.5 : données lues dans une académie (valables pour tout l'empire) : coût d'un
+                // chercheur pour la ville (impôt perdu + entretien), parchemin d'Athéna.
+                getAcademyData: function getAcademyData() {
+                    if (!this.academyData) this.academyData = { costPerScientist: 0, hasAthenaScroll: null,
+                                                                isAthenaScrollActive: null, updated: 0 };
+                    return this.academyData;
+                },
+                _updateAcademyData: function _updateAcademyData(upd) {
+                    $.extend(this.getAcademyData(), upd, { updated: Date.now() });
                 },
                 // v2.07 : accès aux données Sanctuaire
                 getShrineData: function getShrineData() {
@@ -5593,6 +5625,8 @@ if (typeof IkaTools == 'undefined') {
             // la valeur du jeu : même rendement par chercheur qu'avant, sinon celui des autres villes.
             function estimateResearchPerHour(city, oldScientists, oldResearch, newScientists) {
                 if (!(newScientists > 0)) return 0;
+                // v3.5 : facteur exact lu dans l'académie (points par chercheur)
+                if (city.researchFactor > 0) return Math.floor(newScientists * city.researchFactor);
                 if (oldScientists > 0 && oldResearch > 0) {
                     return Math.round(oldResearch / oldScientists * newScientists);
                 }
@@ -5613,7 +5647,53 @@ if (typeof IkaTools == 'undefined') {
                 if (!isNaN(scientists)) city._markScientistsRead(); // v3.2
                 var total = readAcademyResearchValue();
                 if (!isNaN(total)) city._updateResearchPerHour(total, changes);
+                // v3.5 : coût d'un chercheur, points par chercheur, parchemin d'Athéna
+                try {
+                    var cb = data['js_AcademySlider'].slider.callback_data;
+                    if (cb.researchProductionFactor > 0) city._updateResearchFactor(Number(cb.researchProductionFactor));
+                    if (cb.costPerScientist > 0) {
+                        getCivilizationData()._updateAcademyData({ costPerScientist: Number(cb.costPerScientist) });
+                    }
+                } catch (eCb) {}
+                try {
+                    var lj = data['load_js'];
+                    var params = typeof lj.params === 'string' ? JSON.parse(lj.params) : lj.params;
+                    if (params && typeof params.hasAthenaScroll === 'boolean') {
+                        getCivilizationData()._updateAcademyData({
+                            hasAthenaScroll: params.hasAthenaScroll,
+                            isAthenaScrollActive: !!params.isAthenaScrollActive });
+                    }
+                } catch (eLj) {}
+                city._ackExperiment();
                 raiseResourcesChanged(changes);
+            }
+
+            // v3.5 : lancement d'une expérience (boutons « Lancer l'expérience » et « Utiliser le
+            // parchemin d'Athéna »). Si le jeu confirme, le labo de la ville est indisponible 4 h.
+            var EXPERIMENT_COOLDOWN = 4 * Constants.Time.MILLIS_PER_HOUR;
+            function processExperimentForm(form) {
+                var cityId = parseInt($(form).find('input[name="cityId"]').val(), 10);
+                var city = (cityId && getCity(cityId)) || View.getCurrentCity();
+                var withScroll = $(form).find('input[name="useAthenasScroll"]').val() == '1';
+                var launchedAt = Date.now();
+
+                View.registerNextIkariamAjaxRequestCallback(function saveExperiment(response) {
+                    var success = false, failure = false;
+                    Utils.iterateIkariamAjaxResponse(response, function lookForFeedback(index, name, data) {
+                        if (name == Constants.IkariamAjaxResponseType.PROVIDE_FEEDBACK) {
+                            if (data && data[0] && data[0].type == 10) success = true; else failure = true;
+                        }
+                    });
+                    console.log('[Imperator] Expérience ' + (city && city.getName ? city.getName() : '?') +
+                                (withScroll ? ' (parchemin)' : '') + ' : ' +
+                                (success ? 'confirmée' : failure ? 'refusée' : 'sans retour du jeu, comptée lancée'));
+                    if (failure && !success) return;
+                    if (!city) return;
+                    city._markExperimentLaunched(launchedAt + EXPERIMENT_COOLDOWN);
+                    if (withScroll) getCivilizationData()._updateAcademyData({ hasAthenaScroll: null });
+                    raiseResourcesChanged([{ city: city, type: Constants.Resources.SCIENTISTS,
+                                             value: city.getScientists() }]);
+                });
             }
 
             function processSetScientistsForm(form) {
@@ -7193,6 +7273,8 @@ if (typeof IkaTools == 'undefined') {
                             processPlunderForm(form);
                         } else if (form.id == 'setScientists') {
                             processSetScientistsForm(form);
+                        } else if (form.id == 'accelResearchForm') {
+                            processExperimentForm(form); // v3.5
                         }
                     });
             }
@@ -8126,6 +8208,13 @@ var Imperator = function Imperator() {
                 rs_never_read: 'Academy not visited yet',
                 rs_empire_gold_negative: 'Empire gold balance is negative',
                 rs_per_hour: '/h',
+                rs_xp: 'Experiment',
+                rs_xp_ready: 'possible',
+                rs_xp_scroll: 'possible with Athena\'s scroll',
+                rs_xp_cooldown: 'lab ready in %s',
+                rs_xp_crystal: 'crystal %s / %s',
+                rs_xp_noscroll: 'no Athena\'s scroll (crystal %s / %s)',
+                rs_xp_header: 'Experiments possible: %s, with scroll: %s',
 
                 satisfaction: 'Satisfaction',
                 tavern_wine_serving_level: 'Tavern Level',
@@ -8388,6 +8477,13 @@ var Imperator = function Imperator() {
                 rs_never_read: 'Académie pas encore visitée',
                 rs_empire_gold_negative: 'Solde d\'or de l\'empire négatif',
                 rs_per_hour: '/h',
+                rs_xp: 'Expérience',
+                rs_xp_ready: 'possible',
+                rs_xp_scroll: 'possible avec le parchemin d\'Athéna',
+                rs_xp_cooldown: 'labo prêt dans %s',
+                rs_xp_crystal: 'cristal %s / %s',
+                rs_xp_noscroll: 'pas de parchemin d\'Athéna (cristal %s / %s)',
+                rs_xp_header: 'Expériences possibles : %s, avec parchemin : %s',
 
                 satisfaction: 'Satisfaction',
                 tavern_wine_serving_level: 'Niveau de la Taverne',
@@ -8940,6 +9036,37 @@ color: #B9A27E; \
 #ImperatorOverviewResourceTable td.research.imp_rs_stale { \
 opacity: 0.55; \
 } \
+/* v3.5 : voyant experience */ \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp { \
+display: inline-block; \
+width: 8px; \
+height: 8px; \
+border-radius: 50%; \
+margin-right: 4px; \
+vertical-align: middle; \
+box-shadow: 0 0 0 1px rgba(0,0,0,0.25); \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_ready { background-color: #2E9E2E; } \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_scroll { background-color: #F0A020; } \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_blocked { background-color: #D23C3C; } \
+@keyframes imp_rs_blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } } \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_blink { animation: imp_rs_blink 0.8s ease-in-out 10; } \
+#ImperatorOverviewResourceTable th.research { \
+position: relative; \
+} \
+#ImperatorOverviewResourceTable th.research .imp_rs_head_count { \
+position: absolute; \
+right: 2px; \
+bottom: 1px; \
+font-size: 10px; \
+font-weight: bold; \
+color: #5A3A1A; \
+} \
+#ImperatorOverviewResourceTable th.research .imp_rs_head_ready { color: #2E9E2E; } \
+#ImperatorOverviewResourceTable th.research .imp_rs_head_scroll { color: #D9822B; } \
+.imp_rs_tip tr.imp_rs_xp_ready { color: #2E7D2E; font-weight: bold; } \
+.imp_rs_tip tr.imp_rs_xp_scroll { color: #B8650F; font-weight: bold; } \
+.imp_rs_tip tr.imp_rs_xp_blocked { color: #C0392B; } \
 .imp_rs_tip .imp_rs_tip_title { \
 font-weight: bold; \
 margin-bottom: 2px; \
@@ -11468,7 +11595,12 @@ min-width: 851px !important; \
 
         // Coût d'un chercheur (or/h), lu dans le jeu : entretien total des chercheurs / nombre de
         // chercheurs. Sinon (données absentes), la valeur par défaut fournie.
-        function impResearchUnitCost(upkeepTotal, scientistsTotal, fallback) {
+        // v3.5 : en priorité, le coût lu dans une académie (impôt perdu + entretien) moins l'impôt.
+        function impResearchUnitCost(upkeepTotal, scientistsTotal, fallback, academyCostPerScientist) {
+            var academyCost = Number(academyCostPerScientist);
+            if (isFinite(academyCost) && academyCost > IMP_RS_CITIZEN_GOLD) {
+                return academyCost - IMP_RS_CITIZEN_GOLD;
+            }
             var upkeep = Math.abs(Number(upkeepTotal));
             var count = Number(scientistsTotal);
             if (isFinite(upkeep) && upkeep > 0 && isFinite(count) && count > 0) {
@@ -11534,6 +11666,30 @@ min-width: 851px !important; \
                 full ? '#285E28' : '#D9822B',
                 filled.toFixed(2),
                 circumference.toFixed(2));
+        }
+
+        // v3.5 : expérience de l'académie (300 000 points de recherche contre du cristal).
+        var IMP_XP_COST = 300000;          // cristal, sans parchemin
+        var IMP_XP_SCROLL_COST = 240000;   // cristal, avec le parchemin d'Athéna (-20 %)
+
+        // État du voyant : 'ready' (vert), 'scroll' (orange, avec parchemin), 'blocked' (rouge).
+        // reason : 'cooldown' (labo en remise en état), 'crystal' (pas assez), 'noscroll'
+        // (assez pour le parchemin, mais on sait qu'il n'y en a pas). hasScroll : true, false ou
+        // null (inconnu : l'orange reste proposé).
+        function impExperimentState(crystal, readyAt, now, hasScroll) {
+            crystal = Number(crystal) || 0;
+            readyAt = Number(readyAt) || 0;
+            if (readyAt > now) {
+                return { state: 'blocked', reason: 'cooldown', remaining: readyAt - now, crystal: crystal };
+            }
+            if (crystal >= IMP_XP_COST) return { state: 'ready', crystal: crystal };
+            if (crystal >= IMP_XP_SCROLL_COST) {
+                return hasScroll === false ?
+                    { state: 'blocked', reason: 'noscroll', crystal: crystal } :
+                    { state: 'scroll', crystal: crystal };
+            }
+            return { state: 'blocked', reason: 'crystal', crystal: crystal,
+                     missing: IMP_XP_SCROLL_COST - crystal };
         }
 
         function makeResourceTab() {
@@ -11913,7 +12069,8 @@ min-width: 851px !important; \
                         var fallback = civData.hasResearched(
                             IkaTools.Constants.Research.Science.LETTER_CHUTE) ? 3 : 6;
                         researchUnitCostCache = impResearchUnitCost(
-                            civData.getGoldData().scientists, totalScientists, fallback);
+                            civData.getGoldData().scientists, totalScientists, fallback,
+                            civData.getAcademyData().costPerScientist); // v3.5
                     }
                     return researchUnitCostCache;
                 }
@@ -11927,6 +12084,30 @@ min-width: 851px !important; \
                                                      city.getResearch(), getResearchUnitCost());
                     stats.academy = academy;
                     return stats;
+                }
+
+                // v3.5 : voyant d'expérience de la ville (recalculé à chaque appel)
+                function getExperimentState(city) {
+                    var glass = city.getResource(IkaTools.Constants.Resources.GLASS);
+                    var crystal = glass && glass.getCurrent ? glass.getCurrent() : 0;
+                    var academyData = civData.getAcademyData();
+                    var hasScroll = academyData.isAthenaScrollActive ? true : academyData.hasAthenaScroll;
+                    return impExperimentState(crystal, city.getExperimentReadyAt(), Date.now(), hasScroll);
+                }
+
+                function describeExperimentState(xp) {
+                    if (xp.state == 'ready') return localizer.localize('misc','rs_xp_ready');
+                    if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll');
+                    if (xp.reason == 'cooldown') {
+                        return localizer.localize('misc','rs_xp_cooldown').format(
+                            IkaTools.Intl.formatRemainingTime(xp.remaining, '', 2));
+                    }
+                    if (xp.reason == 'noscroll') {
+                        return localizer.localize('misc','rs_xp_noscroll').format(
+                            IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_COST));
+                    }
+                    return localizer.localize('misc','rs_xp_crystal').format(
+                        IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_SCROLL_COST));
                 }
 
                 function formatGoldPerHour(value) {
@@ -11963,6 +12144,10 @@ min-width: 851px !important; \
                         rows.push(row(localizer.localize('misc','rs_gold_per_point'),
                                       IkaTools.Intl.formatDecimal(stats.goldPerPoint, 1)));
                     }
+                    // v3.5 : état de l'expérience
+                    var xp = getExperimentState(city);
+                    rows.push(row(localizer.localize('misc','rs_xp'), describeExperimentState(xp),
+                                  'imp_rs_xp_' + xp.state));
                     var readAt = city.getScientistsReadAt();
                     var age = readAt ?
                         localizer.localize('misc','rs_read_ago').format(
@@ -11978,8 +12163,8 @@ min-width: 851px !important; \
                         rows.join(''),
                         makeResourceUseToolTip('/cdn/all/both/layout/bulb-on.png', [
                             makeResourceUseTableRow('+', stats.research),
-                            makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -stats.directCost),
-                            makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -stats.totalCost)]),
+                            makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -Math.round(stats.directCost)),
+                            makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -Math.round(stats.totalCost))]),
                         age);
                 }
 
@@ -11992,9 +12177,26 @@ min-width: 851px !important; \
                     .toCityView(city, IkaTools.Constants.Buildings.ACADEMY,
                                 { position: stats.academy.getPosition(), cityId: city.getId() });
                     var detailsId = 'ResearchTableDetails_%s'.format(city.getId());
-                    var tip = makeResearchCityToolTip(city, stats);
-                    toolTips.registerSimple(link.getId(), tip);
-                    toolTips.registerSimple(detailsId, tip);
+                    // v3.5 : infobulle rafraîchie (temps restant du labo)
+                    var tip = function() { return makeResearchCityToolTip(city, stats); };
+                    toolTips.registerRefreshable(link.getId(), tip);
+                    toolTips.registerRefreshable(detailsId, tip);
+
+                    // v3.5 : voyant d'expérience, suivi toutes les 4 s ; il clignote quand le labo
+                    // redevient disponible
+                    var xp = getExperimentState(city);
+                    var lampId = 'ResearchExperimentLamp_%s'.format(city.getId());
+                    var lastXp = xp;
+                    updateables.create(lampId).registerTickerUpdate(function(lamp) {
+                        var now = getExperimentState(city);
+                        lamp.removeClass('imp_rs_lamp_ready imp_rs_lamp_scroll imp_rs_lamp_blocked')
+                            .addClass('imp_rs_lamp_' + now.state);
+                        if (lastXp.reason == 'cooldown' && now.reason != 'cooldown') {
+                            lamp.addClass('imp_rs_lamp_blink');
+                            setTimeout(function() { lamp.removeClass('imp_rs_lamp_blink'); }, 8000);
+                        }
+                        lastXp = now;
+                    });
 
                     var readAt = city.getScientistsReadAt();
                     var stale = readAt && Date.now() - readAt > 24 * IkaTools.Constants.Time.MILLIS_PER_HOUR;
@@ -12002,7 +12204,8 @@ min-width: 851px !important; \
                     return ('<td class="research%s">' +
                             '<div class="imp_rs_l1">' +
                             '<a id="%s" href="javascript:void(0)" ' +
-                            'class="imperator_link imperator_tool_tip">%s</a>' +
+                            'class="imperator_link imperator_tool_tip">' +
+                            '<span id="%s" class="imp_rs_lamp imp_rs_lamp_%s"></span>%s</a>' +
                             '</div>' +
                             '<div id="%s" class="imp_rs_l2 imperator_tool_tip">' +
                             '<span class="imp_rs_sci">%s%s</span>' +
@@ -12011,6 +12214,8 @@ min-width: 851px !important; \
                             '</td>').format(
                         stale ? ' imp_rs_stale' : '',
                         link.getId(),
+                        lampId,
+                        xp.state,
                         IkaTools.Intl.formatInteger(stats.research, true),
                         detailsId,
                         impResearchRingSvg(stats.ratio, stats.full),
@@ -12368,9 +12573,9 @@ min-width: 851px !important; \
                                 '<img src="/cdn/all/both/museum/icon32_culturalgood.png" height="10"/>', culturalGoods));
                             footer.push(makeResourceUseTableRow('&sum;', total + culturalGoods));
                         }
-                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -totals.directCost));
-                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_lost_tax'), -totals.lostTax));
-                        footer.push(makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -totals.totalCost));
+                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -Math.round(totals.directCost)));
+                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_lost_tax'), -Math.round(totals.lostTax)));
+                        footer.push(makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -Math.round(totals.totalCost)));
 
                         // Total des recherches
                         toolTips.registerSimple('ResearchTotal',
@@ -12493,9 +12698,31 @@ min-width: 851px !important; \
                     toolTips.registerSimple('ResourcePopulationGrowthHeader',
                                             '<div class="nowrap">%s</div>'.format(
                         localizer.localize('misc','population_growth')));
-                    toolTips.registerSimple('ResourceResearchHeader',
-                                            '<div class="nowrap">%s</div>'.format(
-                        localizer.localize('misc','research')));
+                    // v3.5 : nombre d'expériences possibles (vert · orange) dans l'en-tête
+                    function countExperiments() {
+                        var count = { ready: 0, scroll: 0 };
+                        $.each(IkaTools.EmpireData.getOwnCities(), function(index, city) {
+                            if (!city.getBuildingByType(IkaTools.Constants.Buildings.ACADEMY)) return;
+                            var xp = getExperimentState(city);
+                            if (xp.state in count) count[xp.state]++;
+                        });
+                        return count;
+                    }
+                    function makeExperimentCount() {
+                        var count = countExperiments();
+                        if (!count.ready && !count.scroll) return '';
+                        return '<span class="imp_rs_head_ready">%s</span>·<span class="imp_rs_head_scroll">%s</span>'
+                            .format(count.ready, count.scroll);
+                    }
+                    toolTips.registerRefreshable('ResourceResearchHeader', function() {
+                        var count = countExperiments();
+                        return '<div class="nowrap">%s<br/>%s</div>'.format(
+                            localizer.localize('misc','research'),
+                            localizer.localize('misc','rs_xp_header').format(count.ready, count.scroll));
+                    });
+                    updateables.create('ResearchExperimentCount').registerTickerUpdate(function(element) {
+                        element.html(makeExperimentCount());
+                    });
                     toolTips.registerSimple('ResourceTableActionPoints',
                                             '<div class="nowrap">%s</div>'.format(
                         localizer.localize('misc','action_points')));
@@ -12524,7 +12751,8 @@ min-width: 851px !important; \
                             '<th colspan="2" id="ResourcePopulationGrowthHeader" ' +
                             'class="population_growth imperator_tool_tip">%s</th>' +
                             '<th colspan="1" id="ResourceResearchHeader" ' +
-                            'class="research imperator_tool_tip">%s</th>' +
+                            'class="research imperator_tool_tip">%s' +
+                            '<span id="ResearchExperimentCount" class="imp_rs_head_count">%s</span></th>' +
                             '<th colspan="2" id="ResourceWoodHeader" ' +
                             'class="resource resource_wood imperator_tool_tip">%s</th>' +
                             '<th colspan="2" id="ResourceWineHeader" ' +
@@ -12543,6 +12771,7 @@ min-width: 851px !important; \
                         localizer.localize('misc','population'),
                         localizer.localize('misc','population_growth'),
                         localizer.localize('misc','research'),
+                        makeExperimentCount(),
                         localizer.localize('resources','wood'),
                         localizer.localize('resources','wine'),
                         localizer.localize('resources','marble'),
@@ -15972,6 +16201,52 @@ min-width: 851px !important; \
 
 
 
+// v3.5 : badge dans le titre de l'onglet du navigateur, « (2) Ikariam … », quand des labos
+// d'académie sont redevenus disponibles (4 h après une expérience) et que la ville a assez
+// de cristal pour une nouvelle expérience. Le compte baisse dès que l'académie est revisitée.
+
+(function installExperienceBadge() {
+  'use strict';
+
+  var SCROLL_COST = 240000; // cristal minimal (avec le parchemin d'Athéna)
+
+  function ready() {
+    return typeof IkaTools !== 'undefined' && IkaTools.EmpireData &&
+           IkaTools.EmpireData.getOwnCities && IkaTools.Constants && IkaTools.Constants.Resources;
+  }
+
+  function countReadyAgain() {
+    var n = 0, now = Date.now();
+    $.each(IkaTools.EmpireData.getOwnCities(), function (i, city) {
+      if (!city || !city.getExperimentReadyAt) return;
+      var readyAt = city.getExperimentReadyAt();
+      if (!readyAt || readyAt > now || city.isExperimentAcknowledged()) return;
+      var glass = city.getResource(IkaTools.Constants.Resources.GLASS);
+      var crystal = glass && glass.getCurrent ? Number(glass.getCurrent()) || 0 : 0;
+      if (crystal >= SCROLL_COST) n++;
+    });
+    return n;
+  }
+
+  function update() {
+    var n = 0;
+    try { n = countReadyAgain(); } catch (e) { n = 0; }
+    var title = document.title.replace(/^\(\d+\) /, '');
+    var wanted = n ? '(' + n + ') ' + title : title;
+    if (document.title !== wanted) document.title = wanted;
+  }
+
+  var tries = 0, wait = setInterval(function () {
+    tries++;
+    if (ready()) {
+      clearInterval(wait);
+      update();
+      setInterval(update, 15000);
+    } else if (tries > 100) {
+      clearInterval(wait);
+    }
+  }, 200);
+})();
 IkaTools.Logging.debuggable( {label: "Imperator.init", group: true, alwaysTime: true, swallowException: true},
                             Imperator.init)();
 

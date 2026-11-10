@@ -376,7 +376,8 @@
                         var fallback = civData.hasResearched(
                             IkaTools.Constants.Research.Science.LETTER_CHUTE) ? 3 : 6;
                         researchUnitCostCache = impResearchUnitCost(
-                            civData.getGoldData().scientists, totalScientists, fallback);
+                            civData.getGoldData().scientists, totalScientists, fallback,
+                            civData.getAcademyData().costPerScientist); // v3.5
                     }
                     return researchUnitCostCache;
                 }
@@ -390,6 +391,30 @@
                                                      city.getResearch(), getResearchUnitCost());
                     stats.academy = academy;
                     return stats;
+                }
+
+                // v3.5 : voyant d'expérience de la ville (recalculé à chaque appel)
+                function getExperimentState(city) {
+                    var glass = city.getResource(IkaTools.Constants.Resources.GLASS);
+                    var crystal = glass && glass.getCurrent ? glass.getCurrent() : 0;
+                    var academyData = civData.getAcademyData();
+                    var hasScroll = academyData.isAthenaScrollActive ? true : academyData.hasAthenaScroll;
+                    return impExperimentState(crystal, city.getExperimentReadyAt(), Date.now(), hasScroll);
+                }
+
+                function describeExperimentState(xp) {
+                    if (xp.state == 'ready') return localizer.localize('misc','rs_xp_ready');
+                    if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll');
+                    if (xp.reason == 'cooldown') {
+                        return localizer.localize('misc','rs_xp_cooldown').format(
+                            IkaTools.Intl.formatRemainingTime(xp.remaining, '', 2));
+                    }
+                    if (xp.reason == 'noscroll') {
+                        return localizer.localize('misc','rs_xp_noscroll').format(
+                            IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_COST));
+                    }
+                    return localizer.localize('misc','rs_xp_crystal').format(
+                        IkaTools.Intl.formatInteger(xp.crystal), IkaTools.Intl.formatInteger(IMP_XP_SCROLL_COST));
                 }
 
                 function formatGoldPerHour(value) {
@@ -426,6 +451,10 @@
                         rows.push(row(localizer.localize('misc','rs_gold_per_point'),
                                       IkaTools.Intl.formatDecimal(stats.goldPerPoint, 1)));
                     }
+                    // v3.5 : état de l'expérience
+                    var xp = getExperimentState(city);
+                    rows.push(row(localizer.localize('misc','rs_xp'), describeExperimentState(xp),
+                                  'imp_rs_xp_' + xp.state));
                     var readAt = city.getScientistsReadAt();
                     var age = readAt ?
                         localizer.localize('misc','rs_read_ago').format(
@@ -441,8 +470,8 @@
                         rows.join(''),
                         makeResourceUseToolTip('/cdn/all/both/layout/bulb-on.png', [
                             makeResourceUseTableRow('+', stats.research),
-                            makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -stats.directCost),
-                            makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -stats.totalCost)]),
+                            makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -Math.round(stats.directCost)),
+                            makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -Math.round(stats.totalCost))]),
                         age);
                 }
 
@@ -455,9 +484,26 @@
                     .toCityView(city, IkaTools.Constants.Buildings.ACADEMY,
                                 { position: stats.academy.getPosition(), cityId: city.getId() });
                     var detailsId = 'ResearchTableDetails_%s'.format(city.getId());
-                    var tip = makeResearchCityToolTip(city, stats);
-                    toolTips.registerSimple(link.getId(), tip);
-                    toolTips.registerSimple(detailsId, tip);
+                    // v3.5 : infobulle rafraîchie (temps restant du labo)
+                    var tip = function() { return makeResearchCityToolTip(city, stats); };
+                    toolTips.registerRefreshable(link.getId(), tip);
+                    toolTips.registerRefreshable(detailsId, tip);
+
+                    // v3.5 : voyant d'expérience, suivi toutes les 4 s ; il clignote quand le labo
+                    // redevient disponible
+                    var xp = getExperimentState(city);
+                    var lampId = 'ResearchExperimentLamp_%s'.format(city.getId());
+                    var lastXp = xp;
+                    updateables.create(lampId).registerTickerUpdate(function(lamp) {
+                        var now = getExperimentState(city);
+                        lamp.removeClass('imp_rs_lamp_ready imp_rs_lamp_scroll imp_rs_lamp_blocked')
+                            .addClass('imp_rs_lamp_' + now.state);
+                        if (lastXp.reason == 'cooldown' && now.reason != 'cooldown') {
+                            lamp.addClass('imp_rs_lamp_blink');
+                            setTimeout(function() { lamp.removeClass('imp_rs_lamp_blink'); }, 8000);
+                        }
+                        lastXp = now;
+                    });
 
                     var readAt = city.getScientistsReadAt();
                     var stale = readAt && Date.now() - readAt > 24 * IkaTools.Constants.Time.MILLIS_PER_HOUR;
@@ -465,7 +511,8 @@
                     return ('<td class="research%s">' +
                             '<div class="imp_rs_l1">' +
                             '<a id="%s" href="javascript:void(0)" ' +
-                            'class="imperator_link imperator_tool_tip">%s</a>' +
+                            'class="imperator_link imperator_tool_tip">' +
+                            '<span id="%s" class="imp_rs_lamp imp_rs_lamp_%s"></span>%s</a>' +
                             '</div>' +
                             '<div id="%s" class="imp_rs_l2 imperator_tool_tip">' +
                             '<span class="imp_rs_sci">%s%s</span>' +
@@ -474,6 +521,8 @@
                             '</td>').format(
                         stale ? ' imp_rs_stale' : '',
                         link.getId(),
+                        lampId,
+                        xp.state,
                         IkaTools.Intl.formatInteger(stats.research, true),
                         detailsId,
                         impResearchRingSvg(stats.ratio, stats.full),
@@ -831,9 +880,9 @@
                                 '<img src="/cdn/all/both/museum/icon32_culturalgood.png" height="10"/>', culturalGoods));
                             footer.push(makeResourceUseTableRow('&sum;', total + culturalGoods));
                         }
-                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -totals.directCost));
-                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_lost_tax'), -totals.lostTax));
-                        footer.push(makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -totals.totalCost));
+                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_direct_cost'), -Math.round(totals.directCost)));
+                        rows.push(makeResourceUseTableRow(localizer.localize('misc','rs_lost_tax'), -Math.round(totals.lostTax)));
+                        footer.push(makeResourceUseTableRow(localizer.localize('misc','rs_total_cost'), -Math.round(totals.totalCost)));
 
                         // Total des recherches
                         toolTips.registerSimple('ResearchTotal',
@@ -956,9 +1005,31 @@
                     toolTips.registerSimple('ResourcePopulationGrowthHeader',
                                             '<div class="nowrap">%s</div>'.format(
                         localizer.localize('misc','population_growth')));
-                    toolTips.registerSimple('ResourceResearchHeader',
-                                            '<div class="nowrap">%s</div>'.format(
-                        localizer.localize('misc','research')));
+                    // v3.5 : nombre d'expériences possibles (vert · orange) dans l'en-tête
+                    function countExperiments() {
+                        var count = { ready: 0, scroll: 0 };
+                        $.each(IkaTools.EmpireData.getOwnCities(), function(index, city) {
+                            if (!city.getBuildingByType(IkaTools.Constants.Buildings.ACADEMY)) return;
+                            var xp = getExperimentState(city);
+                            if (xp.state in count) count[xp.state]++;
+                        });
+                        return count;
+                    }
+                    function makeExperimentCount() {
+                        var count = countExperiments();
+                        if (!count.ready && !count.scroll) return '';
+                        return '<span class="imp_rs_head_ready">%s</span>·<span class="imp_rs_head_scroll">%s</span>'
+                            .format(count.ready, count.scroll);
+                    }
+                    toolTips.registerRefreshable('ResourceResearchHeader', function() {
+                        var count = countExperiments();
+                        return '<div class="nowrap">%s<br/>%s</div>'.format(
+                            localizer.localize('misc','research'),
+                            localizer.localize('misc','rs_xp_header').format(count.ready, count.scroll));
+                    });
+                    updateables.create('ResearchExperimentCount').registerTickerUpdate(function(element) {
+                        element.html(makeExperimentCount());
+                    });
                     toolTips.registerSimple('ResourceTableActionPoints',
                                             '<div class="nowrap">%s</div>'.format(
                         localizer.localize('misc','action_points')));
@@ -987,7 +1058,8 @@
                             '<th colspan="2" id="ResourcePopulationGrowthHeader" ' +
                             'class="population_growth imperator_tool_tip">%s</th>' +
                             '<th colspan="1" id="ResourceResearchHeader" ' +
-                            'class="research imperator_tool_tip">%s</th>' +
+                            'class="research imperator_tool_tip">%s' +
+                            '<span id="ResearchExperimentCount" class="imp_rs_head_count">%s</span></th>' +
                             '<th colspan="2" id="ResourceWoodHeader" ' +
                             'class="resource resource_wood imperator_tool_tip">%s</th>' +
                             '<th colspan="2" id="ResourceWineHeader" ' +
@@ -1006,6 +1078,7 @@
                         localizer.localize('misc','population'),
                         localizer.localize('misc','population_growth'),
                         localizer.localize('misc','research'),
+                        makeExperimentCount(),
                         localizer.localize('resources','wood'),
                         localizer.localize('resources','wine'),
                         localizer.localize('resources','marble'),

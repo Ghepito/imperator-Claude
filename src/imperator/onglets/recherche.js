@@ -7,7 +7,12 @@
 
         // Coût d'un chercheur (or/h), lu dans le jeu : entretien total des chercheurs / nombre de
         // chercheurs. Sinon (données absentes), la valeur par défaut fournie.
-        function impResearchUnitCost(upkeepTotal, scientistsTotal, fallback) {
+        // v3.5 : en priorité, le coût lu dans une académie (impôt perdu + entretien) moins l'impôt.
+        function impResearchUnitCost(upkeepTotal, scientistsTotal, fallback, academyCostPerScientist) {
+            var academyCost = Number(academyCostPerScientist);
+            if (isFinite(academyCost) && academyCost > IMP_RS_CITIZEN_GOLD) {
+                return academyCost - IMP_RS_CITIZEN_GOLD;
+            }
             var upkeep = Math.abs(Number(upkeepTotal));
             var count = Number(scientistsTotal);
             if (isFinite(upkeep) && upkeep > 0 && isFinite(count) && count > 0) {
@@ -73,4 +78,28 @@
                 full ? '#285E28' : '#D9822B',
                 filled.toFixed(2),
                 circumference.toFixed(2));
+        }
+
+        // v3.5 : expérience de l'académie (300 000 points de recherche contre du cristal).
+        var IMP_XP_COST = 300000;          // cristal, sans parchemin
+        var IMP_XP_SCROLL_COST = 240000;   // cristal, avec le parchemin d'Athéna (-20 %)
+
+        // État du voyant : 'ready' (vert), 'scroll' (orange, avec parchemin), 'blocked' (rouge).
+        // reason : 'cooldown' (labo en remise en état), 'crystal' (pas assez), 'noscroll'
+        // (assez pour le parchemin, mais on sait qu'il n'y en a pas). hasScroll : true, false ou
+        // null (inconnu : l'orange reste proposé).
+        function impExperimentState(crystal, readyAt, now, hasScroll) {
+            crystal = Number(crystal) || 0;
+            readyAt = Number(readyAt) || 0;
+            if (readyAt > now) {
+                return { state: 'blocked', reason: 'cooldown', remaining: readyAt - now, crystal: crystal };
+            }
+            if (crystal >= IMP_XP_COST) return { state: 'ready', crystal: crystal };
+            if (crystal >= IMP_XP_SCROLL_COST) {
+                return hasScroll === false ?
+                    { state: 'blocked', reason: 'noscroll', crystal: crystal } :
+                    { state: 'scroll', crystal: crystal };
+            }
+            return { state: 'blocked', reason: 'crystal', crystal: crystal,
+                     missing: IMP_XP_SCROLL_COST - crystal };
         }

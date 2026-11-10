@@ -342,6 +342,37 @@ color: #B9A27E; \
 #ImperatorOverviewResourceTable td.research.imp_rs_stale { \
 opacity: 0.55; \
 } \
+/* v3.5 : voyant experience */ \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp { \
+display: inline-block; \
+width: 8px; \
+height: 8px; \
+border-radius: 50%; \
+margin-right: 4px; \
+vertical-align: middle; \
+box-shadow: 0 0 0 1px rgba(0,0,0,0.25); \
+} \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_ready { background-color: #2E9E2E; } \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_scroll { background-color: #F0A020; } \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_blocked { background-color: #D23C3C; } \
+@keyframes imp_rs_blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } } \
+#ImperatorOverviewResourceTable td.research .imp_rs_lamp_blink { animation: imp_rs_blink 0.8s ease-in-out 10; } \
+#ImperatorOverviewResourceTable th.research { \
+position: relative; \
+} \
+#ImperatorOverviewResourceTable th.research .imp_rs_head_count { \
+position: absolute; \
+right: 2px; \
+bottom: 1px; \
+font-size: 10px; \
+font-weight: bold; \
+color: #5A3A1A; \
+} \
+#ImperatorOverviewResourceTable th.research .imp_rs_head_ready { color: #2E9E2E; } \
+#ImperatorOverviewResourceTable th.research .imp_rs_head_scroll { color: #D9822B; } \
+.imp_rs_tip tr.imp_rs_xp_ready { color: #2E7D2E; font-weight: bold; } \
+.imp_rs_tip tr.imp_rs_xp_scroll { color: #B8650F; font-weight: bold; } \
+.imp_rs_tip tr.imp_rs_xp_blocked { color: #C0392B; } \
 .imp_rs_tip .imp_rs_tip_title { \
 font-weight: bold; \
 margin-bottom: 2px; \

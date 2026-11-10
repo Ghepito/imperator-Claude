@@ -163,6 +163,16 @@
                         gd.net = (gd.revenue||0)+(gd.gods||0)+(gd.scientists||0)+(gd.upkeep||0)+(gd.premium||0);
                     }
                 },
+                // v3.5 : données lues dans une académie (valables pour tout l'empire) : coût d'un
+                // chercheur pour la ville (impôt perdu + entretien), parchemin d'Athéna.
+                getAcademyData: function getAcademyData() {
+                    if (!this.academyData) this.academyData = { costPerScientist: 0, hasAthenaScroll: null,
+                                                                isAthenaScrollActive: null, updated: 0 };
+                    return this.academyData;
+                },
+                _updateAcademyData: function _updateAcademyData(upd) {
+                    $.extend(this.getAcademyData(), upd, { updated: Date.now() });
+                },
                 // v2.07 : accès aux données Sanctuaire
                 getShrineData: function getShrineData() {
                     if (!this.shrineData) this.shrineData = { favor: 0, updated: 0 };

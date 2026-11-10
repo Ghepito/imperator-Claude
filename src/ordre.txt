@@ -58,4 +58,5 @@ imperator/zz-fermeture.js
 modules/debit-envoi.js
 modules/capture-vues.js
 modules/surlignage-ameliorations.js
+modules/badge-experiences.js
 99-demarrage.js

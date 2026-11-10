@@ -12,6 +12,8 @@
             // la valeur du jeu : même rendement par chercheur qu'avant, sinon celui des autres villes.
             function estimateResearchPerHour(city, oldScientists, oldResearch, newScientists) {
                 if (!(newScientists > 0)) return 0;
+                // v3.5 : facteur exact lu dans l'académie (points par chercheur)
+                if (city.researchFactor > 0) return Math.floor(newScientists * city.researchFactor);
                 if (oldScientists > 0 && oldResearch > 0) {
                     return Math.round(oldResearch / oldScientists * newScientists);
                 }
@@ -32,7 +34,53 @@
                 if (!isNaN(scientists)) city._markScientistsRead(); // v3.2
                 var total = readAcademyResearchValue();
                 if (!isNaN(total)) city._updateResearchPerHour(total, changes);
+                // v3.5 : coût d'un chercheur, points par chercheur, parchemin d'Athéna
+                try {
+                    var cb = data['js_AcademySlider'].slider.callback_data;
+                    if (cb.researchProductionFactor > 0) city._updateResearchFactor(Number(cb.researchProductionFactor));
+                    if (cb.costPerScientist > 0) {
+                        getCivilizationData()._updateAcademyData({ costPerScientist: Number(cb.costPerScientist) });
+                    }
+                } catch (eCb) {}
+                try {
+                    var lj = data['load_js'];
+                    var params = typeof lj.params === 'string' ? JSON.parse(lj.params) : lj.params;
+                    if (params && typeof params.hasAthenaScroll === 'boolean') {
+                        getCivilizationData()._updateAcademyData({
+                            hasAthenaScroll: params.hasAthenaScroll,
+                            isAthenaScrollActive: !!params.isAthenaScrollActive });
+                    }
+                } catch (eLj) {}
+                city._ackExperiment();
                 raiseResourcesChanged(changes);
+            }
+
+            // v3.5 : lancement d'une expérience (boutons « Lancer l'expérience » et « Utiliser le
+            // parchemin d'Athéna »). Si le jeu confirme, le labo de la ville est indisponible 4 h.
+            var EXPERIMENT_COOLDOWN = 4 * Constants.Time.MILLIS_PER_HOUR;
+            function processExperimentForm(form) {
+                var cityId = parseInt($(form).find('input[name="cityId"]').val(), 10);
+                var city = (cityId && getCity(cityId)) || View.getCurrentCity();
+                var withScroll = $(form).find('input[name="useAthenasScroll"]').val() == '1';
+                var launchedAt = Date.now();
+
+                View.registerNextIkariamAjaxRequestCallback(function saveExperiment(response) {
+                    var success = false, failure = false;
+                    Utils.iterateIkariamAjaxResponse(response, function lookForFeedback(index, name, data) {
+                        if (name == Constants.IkariamAjaxResponseType.PROVIDE_FEEDBACK) {
+                            if (data && data[0] && data[0].type == 10) success = true; else failure = true;
+                        }
+                    });
+                    console.log('[Imperator] Expérience ' + (city && city.getName ? city.getName() : '?') +
+                                (withScroll ? ' (parchemin)' : '') + ' : ' +
+                                (success ? 'confirmée' : failure ? 'refusée' : 'sans retour du jeu, comptée lancée'));
+                    if (failure && !success) return;
+                    if (!city) return;
+                    city._markExperimentLaunched(launchedAt + EXPERIMENT_COOLDOWN);
+                    if (withScroll) getCivilizationData()._updateAcademyData({ hasAthenaScroll: null });
+                    raiseResourcesChanged([{ city: city, type: Constants.Resources.SCIENTISTS,
+                                             value: city.getScientists() }]);
+                });
             }
 
             function processSetScientistsForm(form) {
