@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.6
+// @version        3.7
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.7 Colonne Recherche : les durees de moins d'une heure s'affichent (minutes, secondes) : anciennete du releve de l'academie ("Releve il y a" restait vide), temps restant du labo, anciennete du conseiller en recherches.
 // @history        3.6 Colonne Recherche : infobulle d'une ville, delai avant que le cristal suffise (orange dans ~, vert dans ~) d'apres sa production. Infobulle du total : points de recherche accumules et, pour chaque domaine, points manquants pour la prochaine recherche, delai estime et nombre d'experiences qui suffiraient (donnees du conseiller en recherches, points estimes a l'instant ; +300 000 a chaque experience lancee).
 // @history        3.5 Colonne Recherche : voyant d'experience devant la recherche/h (vert : possible, orange : possible avec le parchemin d'Athena, rouge : cristal insuffisant, pas de parchemin ou labo en remise en etat), clic = academie de la ville. Lancement detecte (bouton de l'academie) : labo indisponible 4 h, decompte dans l'infobulle, le voyant clignote a la fin et le titre de l'onglet affiche le nombre de labos redevenus disponibles. En-tete : nombre d'experiences possibles (vert · orange). Cout d'un chercheur et points par chercheur lus dans l'academie ; presence du parchemin lue dans l'academie.
 // @history        3.4 Infobulles en bas de fenetre : la hauteur est mesuree sur le contenu de l'infobulle (la boite qui le porte n'a pas de hauteur), elles passent donc bien au-dessus du curseur ; fenetre visible lue directement (zoom du navigateur compris).
@@ -12191,7 +12192,7 @@ min-width: 851px !important; \
                     if (days >= 2) {
                         return localizer.localize('misc','rs_days').format(IkaTools.Intl.formatInteger(Math.round(days)));
                     }
-                    return IkaTools.Intl.formatRemainingTime(ms, '', 2);
+                    return IkaTools.Intl.formatRemainingTime(Math.max(ms, 1000), ''); // v3.7 : minutes et secondes sous 1 h
                 }
 
                 // v3.6 : délais avant orange / vert, d'après la production de cristal de la ville
@@ -12218,7 +12219,7 @@ min-width: 851px !important; \
                     if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll') + eta;
                     if (xp.reason == 'cooldown') {
                         return localizer.localize('misc','rs_xp_cooldown').format(
-                            IkaTools.Intl.formatRemainingTime(xp.remaining, '', 2));
+                            IkaTools.Intl.formatRemainingTime(Math.max(xp.remaining, 1000), '')); // v3.7
                     }
                     if (xp.reason == 'noscroll') {
                         return localizer.localize('misc','rs_xp_noscroll').format(
@@ -12269,7 +12270,7 @@ min-width: 851px !important; \
                     var readAt = city.getScientistsReadAt();
                     var age = readAt ?
                         localizer.localize('misc','rs_read_ago').format(
-                            IkaTools.Intl.formatRemainingTime(Date.now() - readAt, '', 2)) :
+                            IkaTools.Intl.formatRemainingTime(Math.max(Date.now() - readAt, 1000), '')) : // v3.7
                         localizer.localize('misc','rs_never_read');
                     return ('<div class="imp_rs_tip">' +
                             '<div class="imp_rs_tip_title">%s</div>' +

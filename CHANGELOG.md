@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.7
+
+Colonne Recherche : les durées de moins d'une heure s'affichent (minutes, secondes) : ancienneté du relevé de l'académie (« Relevé il y a » restait vide), temps restant du labo, ancienneté du conseiller en recherches. Signalé par Ghepito.
+
 ## 3.6
 
 Colonne Recherche : dans l'infobulle d'une ville, délai avant que le cristal suffise (« orange dans ~10 j, vert dans ~13 j ») d'après sa production. Infobulle du total : points de recherche accumulés et, pour chaque domaine, points manquants pour la prochaine recherche, délai estimé et nombre d'expériences qui suffiraient (données du conseiller en recherches, points estimés à l'instant ; +300 000 à chaque expérience lancée).

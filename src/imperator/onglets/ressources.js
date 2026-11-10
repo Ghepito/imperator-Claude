@@ -409,7 +409,7 @@
                     if (days >= 2) {
                         return localizer.localize('misc','rs_days').format(IkaTools.Intl.formatInteger(Math.round(days)));
                     }
-                    return IkaTools.Intl.formatRemainingTime(ms, '', 2);
+                    return IkaTools.Intl.formatRemainingTime(Math.max(ms, 1000), ''); // v3.7 : minutes et secondes sous 1 h
                 }
 
                 // v3.6 : délais avant orange / vert, d'après la production de cristal de la ville
@@ -436,7 +436,7 @@
                     if (xp.state == 'scroll') return localizer.localize('misc','rs_xp_scroll') + eta;
                     if (xp.reason == 'cooldown') {
                         return localizer.localize('misc','rs_xp_cooldown').format(
-                            IkaTools.Intl.formatRemainingTime(xp.remaining, '', 2));
+                            IkaTools.Intl.formatRemainingTime(Math.max(xp.remaining, 1000), '')); // v3.7
                     }
                     if (xp.reason == 'noscroll') {
                         return localizer.localize('misc','rs_xp_noscroll').format(
@@ -487,7 +487,7 @@
                     var readAt = city.getScientistsReadAt();
                     var age = readAt ?
                         localizer.localize('misc','rs_read_ago').format(
-                            IkaTools.Intl.formatRemainingTime(Date.now() - readAt, '', 2)) :
+                            IkaTools.Intl.formatRemainingTime(Math.max(Date.now() - readAt, 1000), '')) : // v3.7
                         localizer.localize('misc','rs_never_read');
                     return ('<div class="imp_rs_tip">' +
                             '<div class="imp_rs_tip_title">%s</div>' +
