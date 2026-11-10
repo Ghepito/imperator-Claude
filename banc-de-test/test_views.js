@@ -207,7 +207,9 @@ if (fs.readdirSync(dir).some(f => f.startsWith('militaryAdvisorCharge'))) {
   const c = capture('finances');
   const src = slice('function processFinancesView(data, viewHtmlStr)', '            // ============================================================\n            // v2.07 : Parser du Sanctuaire');
   const names = [...c.raw.matchAll(/<td class="city">([^<]+)<\/td>/g)].map(m => m[1].trim());
-  const cities = names.map(n => ({ getName: () => n, getScientists: () => 0, _updateScientists(v) { this.sci = v; } }));
+  // v3.2 : le parseur demande si l'académie a déjà été lue (getScientistsReadAt) ; ici, jamais.
+  const cities = names.map(n => ({ getName: () => n, getScientists: () => 0, getScientistsReadAt: () => 0,
+                                   _updateScientists(v) { this.sci = v; } }));
   let gold = null;
   const civ = { hasResearched: () => false, _updateGoldData(u) { gold = u; } };
   const $ = page('');
@@ -225,6 +227,12 @@ if (fs.readdirSync(dir).some(f => f.startsWith('militaryAdvisorCharge'))) {
   t('or actuel exact lu dans l\'infobulle (' + (gold && gold.current) + ')', gold && gold.current === 600205850); // bug 9
   t('revenu = somme des villes, sans Pluton (' + (gold && gold.revenue) + ')', gold && gold.revenue === 34271); // bug 11 prévenu
   t('revenu + dieux = total « Somme » du jeu (45 185)', gold && gold.revenue + gold.gods === 45185);
+  // v3.2 : une académie déjà lue n'est pas écrasée par le nombre déduit du coût.
+  const lues = names.map(n => ({ getName: () => n, getScientists: () => 300, getScientistsReadAt: () => Date.now(),
+                                 _updateScientists(v) { this.sci = v; } }));
+  new Function('$', 'Constants', 'getOwnCities', 'getCivilizationData', 'raiseResourcesChanged', 'raiseGoldChanged', 'setTimeout',
+    src + 'return processFinancesView;')($, Constants, () => lues, () => civ, () => {}, () => {}, f => f())(null, c.raw);
+  t('académie déjà lue : chercheurs non écrasés par le coût (v3.2)', lues.every(x => x.sci === undefined));
 }
 
 // ---------------------------------------------------------------- Musée
