@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.8
+
+Infobulles : gardées entières dans la fenêtre de tous les côtés. Bord droit : affichées à gauche du curseur (ou calées contre le bord) ; bas : au-dessus ; jamais au-delà du haut ni du bord gauche ; position revue quand une infobulle rafraîchie change de taille. Signalé par Ghepito.
+
 ## 3.7
 
 Colonne Recherche : les durées de moins d'une heure s'affichent (minutes, secondes) : ancienneté du relevé de l'académie (« Relevé il y a » restait vide), temps restant du labo, ancienneté du conseiller en recherches. Signalé par Ghepito.

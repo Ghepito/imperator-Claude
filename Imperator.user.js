@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.7
+// @version        3.8
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.8 Infobulles : gardees entieres dans la fenetre de tous les cotes. Bord droit : affichees a gauche du curseur (ou calees contre le bord) ; bas : au-dessus ; jamais au-dela du haut ni du bord gauche ; position revue quand une infobulle rafraichie change de taille.
 // @history        3.7 Colonne Recherche : les durees de moins d'une heure s'affichent (minutes, secondes) : anciennete du releve de l'academie ("Releve il y a" restait vide), temps restant du labo, anciennete du conseiller en recherches.
 // @history        3.6 Colonne Recherche : infobulle d'une ville, delai avant que le cristal suffise (orange dans ~, vert dans ~) d'apres sa production. Infobulle du total : points de recherche accumules et, pour chaque domaine, points manquants pour la prochaine recherche, delai estime et nombre d'experiences qui suffiraient (donnees du conseiller en recherches, points estimes a l'instant ; +300 000 a chaque experience lancee).
 // @history        3.5 Colonne Recherche : voyant d'experience devant la recherche/h (vert : possible, orange : possible avec le parchemin d'Athena, rouge : cristal insuffisant, pas de parchemin ou labo en remise en etat), clic = academie de la ville. Lancement detecte (bouton de l'academie) : labo indisponible 4 h, decompte dans l'infobulle, le voyant clignote a la fin et le titre de l'onglet affiche le nombre de labos redevenus disponibles. En-tete : nombre d'experiences possibles (vert · orange). Cout d'un chercheur et points par chercheur lus dans l'academie ; presence du parchemin lue dans l'academie.
@@ -1766,15 +1767,34 @@ if (typeof IkaTools == 'undefined') {
                     var y = this._lastPageY;
                     if (y === undefined) return;
                     // v3.4 : le contenu (classe tool_tip_container) est en position absolue ; la
-                    // boîte qui le porte a donc une hauteur nulle : on mesure le contenu.
-                    var height = Math.max(this.toolTipContainer.outerHeight() || 0,
-                                          $(this.options.toolTipContainer).outerHeight() || 0);
+                    // boîte qui le porte a donc une taille nulle : on mesure le contenu.
+                    var content = $(this.options.toolTipContainer);
+                    var height = Math.max(this.toolTipContainer.outerHeight() || 0, content.outerHeight() || 0);
+                    var width = Math.max(this.toolTipContainer.outerWidth() || 0, content.outerWidth() || 0);
+                    var root = document.documentElement;
                     var viewTop = window.pageYOffset || $(window).scrollTop() || 0;
-                    var viewBottom = viewTop + (window.innerHeight || $(window).height());
-                    if (y + this.options.offsetY + height > viewBottom) {
-                        this.toolTipContainer.css('top',
-                            Math.max(viewTop, y - height - 10) + 'px');
+                    var viewLeft = window.pageXOffset || $(window).scrollLeft() || 0;
+                    // largeur et hauteur visibles, barres de défilement exclues
+                    var viewWidth = (root && root.clientWidth) || window.innerWidth || $(window).width();
+                    var viewHeight = window.innerHeight || (root && root.clientHeight) || $(window).height();
+                    var margin = 4;
+
+                    // Vertical : sous le curseur ; au-dessus s'il dépasse le bas ; jamais au-dessus du haut
+                    var top = y + this.options.offsetY;
+                    if (top + height > viewTop + viewHeight - margin) top = y - height - 10;
+                    top = Math.max(viewTop + margin, top);
+
+                    // v3.8 : horizontal : à droite du curseur ; à gauche s'il dépasse le bord droit ;
+                    // jamais au-delà du bord gauche
+                    var css = { top: top + 'px' };
+                    var x = this._lastPageX;
+                    if (x !== undefined) {
+                        var left = x + this.options.offsetX;
+                        if (left + width > viewLeft + viewWidth - margin) left = x - width - 10;
+                        if (left < viewLeft + margin) left = viewLeft + viewWidth - margin - width; // calée à droite
+                        css.left = Math.max(viewLeft + margin, left) + 'px';
                     }
+                    this.toolTipContainer.css(css);
                 },
                 _mouseOver: function _mouseOver(e) {
                     var toolTipElement = $(e.target).closest('.' + this.options.toolTipClass);
@@ -1787,6 +1807,7 @@ if (typeof IkaTools == 'undefined') {
                     if (toolTipElement.length > 0) {
                         this.activeToolTipElement = toolTipElement[0];
                         this._lastPageY = e.pageY;
+                        this._lastPageX = e.pageX;
                         this.toolTipContainer.css({
                             left: (e.pageX + this.options.offsetX) + 'px',
                             top: (e.pageY + this.options.offsetY) + 'px',
@@ -1809,6 +1830,7 @@ if (typeof IkaTools == 'undefined') {
                 _mouseMove: function _mouseMove(e) {
                     if (this.activeToolTipElement && !this.activeToolTip) {
                         this._lastPageY = e.pageY;
+                        this._lastPageX = e.pageX;
                         this.toolTipContainer.css({
                             left: (e.pageX + this.options.offsetX)+ 'px',
                             top: (e.pageY + this.options.offsetY) + 'px',
@@ -1836,6 +1858,7 @@ if (typeof IkaTools == 'undefined') {
                         var interval = setInterval(Logging.debuggable('IkaTools.ToolTip.refresh[' + id + ']',
                                                                       function refreshToolTip() {
                             toolTip.options.toolTipContainer.html(contentGenerator());
+                            toolTip._fitInViewport(); // v3.8 : le contenu peut changer de taille
                         }), Constants.Time.MILLIS_PER_SECOND);
 
                         var tip = $(contentGenerator());

@@ -57,15 +57,34 @@
                     var y = this._lastPageY;
                     if (y === undefined) return;
                     // v3.4 : le contenu (classe tool_tip_container) est en position absolue ; la
-                    // boîte qui le porte a donc une hauteur nulle : on mesure le contenu.
-                    var height = Math.max(this.toolTipContainer.outerHeight() || 0,
-                                          $(this.options.toolTipContainer).outerHeight() || 0);
+                    // boîte qui le porte a donc une taille nulle : on mesure le contenu.
+                    var content = $(this.options.toolTipContainer);
+                    var height = Math.max(this.toolTipContainer.outerHeight() || 0, content.outerHeight() || 0);
+                    var width = Math.max(this.toolTipContainer.outerWidth() || 0, content.outerWidth() || 0);
+                    var root = document.documentElement;
                     var viewTop = window.pageYOffset || $(window).scrollTop() || 0;
-                    var viewBottom = viewTop + (window.innerHeight || $(window).height());
-                    if (y + this.options.offsetY + height > viewBottom) {
-                        this.toolTipContainer.css('top',
-                            Math.max(viewTop, y - height - 10) + 'px');
+                    var viewLeft = window.pageXOffset || $(window).scrollLeft() || 0;
+                    // largeur et hauteur visibles, barres de défilement exclues
+                    var viewWidth = (root && root.clientWidth) || window.innerWidth || $(window).width();
+                    var viewHeight = window.innerHeight || (root && root.clientHeight) || $(window).height();
+                    var margin = 4;
+
+                    // Vertical : sous le curseur ; au-dessus s'il dépasse le bas ; jamais au-dessus du haut
+                    var top = y + this.options.offsetY;
+                    if (top + height > viewTop + viewHeight - margin) top = y - height - 10;
+                    top = Math.max(viewTop + margin, top);
+
+                    // v3.8 : horizontal : à droite du curseur ; à gauche s'il dépasse le bord droit ;
+                    // jamais au-delà du bord gauche
+                    var css = { top: top + 'px' };
+                    var x = this._lastPageX;
+                    if (x !== undefined) {
+                        var left = x + this.options.offsetX;
+                        if (left + width > viewLeft + viewWidth - margin) left = x - width - 10;
+                        if (left < viewLeft + margin) left = viewLeft + viewWidth - margin - width; // calée à droite
+                        css.left = Math.max(viewLeft + margin, left) + 'px';
                     }
+                    this.toolTipContainer.css(css);
                 },
                 _mouseOver: function _mouseOver(e) {
                     var toolTipElement = $(e.target).closest('.' + this.options.toolTipClass);
@@ -78,6 +97,7 @@
                     if (toolTipElement.length > 0) {
                         this.activeToolTipElement = toolTipElement[0];
                         this._lastPageY = e.pageY;
+                        this._lastPageX = e.pageX;
                         this.toolTipContainer.css({
                             left: (e.pageX + this.options.offsetX) + 'px',
                             top: (e.pageY + this.options.offsetY) + 'px',
@@ -100,6 +120,7 @@
                 _mouseMove: function _mouseMove(e) {
                     if (this.activeToolTipElement && !this.activeToolTip) {
                         this._lastPageY = e.pageY;
+                        this._lastPageX = e.pageX;
                         this.toolTipContainer.css({
                             left: (e.pageX + this.options.offsetX)+ 'px',
                             top: (e.pageY + this.options.offsetY) + 'px',
@@ -127,6 +148,7 @@
                         var interval = setInterval(Logging.debuggable('IkaTools.ToolTip.refresh[' + id + ']',
                                                                       function refreshToolTip() {
                             toolTip.options.toolTipContainer.html(contentGenerator());
+                            toolTip._fitInViewport(); // v3.8 : le contenu peut changer de taille
                         }), Constants.Time.MILLIS_PER_SECOND);
 
                         var tip = $(contentGenerator());
