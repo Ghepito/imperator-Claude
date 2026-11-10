@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Imperator v3.1
-// @version        3.10
+// @version        3.11
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.11 Onglet Espionnage : traits entre les colonnes, comme dans les autres onglets (colonnes declarees).
 // @history        3.10 Fenetre d'Imperator : meme espace libre a droite qu'a gauche, noms des onglets centres dans la hauteur. Tableaux : couleur de fond et bordures fusionnees enfin appliquees (point-virgule manquant dans le style).
 // @history        3.9 Fenetre d'Imperator : marge a droite pour la barre de defilement du jeu (le texte "Sanctuaire lu il y a ..." et la derniere colonne ne butent plus dessus) ; onglets etires sur toute la largeur du tableau.
 // @history        3.8 Infobulles : gardees entieres dans la fenetre de tous les cotes. Bord droit : affichees a gauche du curseur (ou calees contre le bord) ; bas : au-dessus ; jamais au-dela du haut ni du bord gauche ; position revue quand une infobulle rafraichie change de taille.
@@ -14821,7 +14822,18 @@ line-height: normal !important; \
                 }
                 var targets = IkaTools.EmpireData.Espionage.getTargets();
 
-                return '%s<tbody>%s</tbody>'.format(
+                // v3.11 : colonnes déclarées, pour les traits entre colonnes (comme les autres onglets)
+                function makeCols() {
+                    return makeCityNameColGroup() +
+                        '<colgroup class="espionage">' +
+                        '<col class="player"/><col class="location"/><col class="actions"/>' +
+                        '<col class="travel_time"/><col class="townhall_level"/><col class="wall_level"/>' +
+                        '<col class="resources_lootable"/><col class="combats"/><col class="military_score"/>' +
+                        '</colgroup>';
+                }
+
+                return '%s%s<tbody>%s</tbody>'.format(
+                    makeCols(),
                     makeTableHead(),
                     $.map(targets, renderTarget).join(''));
             }

@@ -429,7 +429,18 @@
                 }
                 var targets = IkaTools.EmpireData.Espionage.getTargets();
 
-                return '%s<tbody>%s</tbody>'.format(
+                // v3.11 : colonnes déclarées, pour les traits entre colonnes (comme les autres onglets)
+                function makeCols() {
+                    return makeCityNameColGroup() +
+                        '<colgroup class="espionage">' +
+                        '<col class="player"/><col class="location"/><col class="actions"/>' +
+                        '<col class="travel_time"/><col class="townhall_level"/><col class="wall_level"/>' +
+                        '<col class="resources_lootable"/><col class="combats"/><col class="military_score"/>' +
+                        '</colgroup>';
+                }
+
+                return '%s%s<tbody>%s</tbody>'.format(
+                    makeCols(),
                     makeTableHead(),
                     $.map(targets, renderTarget).join(''));
             }

@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.11
+
+Onglet Espionnage : traits entre les colonnes, comme dans les autres onglets (colonnes déclarées). Signalé par Ghepito.
+
 ## 3.10
 
 Fenêtre d'Imperator : même espace libre à droite qu'à gauche, noms des onglets centrés dans la hauteur. Tableaux : couleur de fond et bordures fusionnées enfin appliquées (point-virgule manquant dans le style). Signalé par Ghepito.
