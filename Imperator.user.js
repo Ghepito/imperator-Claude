@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.14
-// @version        3.14
+// @name           Imperator v3.15
+// @version        3.15
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.15 Miracles toujours affiches avec leur etat : actif (decompte), en rechargement (decompte), a activer ou termine (pastille orange clignotante). Miracles de combat (Hephaistos, Ares, Colosse) dans l'onglet Armee, les autres (Poseidon...) dans la barre des Ressources. Nom sans le niveau.
 // @history        3.14 Miracles : a la lecture du Temple, le miracle de l'ile et sa fin exacte sont retenus. Les miracles actifs s'affichent a droite de la barre des benedictions (dieu, ile, temps restant, decompte) ; les autres ne sont pas montres. Clic : Temple de la ville.
 // @history        3.13 Popup Planifier l'amelioration : il n'apparait plus pres de la case pendant l'ouverture de la fenetre du batiment ; il s'affiche directement en bandeau sur la fenetre (ou pres de la case si aucune fenetre ne s'ouvre en 3 s).
 // @history        3.12 Espionnage : les liens vers l'ile d'une cible (coordonnees, pillage, blocus, occupation) donnent aussi l'ile au jeu ; depuis une autre ile, on change bien d'ile au lieu de voir seulement la fiche du joueur.
@@ -5988,14 +5989,25 @@ if (typeof IkaTools == 'undefined') {
                 if (name && typeof name === 'object') name = name.text;
                 name = $.trim(String(name || ''));
                 if (!name) return null;
+                // v3.15 : « Forge de Héphaïstos (Niveau 5/5) » -> nom + niveau
+                var level = null, lm = /\s*\((?:Niveau|Level)\s*(\d+)[^)]*\)\s*$/i.exec(name);
+                if (lm) { level = parseInt(lm[1], 10); name = $.trim(name.slice(0, lm.index)); }
                 var activeEnd = _impCountdownEnd(data['js_WonderTextDuration']);
                 var cooldownEnd = _impCountdownEnd(data['js_WonderTextCooldown']);
+                var txt = function(k) { var v = data[k]; if (v && typeof v === 'object') v = v.text; return $.trim(String(v || '')); };
+                var act = data['js_WonderActivateButton'];
                 var position = null;
-                var req = data['js_WonderTextDuration'] && data['js_WonderTextDuration'].countdown &&
-                          data['js_WonderTextDuration'].countdown.timeout_ajaxrequest;
-                var pm = /position=(\d+)/.exec(String(req || ''));
+                var req = (data['js_WonderTextDuration'] && data['js_WonderTextDuration'].countdown &&
+                           data['js_WonderTextDuration'].countdown.timeout_ajaxrequest) || (act && act.href) || '';
+                var pm = /position=(\d+)/.exec(String(req));
                 if (pm) position = parseInt(pm[1], 10);
-                return { name: name, activeEnd: activeEnd, cooldownEnd: cooldownEnd, position: position };
+                var view = data['js_WonderViewButton'];
+                var im = /islandId=(\d+)/.exec(String((view && view.href) || ''));
+                return { name: name, level: level, activeEnd: activeEnd, cooldownEnd: cooldownEnd, position: position,
+                         canActivate: !!(act && act.buttonState === 'enabled'),
+                         islandId: im ? parseInt(im[1], 10) : null,
+                         durationText: activeEnd ? '' : txt('js_WonderTextDurationText').replace(/<[^>]*>/g, ''),
+                         cooldownText: cooldownEnd ? '' : txt('js_WonderTextCooldownText').replace(/<[^>]*>/g, '') };
             }
 
             function getIslandMiracles() {
@@ -11089,12 +11101,23 @@ line-height: normal !important; \
         }
 
         // Bandeau de pastilles au-dessus du tableau (rendu dans un <caption>)
-        // v3.14 : miracles actifs (relevés au Temple), un par île. Les autres ne sont pas montrés.
+        // v3.14 / v3.15 : miracles relevés au Temple, un par île, toujours affichés avec leur état.
+        // Miracles de combat (Héphaïstos, Arès, Colosse) : onglet Armée ; les autres : barre des Ressources.
+        var IMP_MIRACLE_MILITARY = /Héphaïstos|Hephaistos|Hephaestus|Arès|Ares|Colosse|Colossus/i;
         function impMiracleGod(name) {
-            var m = /(?:\sde\s|\sd['\u2019`])\s*(\S+)\s*$/.exec(String(name || ''));
-            return m ? m[1] : String(name || '');
+            var n = String(name || '').replace(/\s*\([^)]*\)\s*$/, '');
+            var m = /(?:\sde\s|\sd['\u2019`])\s*(\S+)\s*$/.exec(n);
+            return m ? m[1] : n;
         }
-        function impMiracleActive(now) {
+        // active : en cours ; cooldown : rechargement ; ready : activable ; ended : terminé, rechargement inconnu
+        function impMiracleState(activeEnd, cooldownEnd, canActivate, now) {
+            if (activeEnd && activeEnd > now) return { state: 'active', label: 'actif ' + impBlessFmtRemaining(activeEnd - now) };
+            if (cooldownEnd && cooldownEnd > now) return { state: 'cooldown', label: 'recharge ' + impBlessFmtRemaining(cooldownEnd - now) };
+            if (activeEnd) return { state: 'ended', label: 'terminé' };
+            if (canActivate || cooldownEnd) return { state: 'ready', label: 'à activer' };
+            return { state: 'ended', label: 'inactif' };
+        }
+        function impMiracleList(military) {
             var list = [];
             try {
                 var store = (IkaTools.EmpireData.getIslandMiracles && IkaTools.EmpireData.getIslandMiracles()) || {};
@@ -11104,32 +11127,48 @@ line-height: normal !important; \
                     (mine[id] = mine[id] || []).push(c);
                 });
                 $.each(store, function(islandId, m) {
-                    if (!m || !m.activeEnd || m.activeEnd <= now || !mine[islandId]) return;
-                    var cities = mine[islandId];
-                    var city = null;
+                    if (!m || !mine[islandId] || IMP_MIRACLE_MILITARY.test(m.name) !== !!military) return;
+                    var cities = mine[islandId], city = null;
                     $.each(cities, function(i, c) { if (c.getId() == m.cityId) city = c; });
-                    city = city || cities[0];
-                    list.push({ islandId: islandId, m: m, city: city, cities: cities });
+                    list.push({ islandId: islandId, m: m, city: city || cities[0], cities: cities });
                 });
             } catch (e) {}
-            list.sort(function(a, b) { return a.m.activeEnd - b.m.activeEnd; });
+            list.sort(function(a, b) { return impMiracleGod(a.m.name).localeCompare(impMiracleGod(b.m.name)); });
             return list;
         }
-        function impMiracleChips(now) {
-            return $.map(impMiracleActive(now), function(x) {
+        function impMiracleChips(now, military) {
+            return $.map(impMiracleList(military), function(x) {
                 var co = x.city.getIslandCoordinates ? x.city.getIslandCoordinates() : null;
                 var coords = co ? '[' + co[0] + ':' + co[1] + ']' : '';
+                var st = impMiracleState(x.m.activeEnd, x.m.cooldownEnd, x.m.canActivate, now);
                 var names = $.map(x.cities, function(c) { return c.getName(); }).join(', ');
-                var title = x.m.name + ' ' + coords + ' \u2014 actif jusqu\'à ' +
-                    new Date(x.m.activeEnd).toLocaleString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) +
-                    '\nVilles sur l\'île : ' + names + '\nRelevé au Temple ' + impBlessFmtAgo(x.m.readAt) +
-                    '\nClic : ouvrir le Temple';
-                return '<a href="javascript:void(0);" class="imp-miracle-chip" data-imp-miracle-end="' + x.m.activeEnd + '"' +
+                var when = function(t) { return new Date(t).toLocaleString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }); };
+                var lines = [x.m.name + (x.m.level ? ' (niveau ' + x.m.level + ')' : '') + ' ' + coords];
+                if (x.m.activeEnd) lines.push((x.m.activeEnd > now ? 'Actif jusqu\'à ' : 'Terminé depuis ') + when(x.m.activeEnd));
+                if (x.m.cooldownEnd) lines.push('Rechargement jusqu\'à ' + when(x.m.cooldownEnd));
+                if (x.m.durationText) lines.push(x.m.durationText);
+                if (x.m.cooldownText) lines.push(x.m.cooldownText);
+                lines.push('Villes sur l\'île : ' + names);
+                lines.push('Relevé au Temple ' + impBlessFmtAgo(x.m.readAt) + ' \u2014 clic : ouvrir le Temple');
+                return '<a href="javascript:void(0);" class="imp-miracle-chip imp-miracle-' + st.state + '"' +
+                       ' data-imp-miracle-end="' + (x.m.activeEnd || 0) + '" data-imp-miracle-cd="' + (x.m.cooldownEnd || 0) + '"' +
+                       ' data-imp-miracle-can="' + (x.m.canActivate ? 1 : 0) + '"' +
                        ' data-imp-miracle-city="' + x.city.getId() + '"' +
                        (x.m.position !== null && x.m.position !== undefined ? ' data-imp-miracle-pos="' + x.m.position + '"' : '') +
-                       ' title="' + __impH(title) + '">' + __impH(impMiracleGod(x.m.name)) + ' ' + coords +
-                       ' <span class="imp-miracle-rem">' + impBlessFmtRemaining(x.m.activeEnd - now) + '</span></a>';
+                       ' title="' + __impH(lines.join('\n')) + '"><span class="imp-miracle-dot"></span>' +
+                       __impH(impMiracleGod(x.m.name)) + ' ' + coords +
+                       ' <span class="imp-miracle-rem">' + __impH(st.label) + '</span></a>';
             }).join('');
+        }
+        function impMiracleBar(now, military) {
+            var chips = impMiracleChips(now, military);
+            return chips ? '<span class="imp-miracle-bar"><span class="imp-bless-bar-label">Miracles</span>' + chips + '</span>' : '';
+        }
+        // Onglet Armée : barre des miracles de combat
+        function impMiracleMilitaryCaption() {
+            impBlessInstallOnce();
+            var bar = impMiracleBar(Date.now(), true);
+            return bar ? '<caption class="imp-bless-bar imp-miracle-cap">' + bar + '</caption>' : '';
         }
 
         function impBlessMakeCaption() {
@@ -11144,7 +11183,7 @@ line-height: normal !important; \
             });
             var ids = $.map(counts, function(v, k) { return k; });
             var now = Date.now();
-            var miracles = impMiracleChips(now);   // v3.14
+            var miracles = impMiracleBar(now, false);   // v3.14 / v3.15
             if (!ids.length && !miracles) return '';
             var rank = { floor:0, weak:1, soon:2, max:3 };
             var toGive = 0, unknownGive = false;
@@ -11183,7 +11222,7 @@ line-height: normal !important; \
                    '<span class="imp-bless-bar-label">Bénédictions</span>' + chips + give +
                    '<span class="imp-bless-bar-upd' + (stale ? ' is-stale' : '') + '">Sanctuaire lu ' +
                    impBlessFmtAgo(sd.godsUpdated) + '</span>' +
-                   (miracles ? '<span class="imp-miracle-bar"><span class="imp-bless-bar-label">Miracles</span>' + miracles + '</span>' : '') +
+                   miracles +
                    '</caption>';
         }
 
@@ -11217,9 +11256,17 @@ line-height: normal !important; \
                 '.imp-bless-bar-upd { float:right; color:#8a6d39; font-style:italic; }' +
                 '.imp-bless-bar-upd.is-stale { color:#c0392b; font-style:normal; font-weight:bold; }' +
                 '.imp-miracle-bar { float:right; margin-right:14px; }' +
-                '.imp-miracle-chip { display:inline-block; margin:1px 0 1px 5px; padding:1px 7px; border-radius:9px; background:#e7f1fb; border:1px solid #4a7fb5; color:#5a3e1b !important; text-decoration:none !important; cursor:pointer; }' +
+                '#ImperatorOverviewMilitaryTable caption.imp-miracle-cap { caption-side:top; text-align:left; padding:3px 2px 5px; font-size:11px; color:#5a3e1b; }' +
+                '.imp-miracle-chip { display:inline-block; margin:1px 0 1px 5px; padding:1px 7px 1px 5px; border-radius:9px; background:#e7f1fb; border:1px solid #4a7fb5; color:#5a3e1b !important; text-decoration:none !important; cursor:pointer; }' +
                 '.imp-miracle-chip:hover { background:#fff8e1; }' +
                 '.imp-miracle-chip .imp-miracle-rem { font-weight:bold; }' +
+                '.imp-miracle-dot { display:inline-block; width:7px; height:7px; margin-right:4px; border-radius:50%; background:#4a7fb5; }' +
+                '.imp-miracle-chip.imp-miracle-cooldown { background:rgba(0,0,0,0.04); border-color:#a1978a; }' +
+                '.imp-miracle-chip.imp-miracle-cooldown .imp-miracle-dot { background:#a1978a; }' +
+                '.imp-miracle-chip.imp-miracle-ready, .imp-miracle-chip.imp-miracle-ended { background:#fff1e0; border-color:#ef6c00; }' +
+                '.imp-miracle-chip.imp-miracle-ready .imp-miracle-rem, .imp-miracle-chip.imp-miracle-ended .imp-miracle-rem { color:#ef6c00; }' +
+                '.imp-miracle-chip.imp-miracle-ready .imp-miracle-dot, .imp-miracle-chip.imp-miracle-ended .imp-miracle-dot { background:#ef6c00; animation:impMiracleBlink 1.6s ease-in-out infinite; }' +
+                '@keyframes impMiracleBlink { 0%,100% { opacity:1; } 50% { opacity:.25; } }' +
                 '.imp-bless-tt { margin-top:4px; padding:4px 6px; border-top:1px solid #d8b871; font-size:11px; line-height:1.45; color:#5a3e1b; min-width:190px; }' +
                 '.imp-bless-tt-head { font-weight:bold; }' +
                 '.imp-bless-tt-state { font-weight:normal; font-size:10px; margin-left:4px; padding:0 4px; border-radius:6px; color:#fff; }' +
@@ -11243,16 +11290,15 @@ line-height: normal !important; \
                         $e.removeClass('imp-bless-max imp-bless-soon imp-bless-weak imp-bless-floor').addClass('imp-bless-' + state);
                         $e.find('.imp-bless-rem').text(impBlessChipLabel(state, end, favor, now));
                     });
-                    // v3.14 : décompte des miracles ; un miracle terminé disparaît
+                    // v3.15 : état et décompte des miracles (actif -> terminé, recharge -> à activer)
                     $('[data-imp-miracle-end]').each(function() {
-                        var $e = $(this), left = (parseInt($e.attr('data-imp-miracle-end'), 10) || 0) - now;
-                        if (left <= 0) {
-                            var $bar = $e.closest('.imp-miracle-bar');
-                            $e.remove();
-                            if (!$bar.find('.imp-miracle-chip').length) $bar.remove();
-                        } else {
-                            $e.find('.imp-miracle-rem').text(impBlessFmtRemaining(left));
-                        }
+                        var $e = $(this);
+                        var st = impMiracleState(parseInt($e.attr('data-imp-miracle-end'), 10) || 0,
+                                                 parseInt($e.attr('data-imp-miracle-cd'), 10) || 0,
+                                                 $e.attr('data-imp-miracle-can') === '1', now);
+                        $e.removeClass('imp-miracle-active imp-miracle-cooldown imp-miracle-ready imp-miracle-ended')
+                          .addClass('imp-miracle-' + st.state);
+                        $e.find('.imp-miracle-rem').text(st.label);
                     });
                 } catch (e) {}
             }, 30000);
@@ -14489,7 +14535,9 @@ line-height: normal !important; \
                         }).join(''));
                 }
 
-                return '%s%s%s<thead>%s</thead><tbody>%s</tbody><tfoot>%s</tfoot>'.format(
+                var miracleCaption = '';
+                try { miracleCaption = impMiracleMilitaryCaption(); } catch (eMir) {} // v3.15
+                return miracleCaption + '%s%s%s<thead>%s</thead><tbody>%s</tbody><tfoot>%s</tfoot>'.format(
                     makeCityNameColGroup('<col class="action_points">', true),
                     '<colgroup class="actions"><col class="actions"/></colgroup>',
                     $.map(UNIT_ORDER, makeColGroup).join(''),
@@ -14506,6 +14554,10 @@ line-height: normal !important; \
                               'ImperatorOverviewMilitaryTable',
                               function() {
                 IkaTools.EmpireData.registerMilitaryChangedHandler(function(changes) {
+                    tab.maybeRedraw(true);
+                });
+                // v3.15 : un Temple relu met à jour la barre des miracles
+                IkaTools.EmpireData.registerShrineChangedHandler(function() {
                     tab.maybeRedraw(true);
                 });
                 IkaTools.EmpireData.registerResourcesChangedHandler(function(changes) {

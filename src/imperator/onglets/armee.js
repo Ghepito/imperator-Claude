@@ -423,7 +423,9 @@
                         }).join(''));
                 }
 
-                return '%s%s%s<thead>%s</thead><tbody>%s</tbody><tfoot>%s</tfoot>'.format(
+                var miracleCaption = '';
+                try { miracleCaption = impMiracleMilitaryCaption(); } catch (eMir) {} // v3.15
+                return miracleCaption + '%s%s%s<thead>%s</thead><tbody>%s</tbody><tfoot>%s</tfoot>'.format(
                     makeCityNameColGroup('<col class="action_points">', true),
                     '<colgroup class="actions"><col class="actions"/></colgroup>',
                     $.map(UNIT_ORDER, makeColGroup).join(''),
@@ -440,6 +442,10 @@
                               'ImperatorOverviewMilitaryTable',
                               function() {
                 IkaTools.EmpireData.registerMilitaryChangedHandler(function(changes) {
+                    tab.maybeRedraw(true);
+                });
+                // v3.15 : un Temple relu met à jour la barre des miracles
+                IkaTools.EmpireData.registerShrineChangedHandler(function() {
                     tab.maybeRedraw(true);
                 });
                 IkaTools.EmpireData.registerResourcesChangedHandler(function(changes) {

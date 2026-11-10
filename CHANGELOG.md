@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.15
+
+Miracles toujours affiches avec leur etat : actif (decompte), en rechargement (decompte), a activer ou termine (pastille orange clignotante). Miracles de combat (Hephaistos, Ares, Colosse) dans l'onglet Armee, les autres (Poseidon...) dans la barre des Ressources. Nom sans le niveau.
+
 ## 3.14
 
 Miracles : a la lecture du Temple, le miracle de l'ile et sa fin exacte sont retenus. Les miracles actifs s'affichent a droite de la barre des benedictions (dieu, ile, temps restant, decompte) ; les autres ne sont pas montres. Clic : Temple de la ville.

@@ -320,14 +320,25 @@
                 if (name && typeof name === 'object') name = name.text;
                 name = $.trim(String(name || ''));
                 if (!name) return null;
+                // v3.15 : « Forge de Héphaïstos (Niveau 5/5) » -> nom + niveau
+                var level = null, lm = /\s*\((?:Niveau|Level)\s*(\d+)[^)]*\)\s*$/i.exec(name);
+                if (lm) { level = parseInt(lm[1], 10); name = $.trim(name.slice(0, lm.index)); }
                 var activeEnd = _impCountdownEnd(data['js_WonderTextDuration']);
                 var cooldownEnd = _impCountdownEnd(data['js_WonderTextCooldown']);
+                var txt = function(k) { var v = data[k]; if (v && typeof v === 'object') v = v.text; return $.trim(String(v || '')); };
+                var act = data['js_WonderActivateButton'];
                 var position = null;
-                var req = data['js_WonderTextDuration'] && data['js_WonderTextDuration'].countdown &&
-                          data['js_WonderTextDuration'].countdown.timeout_ajaxrequest;
-                var pm = /position=(\d+)/.exec(String(req || ''));
+                var req = (data['js_WonderTextDuration'] && data['js_WonderTextDuration'].countdown &&
+                           data['js_WonderTextDuration'].countdown.timeout_ajaxrequest) || (act && act.href) || '';
+                var pm = /position=(\d+)/.exec(String(req));
                 if (pm) position = parseInt(pm[1], 10);
-                return { name: name, activeEnd: activeEnd, cooldownEnd: cooldownEnd, position: position };
+                var view = data['js_WonderViewButton'];
+                var im = /islandId=(\d+)/.exec(String((view && view.href) || ''));
+                return { name: name, level: level, activeEnd: activeEnd, cooldownEnd: cooldownEnd, position: position,
+                         canActivate: !!(act && act.buttonState === 'enabled'),
+                         islandId: im ? parseInt(im[1], 10) : null,
+                         durationText: activeEnd ? '' : txt('js_WonderTextDurationText').replace(/<[^>]*>/g, ''),
+                         cooldownText: cooldownEnd ? '' : txt('js_WonderTextCooldownText').replace(/<[^>]*>/g, '') };
             }
 
             function getIslandMiracles() {
