@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.18
+
+Experience : comptee (labo indisponible 4 h, +300 000 points) seulement si le serveur confirme le lancement ; sans retour du jeu, rien n'est compte.
+
 ## 3.17
 
 Donnees suivant les reponses du serveur : ressources, production, vin consomme et points d'action lus aussi dans headerData (format des reponses du jeu) ; une action acceptee (amelioration, envoi...) se voit tout de suite. Or : le montant de la reponse passe avant celui, fige, du chargement de la page.

@@ -35,7 +35,7 @@ t('académie revisitée : labo « vu »', /city\._ackExperiment\(\);\n\s+raiseRe
 t('formulaire accelResearchForm suivi', /form\.id == 'accelResearchForm'\) \{\n\s+processExperimentForm\(form\);/.test(s));
 t('lancement : labo indisponible 4 h', /var EXPERIMENT_COOLDOWN = 4 \* Constants\.Time\.MILLIS_PER_HOUR;/.test(s) &&
   /city\._markExperimentLaunched\(launchedAt \+ EXPERIMENT_COOLDOWN\);/.test(s));
-t('refus du jeu : rien n\'est enregistré', /if \(failure && !success\) return;/.test(s));
+t('refus du jeu : rien n\'est enregistré', /if \(failure && !success\) return;/.test(s) || /if \(!success\) return;/.test(s)); // v3.18 : plus strict (confirmation exigée)
 t('voyant dans le lien vers l\'académie', /<span id="%s" class="imp_rs_lamp imp_rs_lamp_%s"><\/span>%s<\/a>/.test(s));
 t('clignotement à la fin du délai', /lastXp\.reason == 'cooldown' && now\.reason != 'cooldown'/.test(s));
 t('compteur dans l\'en-tête', /id="ResearchExperimentCount" class="imp_rs_head_count"/.test(s));

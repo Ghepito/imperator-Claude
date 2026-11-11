@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.17
-// @version        3.17
+// @name           Imperator v3.18
+// @version        3.18
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.18 Experience : comptee (labo indisponible 4 h, +300 000 points) seulement si le serveur confirme le lancement ; sans retour du jeu, rien n'est compte.
 // @history        3.17 Donnees suivant les reponses du serveur : ressources, production, vin consomme et points d'action lus aussi dans headerData (format des reponses du jeu) ; une action acceptee (amelioration, envoi...) se voit tout de suite. Or : le montant de la reponse passe avant celui, fige, du chargement de la page.
 // @history        3.16 Miracles : une seule pastille par miracle (un miracle actif vaut pour toutes les iles), synthese de ses Temples : actif (fin la plus lointaine), sinon a activer, sinon rechargement (reprise la plus proche), sinon termine. Nombre de Temples entre parentheses, detail ile par ile au survol.
 // @history        3.15 Miracles toujours affiches avec leur etat : actif (decompte), en rechargement (decompte), a activer ou termine (pastille orange clignotante). Miracles de combat (Hephaistos, Ares, Colosse) dans l'onglet Armee, les autres (Poseidon...) dans la barre des Ressources. Nom sans le niveau.

@@ -71,10 +71,12 @@
                             if (data && data[0] && data[0].type == 10) success = true; else failure = true;
                         }
                     });
+                    // v3.18 : comptée seulement si le serveur confirme (vérifié en jeu le 11 nov. 2026 :
+                    // le jeu renvoie bien la confirmation). Sans retour, rien n'est compté.
                     console.log('[Imperator] Expérience ' + (city && city.getName ? city.getName() : '?') +
                                 (withScroll ? ' (parchemin)' : '') + ' : ' +
-                                (success ? 'confirmée' : failure ? 'refusée' : 'sans retour du jeu, comptée lancée'));
-                    if (failure && !success) return;
+                                (success ? 'confirmée' : failure ? 'refusée' : 'sans retour du jeu, non comptée'));
+                    if (!success) return;
                     if (!city) return;
                     city._markExperimentLaunched(launchedAt + EXPERIMENT_COOLDOWN);
                     if (withScroll) getCivilizationData()._updateAcademyData({ hasAthenaScroll: null });
