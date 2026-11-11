@@ -39,6 +39,42 @@
                         });
                     }
                 },
+                // v3.19 : le serveur vient de donner les ressources de cette ville (v3.17). Il a déjà
+                // crédité tout ce qui y est arrivé : un transport (ou un retour de pillage) dont l'heure
+                // est passée est retiré SANS nouveau crédit. Sinon on voyait, jusqu'au déclenchement de
+                // la minuterie (retardée quand l'onglet est en arrière-plan), le crédit ET le transport
+                // en cours, puis un second crédit.
+                _settleArrivalsCountedByServer: function settleArrivalsCountedByServer(cityId, changedAccumulator) {
+                    if (!cityId) return 0;
+                    var now = View.gameTimeNow(), settled = [];
+                    $.each(this.movements, function(id, mv) {
+                        try {
+                            if (!mv || mv._etaUnknown || mv.stage == Constants.Movements.Stage.LOADING) return;
+                            var t = mv.completionTime;
+                            if (typeof t !== 'number' || !isFinite(t) || t > now) return;
+                            if (!mv._isFinalStage()) return;
+                            var credited = null;
+                            if (mv.stage == Constants.Movements.Stage.EN_ROUTE &&
+                                mv.mission == Constants.Movements.Mission.TRANSPORT) credited = mv.targetCityId;
+                            if (mv.stage == Constants.Movements.Stage.RETURNING &&
+                                mv.mission == Constants.Movements.Mission.PLUNDER) credited = mv.originCityId;
+                            if (credited != null && credited == cityId) settled.push(id);
+                        } catch (e) {}
+                    });
+                    for (var i = 0; i < settled.length; i++) {
+                        var mv = this.movements[settled[i]];
+                        // Les troupes d'un retour de pillage ne sont pas dans les ressources : elles restent recréditées.
+                        if (mv && mv.mission == Constants.Movements.Mission.PLUNDER && mv.units) {
+                            try { var c = mv.getOriginCity(); if (c && c.isOwn()) { c.getMilitary()._increment(mv.units); } } catch (e) {}
+                        }
+                        this._dropMovement(settled[i], changedAccumulator);
+                    }
+                    if (settled.length) {
+                        console.log('[Imperator] ' + settled.length + ' arrivée(s) déjà comptée(s) par le serveur : ' +
+                                    'transport retiré sans nouveau crédit');
+                    }
+                    return settled.length;
+                },
                 // v2.16 : purge des mouvements périmés (reliquats). Silencieuse : appelée aussi
                 // pendant un rendu, elle ne déclenche pas d'événement (évite un redessin en boucle).
                 _purgeStaleMovements: function purgeStaleMovements() {

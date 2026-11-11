@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.19
+
+Transports : quand le serveur donne les ressources d'une ville, un transport (ou retour de pillage) dont l'heure d'arrivee est passee est deja compte : il est retire sans nouveau credit. Fini le transport encore affiche apres le credit, et le double credit qui pouvait suivre.
+
 ## 3.18
 
 Experience : comptee (labo indisponible 4 h, +300 000 points) seulement si le serveur confirme le lancement ; sans retour du jeu, rien n'est compte.

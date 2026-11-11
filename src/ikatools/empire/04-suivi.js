@@ -157,6 +157,18 @@
                 } catch (e) {
                     console.warn("Imperator: erreur dans updateCurrentCity, mise à jour ignorée :", e);
                 }
+                // v3.19 : ressources du serveur reçues -> les arrivées passées y sont déjà comptées
+                try {
+                    var hasResources = data.currentResources || (data.headerData && data.headerData.currentResources);
+                    var serverCity = hasResources && View.getCurrentCity();
+                    if (serverCity && serverCity.isOwn && serverCity.isOwn()) {
+                        var mvChanges = [];
+                        if (getCivilizationData()._settleArrivalsCountedByServer(serverCity.getId(), mvChanges)) {
+                            raiseMovementsChanged(mvChanges);
+                            empireData.saveSoon();
+                        }
+                    }
+                } catch (eSettle) {}
             }
 
             function updateAndStartTracking() {

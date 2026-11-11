@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.18
-// @version        3.18
+// @name           Imperator v3.19
+// @version        3.19
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.19 Transports : quand le serveur donne les ressources d'une ville, un transport (ou retour de pillage) dont l'heure d'arrivee est passee est deja compte : il est retire sans nouveau credit. Fini le transport encore affiche apres le credit, et le double credit qui pouvait suivre.
 // @history        3.18 Experience : comptee (labo indisponible 4 h, +300 000 points) seulement si le serveur confirme le lancement ; sans retour du jeu, rien n'est compte.
 // @history        3.17 Donnees suivant les reponses du serveur : ressources, production, vin consomme et points d'action lus aussi dans headerData (format des reponses du jeu) ; une action acceptee (amelioration, envoi...) se voit tout de suite. Or : le montant de la reponse passe avant celui, fige, du chargement de la page.
 // @history        3.16 Miracles : une seule pastille par miracle (un miracle actif vaut pour toutes les iles), synthese de ses Temples : actif (fin la plus lointaine), sinon a activer, sinon rechargement (reprise la plus proche), sinon termine. Nombre de Temples entre parentheses, detail ile par ile au survol.
@@ -4634,6 +4635,42 @@ if (typeof IkaTools == 'undefined') {
                         });
                     }
                 },
+                // v3.19 : le serveur vient de donner les ressources de cette ville (v3.17). Il a déjà
+                // crédité tout ce qui y est arrivé : un transport (ou un retour de pillage) dont l'heure
+                // est passée est retiré SANS nouveau crédit. Sinon on voyait, jusqu'au déclenchement de
+                // la minuterie (retardée quand l'onglet est en arrière-plan), le crédit ET le transport
+                // en cours, puis un second crédit.
+                _settleArrivalsCountedByServer: function settleArrivalsCountedByServer(cityId, changedAccumulator) {
+                    if (!cityId) return 0;
+                    var now = View.gameTimeNow(), settled = [];
+                    $.each(this.movements, function(id, mv) {
+                        try {
+                            if (!mv || mv._etaUnknown || mv.stage == Constants.Movements.Stage.LOADING) return;
+                            var t = mv.completionTime;
+                            if (typeof t !== 'number' || !isFinite(t) || t > now) return;
+                            if (!mv._isFinalStage()) return;
+                            var credited = null;
+                            if (mv.stage == Constants.Movements.Stage.EN_ROUTE &&
+                                mv.mission == Constants.Movements.Mission.TRANSPORT) credited = mv.targetCityId;
+                            if (mv.stage == Constants.Movements.Stage.RETURNING &&
+                                mv.mission == Constants.Movements.Mission.PLUNDER) credited = mv.originCityId;
+                            if (credited != null && credited == cityId) settled.push(id);
+                        } catch (e) {}
+                    });
+                    for (var i = 0; i < settled.length; i++) {
+                        var mv = this.movements[settled[i]];
+                        // Les troupes d'un retour de pillage ne sont pas dans les ressources : elles restent recréditées.
+                        if (mv && mv.mission == Constants.Movements.Mission.PLUNDER && mv.units) {
+                            try { var c = mv.getOriginCity(); if (c && c.isOwn()) { c.getMilitary()._increment(mv.units); } } catch (e) {}
+                        }
+                        this._dropMovement(settled[i], changedAccumulator);
+                    }
+                    if (settled.length) {
+                        console.log('[Imperator] ' + settled.length + ' arrivée(s) déjà comptée(s) par le serveur : ' +
+                                    'transport retiré sans nouveau crédit');
+                    }
+                    return settled.length;
+                },
                 // v2.16 : purge des mouvements périmés (reliquats). Silencieuse : appelée aussi
                 // pendant un rendu, elle ne déclenche pas d'événement (évite un redessin en boucle).
                 _purgeStaleMovements: function purgeStaleMovements() {
@@ -7029,6 +7066,18 @@ if (typeof IkaTools == 'undefined') {
                 } catch (e) {
                     console.warn("Imperator: erreur dans updateCurrentCity, mise à jour ignorée :", e);
                 }
+                // v3.19 : ressources du serveur reçues -> les arrivées passées y sont déjà comptées
+                try {
+                    var hasResources = data.currentResources || (data.headerData && data.headerData.currentResources);
+                    var serverCity = hasResources && View.getCurrentCity();
+                    if (serverCity && serverCity.isOwn && serverCity.isOwn()) {
+                        var mvChanges = [];
+                        if (getCivilizationData()._settleArrivalsCountedByServer(serverCity.getId(), mvChanges)) {
+                            raiseMovementsChanged(mvChanges);
+                            empireData.saveSoon();
+                        }
+                    }
+                } catch (eSettle) {}
             }
 
             function updateAndStartTracking() {
