@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.23
+
+Taverne : un nouveau service valide (A la votre !) met a jour tout de suite, des que le serveur l'accepte, le niveau servi, la consommation, la satisfaction, l'humeur et le conseil de vin, sans repasser par l'Hotel de ville.
+
 ## 3.22
 
 Vin juste necessaire : satisfaction sans vin lue a l'Hotel de ville ou a la taverne ; l'infobulle de la croissance indique le service suffisant pour l'objectif choisi (reglage : neutre, neutre +10, contente) et l'economie possible, ou le service a ajouter si la ville est triste. Consommation de la taverne : l'economie du pressoir n'est plus soustraite. Niveau servi retrouve dans la liste du jeu.

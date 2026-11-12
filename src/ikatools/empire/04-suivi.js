@@ -579,6 +579,8 @@
                             processDeploymentForm(form);
                         } else if (form.id == 'plunderForm') {
                             processPlunderForm(form);
+                        } else if (form.id == 'wineAssignForm') {
+                            processWineAssignForm(form); // v3.23
                         } else if (form.id == 'setScientists') {
                             processSetScientistsForm(form);
                         } else if (form.id == 'accelResearchForm') {

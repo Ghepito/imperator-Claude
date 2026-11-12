@@ -88,6 +88,42 @@
                 });
             }
 
+            // v3.23 : « À la vôtre ! » à la taverne : le nouveau service (niveau, vin/h) est pris en compte
+            // dès que le serveur l'accepte, sans repasser par l'Hôtel de ville. La satisfaction sans vin
+            // ne change pas : le conseil de vin se met à jour avec.
+            function processWineAssignForm(form) {
+                var $f = $(form);
+                var level = parseInt($f.find('[name="amount"]').val(), 10);
+                if (!isFinite(level)) level = parseInt($('#wineAmount').val(), 10);
+                if (!isFinite(level)) return;
+                var cityId = parseInt($f.find('[name="cityId"]').val(), 10);
+                var txt = $f.find('[name="amount"] option[value="' + level + '"]').text();
+                var amount = level > 0 ? parseInt(String(txt).replace(/[^0-9]/g, ''), 10) : 0;
+                if (!isFinite(amount)) amount = Constants.BuildingData[Constants.Buildings.TAVERN].wineServe[level] || 0;
+
+                View.registerNextIkariamAjaxRequestCallback(function saveWineServed(response) {
+                    var success = false, failure = false, spendings = null;
+                    Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
+                        if (name == Constants.IkariamAjaxResponseType.PROVIDE_FEEDBACK && data && data[0]) {
+                            if (data[0].type == 10) success = true; else if (data[0].type == 11) failure = true;
+                        }
+                        if (name == Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA && data) {
+                            var h = data.headerData || {};
+                            spendings = data.wineSpendings != null ? data.wineSpendings : h.wineSpendings;
+                        }
+                    });
+                    // Sans message du jeu, on se fie à la consommation renvoyée : elle doit valoir le nouveau service.
+                    if (!success && !failure && spendings != null && Math.abs(Number(spendings) - amount) < 0.5) success = true;
+                    var city = (isFinite(cityId) && getCity(cityId)) || View.getCurrentCity();
+                    console.log('[Imperator] Taverne' + (city ? ' (' + city.getName() + ')' : '') + ' : ' + amount +
+                                ' vin/h (niveau ' + level + ') ' + (success ? 'accepté' : failure ? 'refusé' : 'sans confirmation, ignoré'));
+                    if (!success || !city) return;
+                    var changes = [];
+                    city._updateFromTavern(level, amount, 0, changes);
+                    raiseResourcesChanged(changes);
+                });
+            }
+
             function processSetScientistsForm(form) {
                 var scientists = parseInt($('#inputScientists').val());
                 var shownBefore = readAcademyResearchValue(); // v3.2

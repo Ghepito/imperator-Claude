@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.22
-// @version        3.22
+// @name           Imperator v3.23
+// @version        3.23
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.23 Taverne : un nouveau service valide (A la votre !) met a jour tout de suite, des que le serveur l'accepte, le niveau servi, la consommation, la satisfaction, l'humeur et le conseil de vin, sans repasser par l'Hotel de ville.
 // @history        3.22 Vin juste necessaire : satisfaction sans vin lue a l'Hotel de ville ou a la taverne ; l'infobulle de la croissance indique le service suffisant pour l'objectif choisi (reglage : neutre, neutre +10, contente) et l'economie possible, ou le service a ajouter si la ville est triste. Consommation de la taverne : l'economie du pressoir n'est plus soustraite. Niveau servi retrouve dans la liste du jeu.
 // @history        3.21.1 Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
 // @history        3.21 Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.

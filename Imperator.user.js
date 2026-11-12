@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.22
-// @version        3.22
+// @name           Imperator v3.23
+// @version        3.23
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.23 Taverne : un nouveau service valide (A la votre !) met a jour tout de suite, des que le serveur l'accepte, le niveau servi, la consommation, la satisfaction, l'humeur et le conseil de vin, sans repasser par l'Hotel de ville.
 // @history        3.22 Vin juste necessaire : satisfaction sans vin lue a l'Hotel de ville ou a la taverne ; l'infobulle de la croissance indique le service suffisant pour l'objectif choisi (reglage : neutre, neutre +10, contente) et l'economie possible, ou le service a ajouter si la ville est triste. Consommation de la taverne : l'economie du pressoir n'est plus soustraite. Niveau servi retrouve dans la liste du jeu.
 // @history        3.21.1 Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
 // @history        3.21 Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.
@@ -3922,6 +3923,15 @@ if (typeof IkaTools == 'undefined') {
                     // (vérifié le 12 nov. 2026 : 150 servis, « économise 150 », le jeu compte 150).
                     var net = Math.max(0, amountPerHour || 0);
                     this._tavernServed = { level: level, amount: amountPerHour, net: net, updated: View.gameTimeNow() };
+                    // v3.23 : satisfaction et humeur suivent le nouveau service (seuils du jeu, lus à la taverne :
+                    // joyeuse >= 300, contente >= 50, neutre >= 0, triste >= -50, furieuse en dessous).
+                    if (this.satisfactionNoWine != null && isFinite(this.satisfactionNoWine)) {
+                        var bonusTable = Constants.BuildingData[Constants.Buildings.TAVERN].maxBonus;
+                        var sat = this.satisfactionNoWine + (level > 0 ? (bonusTable[level - 1] || 0) : 0);
+                        this.happinessScore = sat;
+                        this._imperatorMood = sat >= 300 ? 'ecstatic' : sat >= 50 ? 'happy' : sat >= 0 ? 'neutral' :
+                                              sat >= -50 ? 'sad' : 'outraged';
+                    }
                     var wine = this.resources[Constants.Resources.WINE];
                     if (wine) {
                         var perSecond = net / Constants.Time.SECONDS_PER_HOUR;
@@ -5835,6 +5845,42 @@ if (typeof IkaTools == 'undefined') {
                 });
             }
 
+            // v3.23 : « À la vôtre ! » à la taverne : le nouveau service (niveau, vin/h) est pris en compte
+            // dès que le serveur l'accepte, sans repasser par l'Hôtel de ville. La satisfaction sans vin
+            // ne change pas : le conseil de vin se met à jour avec.
+            function processWineAssignForm(form) {
+                var $f = $(form);
+                var level = parseInt($f.find('[name="amount"]').val(), 10);
+                if (!isFinite(level)) level = parseInt($('#wineAmount').val(), 10);
+                if (!isFinite(level)) return;
+                var cityId = parseInt($f.find('[name="cityId"]').val(), 10);
+                var txt = $f.find('[name="amount"] option[value="' + level + '"]').text();
+                var amount = level > 0 ? parseInt(String(txt).replace(/[^0-9]/g, ''), 10) : 0;
+                if (!isFinite(amount)) amount = Constants.BuildingData[Constants.Buildings.TAVERN].wineServe[level] || 0;
+
+                View.registerNextIkariamAjaxRequestCallback(function saveWineServed(response) {
+                    var success = false, failure = false, spendings = null;
+                    Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
+                        if (name == Constants.IkariamAjaxResponseType.PROVIDE_FEEDBACK && data && data[0]) {
+                            if (data[0].type == 10) success = true; else if (data[0].type == 11) failure = true;
+                        }
+                        if (name == Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA && data) {
+                            var h = data.headerData || {};
+                            spendings = data.wineSpendings != null ? data.wineSpendings : h.wineSpendings;
+                        }
+                    });
+                    // Sans message du jeu, on se fie à la consommation renvoyée : elle doit valoir le nouveau service.
+                    if (!success && !failure && spendings != null && Math.abs(Number(spendings) - amount) < 0.5) success = true;
+                    var city = (isFinite(cityId) && getCity(cityId)) || View.getCurrentCity();
+                    console.log('[Imperator] Taverne' + (city ? ' (' + city.getName() + ')' : '') + ' : ' + amount +
+                                ' vin/h (niveau ' + level + ') ' + (success ? 'accepté' : failure ? 'refusé' : 'sans confirmation, ignoré'));
+                    if (!success || !city) return;
+                    var changes = [];
+                    city._updateFromTavern(level, amount, 0, changes);
+                    raiseResourcesChanged(changes);
+                });
+            }
+
             function processSetScientistsForm(form) {
                 var scientists = parseInt($('#inputScientists').val());
                 var shownBefore = readAcademyResearchValue(); // v3.2
@@ -7566,6 +7612,8 @@ if (typeof IkaTools == 'undefined') {
                             processDeploymentForm(form);
                         } else if (form.id == 'plunderForm') {
                             processPlunderForm(form);
+                        } else if (form.id == 'wineAssignForm') {
+                            processWineAssignForm(form); // v3.23
                         } else if (form.id == 'setScientists') {
                             processSetScientistsForm(form);
                         } else if (form.id == 'accelResearchForm') {

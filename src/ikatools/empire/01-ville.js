@@ -327,6 +327,15 @@
                     // (vérifié le 12 nov. 2026 : 150 servis, « économise 150 », le jeu compte 150).
                     var net = Math.max(0, amountPerHour || 0);
                     this._tavernServed = { level: level, amount: amountPerHour, net: net, updated: View.gameTimeNow() };
+                    // v3.23 : satisfaction et humeur suivent le nouveau service (seuils du jeu, lus à la taverne :
+                    // joyeuse >= 300, contente >= 50, neutre >= 0, triste >= -50, furieuse en dessous).
+                    if (this.satisfactionNoWine != null && isFinite(this.satisfactionNoWine)) {
+                        var bonusTable = Constants.BuildingData[Constants.Buildings.TAVERN].maxBonus;
+                        var sat = this.satisfactionNoWine + (level > 0 ? (bonusTable[level - 1] || 0) : 0);
+                        this.happinessScore = sat;
+                        this._imperatorMood = sat >= 300 ? 'ecstatic' : sat >= 50 ? 'happy' : sat >= 0 ? 'neutral' :
+                                              sat >= -50 ? 'sad' : 'outraged';
+                    }
                     var wine = this.resources[Constants.Resources.WINE];
                     if (wine) {
                         var perSecond = net / Constants.Time.SECONDS_PER_HOUR;
