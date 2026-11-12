@@ -83,19 +83,14 @@
                     }
 
                     if (this.isOwn()) {
+                        // v3.20 : wineSpendings est la consommation RÉELLE envoyée par le jeu (en-tête de la
+                        // ville) : on ne retire plus la Cave à vin. Avant, la réduction était appliquée une
+                        // seconde fois (-75 affiché pour 150 servis ; vérifié à la taverne de G - Soufre 1
+                        // le 12 nov. 2026 : 150/h servis, « économise 0 »).
                         var wineConsumption = read('wineSpendings');
                         var baseWineConsumption = wineConsumption;
-
-                        var winePress = this.getBuildingByType(Constants.Buildings.WINE_PRESS);
-                        if (correctWineConsumption) {
-                            if (winePress) {
-                                wineConsumption = wineConsumption * (100 - winePress.getLevel()) / 100;
-                            }
-                        } else {
-                            if (winePress) {
-                                baseWineConsumption = Math.floor(
-                                    wineConsumption / (100 - winePress.getLevel()) * 100);
-                            }
+                        if (this._tavernServed && this._tavernServed.level != null && this._tavernServed.net === wineConsumption) {
+                            baseWineConsumption = this._tavernServed.amount;   // niveau exact lu à la taverne
                         }
 
                         // v2.20 : table maxWine (70 niveaux, maxWine[0] = niveau 1) au lieu de
@@ -311,6 +306,20 @@
                 },
 
                 // Niveau taverne
+                // v3.20 : lu à la taverne : niveau servi, vin servi par heure, économie de la Cave à vin.
+                _updateFromTavern: function updateFromTavern(level, amountPerHour, savedPerHour, changedAccumulator) {
+                    this._updateTavernWineLevel(level, changedAccumulator);
+                    var net = Math.max(0, (amountPerHour || 0) - (savedPerHour || 0));
+                    this._tavernServed = { level: level, amount: amountPerHour, net: net, updated: View.gameTimeNow() };
+                    var wine = this.resources[Constants.Resources.WINE];
+                    if (wine) {
+                        var perSecond = net / Constants.Time.SECONDS_PER_HOUR;
+                        if (wine.consumption != perSecond) {
+                            wine.consumption = perSecond;
+                            changedAccumulator.push({ city: this, type: Constants.Resources.WINE, value: wine });
+                        }
+                    }
+                },
                 _updateTavernWineLevel: function updateTavernWineLevel(level, changedAccumulator) {
                     if (this.tavernWineLevel != level) {
                         changedAccumulator.push({

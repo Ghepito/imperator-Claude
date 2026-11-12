@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.19
-// @version        3.19
+// @name           Imperator v3.20
+// @version        3.20
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.20 Vin : la consommation envoyee par le jeu est deja la consommation reelle ; la Cave a vin n'est plus retiree une seconde fois (-75 affiche pour 150 servis). La taverne est lue : niveau servi, vin servi et economie, consommation exacte de la ville.
 // @history        3.19 Transports : quand le serveur donne les ressources d'une ville, un transport (ou retour de pillage) dont l'heure d'arrivee est passee est deja compte : il est retire sans nouveau credit. Fini le transport encore affiche apres le credit, et le double credit qui pouvait suivre.
 // @history        3.18 Experience : comptee (labo indisponible 4 h, +300 000 points) seulement si le serveur confirme le lancement ; sans retour du jeu, rien n'est compte.
 // @history        3.17 Donnees suivant les reponses du serveur : ressources, production, vin consomme et points d'action lus aussi dans headerData (format des reponses du jeu) ; une action acceptee (amelioration, envoi...) se voit tout de suite. Or : le montant de la reponse passe avant celui, fige, du chargement de la page.

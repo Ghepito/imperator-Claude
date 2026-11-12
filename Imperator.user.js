@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.19
-// @version        3.19
+// @name           Imperator v3.20
+// @version        3.20
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.20 Vin : la consommation envoyee par le jeu est deja la consommation reelle ; la Cave a vin n'est plus retiree une seconde fois (-75 affiche pour 150 servis). La taverne est lue : niveau servi, vin servi et economie, consommation exacte de la ville.
 // @history        3.19 Transports : quand le serveur donne les ressources d'une ville, un transport (ou retour de pillage) dont l'heure d'arrivee est passee est deja compte : il est retire sans nouveau credit. Fini le transport encore affiche apres le credit, et le double credit qui pouvait suivre.
 // @history        3.18 Experience : comptee (labo indisponible 4 h, +300 000 points) seulement si le serveur confirme le lancement ; sans retour du jeu, rien n'est compte.
 // @history        3.17 Donnees suivant les reponses du serveur : ressources, production, vin consomme et points d'action lus aussi dans headerData (format des reponses du jeu) ; une action acceptee (amelioration, envoi...) se voit tout de suite. Or : le montant de la reponse passe avant celui, fige, du chargement de la page.
@@ -3671,19 +3672,14 @@ if (typeof IkaTools == 'undefined') {
                     }
 
                     if (this.isOwn()) {
+                        // v3.20 : wineSpendings est la consommation RÉELLE envoyée par le jeu (en-tête de la
+                        // ville) : on ne retire plus la Cave à vin. Avant, la réduction était appliquée une
+                        // seconde fois (-75 affiché pour 150 servis ; vérifié à la taverne de G - Soufre 1
+                        // le 12 nov. 2026 : 150/h servis, « économise 0 »).
                         var wineConsumption = read('wineSpendings');
                         var baseWineConsumption = wineConsumption;
-
-                        var winePress = this.getBuildingByType(Constants.Buildings.WINE_PRESS);
-                        if (correctWineConsumption) {
-                            if (winePress) {
-                                wineConsumption = wineConsumption * (100 - winePress.getLevel()) / 100;
-                            }
-                        } else {
-                            if (winePress) {
-                                baseWineConsumption = Math.floor(
-                                    wineConsumption / (100 - winePress.getLevel()) * 100);
-                            }
+                        if (this._tavernServed && this._tavernServed.level != null && this._tavernServed.net === wineConsumption) {
+                            baseWineConsumption = this._tavernServed.amount;   // niveau exact lu à la taverne
                         }
 
                         // v2.20 : table maxWine (70 niveaux, maxWine[0] = niveau 1) au lieu de
@@ -3899,6 +3895,20 @@ if (typeof IkaTools == 'undefined') {
                 },
 
                 // Niveau taverne
+                // v3.20 : lu à la taverne : niveau servi, vin servi par heure, économie de la Cave à vin.
+                _updateFromTavern: function updateFromTavern(level, amountPerHour, savedPerHour, changedAccumulator) {
+                    this._updateTavernWineLevel(level, changedAccumulator);
+                    var net = Math.max(0, (amountPerHour || 0) - (savedPerHour || 0));
+                    this._tavernServed = { level: level, amount: amountPerHour, net: net, updated: View.gameTimeNow() };
+                    var wine = this.resources[Constants.Resources.WINE];
+                    if (wine) {
+                        var perSecond = net / Constants.Time.SECONDS_PER_HOUR;
+                        if (wine.consumption != perSecond) {
+                            wine.consumption = perSecond;
+                            changedAccumulator.push({ city: this, type: Constants.Resources.WINE, value: wine });
+                        }
+                    }
+                },
                 _updateTavernWineLevel: function updateTavernWineLevel(level, changedAccumulator) {
                     if (this.tavernWineLevel != level) {
                         changedAccumulator.push({
@@ -6018,6 +6028,45 @@ if (typeof IkaTools == 'undefined') {
                 } catch (eMir) {}
             }
 
+            // v3.20 : taverne : niveau servi (wineServeLevel), vin servi par heure (liste du jeu) et
+            // économie de la Cave à vin (« permet d'économiser N litres »), pour la consommation exacte.
+            function readTavern(data, html) {
+                var params = null;
+                try { params = JSON.parse((data && data['load_js'] && data['load_js'].params) || 'null'); } catch (e) {}
+                var level = params && params.wineServeLevel != null ? parseInt(params.wineServeLevel, 10) : NaN;
+                var $h = $('<div></div>').append($.parseHTML(String(html || ''), document, false));
+                if (!isFinite(level)) {
+                    var sel = $h.find('#wineAmount option[selected]').val();
+                    level = parseInt(sel, 10);
+                }
+                if (!isFinite(level)) return null;
+                var amount = 0;
+                if (level > 0) {
+                    var txt = $h.find('#wineAmount option[value="' + level + '"]').text();
+                    amount = parseInt(String(txt).replace(/[^0-9]/g, ''), 10);
+                    if (!isFinite(amount)) {
+                        var maxWine = Constants.BuildingData[Constants.Buildings.TAVERN].maxWine;
+                        amount = maxWine[level - 1];
+                    }
+                }
+                var saved = parseFloat(String($h.find('#savedWine').text()).replace(/[\s\u00a0]/g, '').replace(',', '.'));
+                return { level: level, amount: amount || 0, saved: isFinite(saved) ? saved : 0 };
+            }
+            function processTavernView(data, html) {
+                try {
+                    var city = View.getCurrentCity();
+                    var t = readTavern(data, html);
+                    if (!city || !t) return;
+                    var changes = [];
+                    city._updateFromTavern(t.level, t.amount, t.saved, changes);
+                    raiseResourcesChanged(changes);
+                    console.log('[Imperator] Taverne (' + city.getName() + ') : niveau ' + t.level + ', ' + t.amount +
+                                ' vin/h servis, ' + t.saved + ' économisés -> ' + Math.max(0, t.amount - t.saved) + '/h');
+                } catch (e) {
+                    console.warn('[Imperator] Lecture de la taverne échouée', e);
+                }
+            }
+
             // v3.14 : miracles par île, relevés au Temple.
             // { <islandId>: { name, activeEnd, cooldownEnd, position, cityId, readAt } } ; heures locales en ms.
             var islandMiracleData = new Data.Value('islandMiracles', {}, { version: 1 });
@@ -7429,6 +7478,8 @@ if (typeof IkaTools == 'undefined') {
                             processTownHallView(templateData);
                         } else if (view == Constants.View.TEMPLE) {
                             processTempleView(templateData);
+                        } else if (view == Constants.Buildings.TAVERN) {
+                            processTavernView(templateData, viewHtml); // v3.20
                         } else if (view == Constants.View.RESEARCH_ADVISOR) {
                             processResearchAdvisorView(templateData);
                         } else if (view == Constants.View.FINANCES || view == 'bilan' || view == 'finances') {

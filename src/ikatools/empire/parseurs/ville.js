@@ -303,6 +303,45 @@
                 } catch (eMir) {}
             }
 
+            // v3.20 : taverne : niveau servi (wineServeLevel), vin servi par heure (liste du jeu) et
+            // économie de la Cave à vin (« permet d'économiser N litres »), pour la consommation exacte.
+            function readTavern(data, html) {
+                var params = null;
+                try { params = JSON.parse((data && data['load_js'] && data['load_js'].params) || 'null'); } catch (e) {}
+                var level = params && params.wineServeLevel != null ? parseInt(params.wineServeLevel, 10) : NaN;
+                var $h = $('<div></div>').append($.parseHTML(String(html || ''), document, false));
+                if (!isFinite(level)) {
+                    var sel = $h.find('#wineAmount option[selected]').val();
+                    level = parseInt(sel, 10);
+                }
+                if (!isFinite(level)) return null;
+                var amount = 0;
+                if (level > 0) {
+                    var txt = $h.find('#wineAmount option[value="' + level + '"]').text();
+                    amount = parseInt(String(txt).replace(/[^0-9]/g, ''), 10);
+                    if (!isFinite(amount)) {
+                        var maxWine = Constants.BuildingData[Constants.Buildings.TAVERN].maxWine;
+                        amount = maxWine[level - 1];
+                    }
+                }
+                var saved = parseFloat(String($h.find('#savedWine').text()).replace(/[\s\u00a0]/g, '').replace(',', '.'));
+                return { level: level, amount: amount || 0, saved: isFinite(saved) ? saved : 0 };
+            }
+            function processTavernView(data, html) {
+                try {
+                    var city = View.getCurrentCity();
+                    var t = readTavern(data, html);
+                    if (!city || !t) return;
+                    var changes = [];
+                    city._updateFromTavern(t.level, t.amount, t.saved, changes);
+                    raiseResourcesChanged(changes);
+                    console.log('[Imperator] Taverne (' + city.getName() + ') : niveau ' + t.level + ', ' + t.amount +
+                                ' vin/h servis, ' + t.saved + ' économisés -> ' + Math.max(0, t.amount - t.saved) + '/h');
+                } catch (e) {
+                    console.warn('[Imperator] Lecture de la taverne échouée', e);
+                }
+            }
+
             // v3.14 : miracles par île, relevés au Temple.
             // { <islandId>: { name, activeEnd, cooldownEnd, position, cityId, readAt } } ; heures locales en ms.
             var islandMiracleData = new Data.Value('islandMiracles', {}, { version: 1 });

@@ -520,6 +520,8 @@
                             processTownHallView(templateData);
                         } else if (view == Constants.View.TEMPLE) {
                             processTempleView(templateData);
+                        } else if (view == Constants.Buildings.TAVERN) {
+                            processTavernView(templateData, viewHtml); // v3.20
                         } else if (view == Constants.View.RESEARCH_ADVISOR) {
                             processResearchAdvisorView(templateData);
                         } else if (view == Constants.View.FINANCES || view == 'bilan' || view == 'finances') {
