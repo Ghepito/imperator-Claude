@@ -9,7 +9,7 @@
                                                   [localizedLanguage]),
              new IkaTools.UI.SettingsWindow.Group(localizer.localize('settings','overviews'),
                                                   [showResourceOverview, showBuildingsOverview, showMilitaryOverview,
-                                                   showEspionageOverview, blessSoonThreshold]),
+                                                   showEspionageOverview, blessSoonThreshold, wineTarget]),
              new IkaTools.UI.SettingsWindow.Group(localizer.localize('settings','tweaks'),
                                                   [autoAcceptDailyBonus, hideAds, hideFacebook, hideFriendsBar, hideChat,
                                                    transportButtons, donationButtons, showCityOwners,

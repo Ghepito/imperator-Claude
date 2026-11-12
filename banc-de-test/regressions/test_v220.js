@@ -11,15 +11,16 @@ t('niveau 84 = pas max', isMax.call(B('warehouse',84,false))===false);
 t('84 en cours -> max', isMax.call(B('warehouse',84,true))===true);
 t('table en retard mais coût réel proposé -> pas max', isMax.call(B('warehouse',85,false,{forLevel:85}))===false);
 t('bâtiment inconnu -> pas max', isMax.call(B('foo',10,false))===false);
-// --- niveau de vin ---
-const w=s.match(/var maxWine = Constants\.BuildingData\[Constants\.Buildings\.TAVERN\]\.maxWine;([\s\S]*?)\n                        \}\n/);
+// --- niveau de vin --- (v3.22 : recherche dans la liste du vin servi, wineServe, et non plus maxWine)
+const w=s.match(/var wineServe = Constants\.BuildingData\[Constants\.Buildings\.TAVERN\]\.wineServe;([\s\S]*?)\n                        \}\n/);
 const tav=s.match(/maxWine:\[([\d,]+)\]/)[1].split(',').map(Number);
-const level=(base)=>{let got=null; const self={_updateTavernWineLevel:(l)=>got=l}; new Function('Constants','baseWineConsumption','changes','var maxWine=Constants.BuildingData.tavern.maxWine;'+w[1]+'}').call(self,{BuildingData:{tavern:{maxWine:tav}},Buildings:{TAVERN:'tavern'}},base,[]); return got;};
+const serve=s.match(/wineServe:\[([\d,]+)\]/)[1].split(',').map(Number);
+const level=(base)=>{let got=null; const self={_updateTavernWineLevel:(l)=>got=l}; new Function('Constants','baseWineConsumption','changes','var wineServe=Constants.BuildingData.tavern.wineServe;'+w[1]+'}').call(self,{BuildingData:{tavern:{maxWine:tav,wineServe:serve}},Buildings:{TAVERN:'tavern'}},base,[]); return got;};
 t('70 niveaux dans maxWine', tav.length===70);
 t('conso 0 -> niveau 0', level(0)===0);
-t('conso 4 -> niveau 1', level(4)===1);
-t('conso 1449 -> niveau 49 (au-delà de 47)', level(1449)===49);
-t('conso 5332 -> niveau 70', level(5332)===70);
+t('conso 2 -> niveau 1', level(2)===1);
+t('conso 150 -> niveau 26', level(150)===26);
+t('conso 438 -> niveau 41', level(438)===41);
 t('conso NaN -> pas de mise à jour', level(NaN)===null);
 // --- dashboard ---
 t('dashboard production x3600', /production\[res\] \+= \(r\.getProduction\(\) \|\| 0\) \* IkaTools\.Constants\.Time\.SECONDS_PER_HOUR/.test(s));

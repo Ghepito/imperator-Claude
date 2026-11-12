@@ -8,7 +8,7 @@ t('version >= 3.17', _ge(_n(_v), _n('3.17')) >= 0, _v);
 t('nom et version d\'accord', (s.match(/@name\s+Imperator v([0-9.]+)/) || [])[1] === _v);
 const a = s.indexOf('_updateFromGlobalData: function _updateFromGlobalData('), b = s.indexOf('_updateFromBackgroundData:', a);
 const body = s.slice(a + '_updateFromGlobalData: '.length, b).replace(/,\s*$/, '');
-const Constants = { Buildings: { WINE_PRESS: 'vineyard', TAVERN: 'tavern' }, BuildingData: { tavern: { maxWine: [4, 8, 13, 18, 24] } },
+const Constants = { Buildings: { WINE_PRESS: 'vineyard', TAVERN: 'tavern' }, BuildingData: { tavern: { maxWine: [4, 8, 13, 18, 24], wineServe: [0, 2, 4, 7, 9, 12, 15, 18, 22] } },
                     Time: { SECONDS_PER_HOUR: 3600 } };
 const $ = () => ({ text: () => '' });
 let raised = 0;
@@ -26,7 +26,7 @@ const c1 = city(); fn.call(c1, rep, true);
 t('réponse du jeu : ressources lues (bois 120 000 après débit)', c1.got && c1.got.cur && c1.got.cur.resource === 120000);
 t('réponse du jeu : capacité, production, vin', c1.got && c1.got.max.resource === 480000 && c1.got.prod === 1.5 && c1.got.tg === 0.8 &&
   Math.abs(c1.got.wine - 13 / 3600) < 1e-9);
-t('réponse du jeu : points d\'action et niveau de taverne', c1.ap === 9 && c1.wine === 3);
+t('réponse du jeu : points d\'action et niveau de taverne', c1.ap === 9 && c1.wine === 6); // v3.22 : 13/h -> niveau 6 (15/h) dans la liste du vin servi
 t('changement signalé (tableaux redessinés)', raised === 1);
 // 2. Chargement de la page : à plat (dataSetForView), comme avant
 const page = { currentResources: { resource: 99 }, resourceProduction: 2, tradegoodProduction: 1, wineSpendings: 0, maxActionPoints: 7,

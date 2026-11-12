@@ -232,6 +232,11 @@ table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
 } \
 \
+.imp_wine_excess .imp_wine_age { \
+font-size: 10px; \
+color: #a1978a; \
+} \
+\
 .imp_wine_excess { \
 margin-top: 4px; \
 max-width: 260px; \

@@ -41,7 +41,6 @@
                 missing: 'Missing',
 
                 full: 'Full',
-                wine_excess: 'City full with +%s satisfaction and wine served: wine probably served in excess.', // v3.21.1
                 time_to_full: 'To Full',
                 time_to_empty: 'To Empty',
 
@@ -319,7 +318,6 @@
                 missing: 'Manquant',
 
                 full: 'Plein',
-                wine_excess: 'Ville pleine avec +%s de satisfaction et du vin servi : vin probablement servi en excès.', // v3.21.1
                 time_to_full: 'Jusqu\'au maximum',
                 time_to_empty: 'Jusqu\'au minimum',
 

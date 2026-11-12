@@ -79,6 +79,13 @@
         { '6 h': '6', '12 h': '12', '24 h': '24', '48 h': '48' },
         IkaTools.Utils.fixedFunction('Bénédictions divines : alerte « bientôt fini »'));
 
+    // v3.22 : objectif de satisfaction d'une ville pleine (vin juste nécessaire)
+    var wineTarget = settings.choice(
+        'wine_target_full_city',
+        '10',
+        { 'Neutre (satisfaction ≥ 0)': '0', 'Neutre avec marge (≥ +10)': '10', 'Contente (≥ +50)': '50' },
+        IkaTools.Utils.fixedFunction('Vin : objectif pour une ville pleine'));
+
     // ============================================================
     // v2.20 : notifications de bureau via GM_notification (Tampermonkey)
     // remplace l ancienne API webkit, retirée des navigateurs.

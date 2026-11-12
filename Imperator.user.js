@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.21.1
-// @version        3.21.1
+// @name           Imperator v3.22
+// @version        3.22
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.22 Vin juste necessaire : satisfaction sans vin lue a l'Hotel de ville ou a la taverne ; l'infobulle de la croissance indique le service suffisant pour l'objectif choisi (reglage : neutre, neutre +10, contente) et l'economie possible, ou le service a ajouter si la ville est triste. Consommation de la taverne : l'economie du pressoir n'est plus soustraite. Niveau servi retrouve dans la liste du jeu.
 // @history        3.21.1 Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
 // @history        3.21 Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.
 // @history        3.20 Vin : la consommation envoyee par le jeu est deja la consommation reelle ; la Cave a vin n'est plus retiree une seconde fois (-75 affiche pour 150 servis). La taverne est lue : niveau servi, vin servi et economie, consommation exacte de la ville.
@@ -2871,6 +2872,9 @@ if (typeof IkaTools == 'undefined') {
                     marble:[0,0,0,80,104,135,177,229,299,388,504,657,853,1109,1442,1875,2438,3169,412,5356,6963,9052,11768,15298,19887,25854,3361,43693,56801,73841,95994,124792,16223,210899,274168,356419,463345,602349,783054,1017969,1323361,1720368,2236479,2907424,3779650,4913547,6387610,8303891,10795057,14033573,18243642,23716732,30831747,40081266,52105638,67737320,88058503,114476037,148818827,193464446,251503743,326954818,425041200,552553478,718319416,933815102,1213959454,1578147056,2051590869,2667067736],
                     glass:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                     sulfur:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    // v3.22 : vin servi par heure selon le niveau de service (0 = pas de vin), liste du jeu
+                    // relevée à la taverne le 12 nov. 2026 (niveaux 0 à 41).
+                    wineServe:[0,2,4,7,9,12,15,18,22,26,30,34,39,44,50,56,62,68,75,83,91,99,108,118,128,139,150,162,175,189,204,220,236,254,272,292,313,335,359,383,410,438],
                     maxWine:[4,8,13,18,24,30,37,44,51,60,68,78,88,99,110,122,136,150,165,180,197,216,235,255,277,300,325,351,378,408,439,472,507,544,584,626,670,717,766,818,874,933,995,1060,1129,1203,1280,1361,1449,1541,1640,1745,1857,1976,2102,2237,2380,2532,2694,2867,3050,3246,3453,3675,3910,4160,4426,4710,5011,5332],
                     satisfaction:[12,24,36,48,61,73,86,99,112,125,138,152,165,179,193,207,222,236,251,266,282,297,313,329,345,361,378,395,412,430,448,466,484,502,521,540,560,580,600,620,641,662,683,705,727,749,772,795,819,843,867,891,916,942,968,994,1021,1048,1075,1103,1131,1160,1189,1219,1249,1280,1311,1343,1375,1408],
                     maxBonus:[60,120,181,242,304,367,430,494,559,624,691,758,826,896,966,1037,1109,1182,1256,1332,1408,1485,1564,1644,1725,1807,1891,1975,2061,2149,2238,2328,2419,2512,2606,2702,2800,2898,2999,3101,3204,3310,3416,3525,3635,3747,3861,3976,4094,4213,4334,4457,4582,4709,4838,4969,5103,5238,5375,5515,5657,5801,5947,6096,6247,6400,6556,6714,6875,7038],
@@ -3686,13 +3690,15 @@ if (typeof IkaTools == 'undefined') {
 
                         // v2.20 : table maxWine (70 niveaux, maxWine[0] = niveau 1) au lieu de
                         // wineUse limitée à 48 entrées (niveaux > 47 jamais reconnus).
-                        var maxWine = Constants.BuildingData[Constants.Buildings.TAVERN].maxWine;
+                        // v3.22 : niveau servi retrouvé dans la liste du jeu (vin servi par niveau), et non
+                        // dans maxWine (capacité de la taverne), qui donnait un niveau faux.
+                        var wineServe = Constants.BuildingData[Constants.Buildings.TAVERN].wineServe;
                         if (isFinite(baseWineConsumption)) {
                             var wineLevel = 0;
                             if (baseWineConsumption > 0) {
-                                wineLevel = maxWine.length;
-                                for (var i = 0; i < maxWine.length; i++) {
-                                    if (maxWine[i] >= baseWineConsumption) { wineLevel = i + 1; break; }
+                                wineLevel = wineServe.length - 1;
+                                for (var i = 1; i < wineServe.length; i++) {
+                                    if (wineServe[i] >= baseWineConsumption - 0.5) { wineLevel = i; break; }
                                 }
                             }
                             this._updateTavernWineLevel(wineLevel, changes);
@@ -3895,12 +3901,26 @@ if (typeof IkaTools == 'undefined') {
                 _updateHappinessScore: function updateHappinessScore(value, changedAccumulator) {
                     this.happinessScore = value;
                 },
+                // v3.22 : satisfaction de la ville SANS le bonus du vin (Hôtel de ville ou taverne)
+                _updateSatisfactionNoWine: function updateSatisfactionNoWine(value, changedAccumulator) {
+                    if (!isFinite(value)) return;
+                    this.satisfactionNoWine = value;
+                    this.satisfactionNoWineUpdated = View.gameTimeNow();
+                },
+                getSatisfactionNoWine: function getSatisfactionNoWine() {
+                    return this.satisfactionNoWine;
+                },
+                getSatisfactionNoWineUpdated: function getSatisfactionNoWineUpdated() {
+                    return this.satisfactionNoWineUpdated || 0;
+                },
 
                 // Niveau taverne
                 // v3.20 : lu à la taverne : niveau servi, vin servi par heure, économie de la Cave à vin.
                 _updateFromTavern: function updateFromTavern(level, amountPerHour, savedPerHour, changedAccumulator) {
                     this._updateTavernWineLevel(level, changedAccumulator);
-                    var net = Math.max(0, (amountPerHour || 0) - (savedPerHour || 0));
+                    // v3.22 : l'« économie du pressoir » affichée par la taverne ne baisse pas la consommation
+                    // (vérifié le 12 nov. 2026 : 150 servis, « économise 150 », le jeu compte 150).
+                    var net = Math.max(0, amountPerHour || 0);
                     this._tavernServed = { level: level, amount: amountPerHour, net: net, updated: View.gameTimeNow() };
                     var wine = this.resources[Constants.Resources.WINE];
                     if (wine) {
@@ -5987,6 +6007,11 @@ if (typeof IkaTools == 'undefined') {
                 // Satisfaction libre reelle (surplus) -> pilote la croissance
                 var _sat = _impNumFR($('#js_TownHallHappinessLargeValue').text());
                 if (isFinite(_sat)) city._updateHappinessScore(_sat, changes);
+                // v3.22 : satisfaction sans vin = satisfaction - bonus du vin servi (lu juste au-dessus)
+                try {
+                    var _wb = _impReadTH('js_TownHallSatisfactionOverviewWineBoniServeBonusValue');
+                    if (isFinite(_sat)) city._updateSatisfactionNoWine(_sat - (isFinite(_wb) ? _wb : 0), changes);
+                } catch (e) {}
 
                 // Population reelle (l'onglet Hotel de Ville l'expose ; d'autres vues renvoient 0)
                 try {
@@ -6052,7 +6077,8 @@ if (typeof IkaTools == 'undefined') {
                     }
                 }
                 var saved = parseFloat(String($h.find('#savedWine').text()).replace(/[\s\u00a0]/g, '').replace(',', '.'));
-                return { level: level, amount: amount || 0, saved: isFinite(saved) ? saved : 0 };
+                var start = params && params.startSatisfaction != null ? Number(params.startSatisfaction) : NaN; // v3.22
+                return { level: level, amount: amount || 0, saved: isFinite(saved) ? saved : 0, satisfactionNoWine: start };
             }
             function processTavernView(data, html) {
                 try {
@@ -6061,9 +6087,10 @@ if (typeof IkaTools == 'undefined') {
                     if (!city || !t) return;
                     var changes = [];
                     city._updateFromTavern(t.level, t.amount, t.saved, changes);
+                    if (isFinite(t.satisfactionNoWine)) city._updateSatisfactionNoWine(t.satisfactionNoWine, changes); // v3.22
                     raiseResourcesChanged(changes);
                     console.log('[Imperator] Taverne (' + city.getName() + ') : niveau ' + t.level + ', ' + t.amount +
-                                ' vin/h servis, ' + t.saved + ' économisés -> ' + Math.max(0, t.amount - t.saved) + '/h');
+                                ' vin/h servis, satisfaction sans vin ' + t.satisfactionNoWine);
                 } catch (e) {
                     console.warn('[Imperator] Lecture de la taverne échouée', e);
                 }
@@ -8457,7 +8484,6 @@ var Imperator = function Imperator() {
                 missing: 'Missing',
 
                 full: 'Full',
-                wine_excess: 'City full with +%s satisfaction and wine served: wine probably served in excess.', // v3.21.1
                 time_to_full: 'To Full',
                 time_to_empty: 'To Empty',
 
@@ -8735,7 +8761,6 @@ var Imperator = function Imperator() {
                 missing: 'Manquant',
 
                 full: 'Plein',
-                wine_excess: 'Ville pleine avec +%s de satisfaction et du vin servi : vin probablement servi en excès.', // v3.21.1
                 time_to_full: 'Jusqu\'au maximum',
                 time_to_empty: 'Jusqu\'au minimum',
 
@@ -9211,6 +9236,11 @@ border-left: none; \
 \
 table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
+} \
+\
+.imp_wine_excess .imp_wine_age { \
+font-size: 10px; \
+color: #a1978a; \
 } \
 \
 .imp_wine_excess { \
@@ -10429,6 +10459,13 @@ line-height: normal !important; \
         { '6 h': '6', '12 h': '12', '24 h': '24', '48 h': '48' },
         IkaTools.Utils.fixedFunction('Bénédictions divines : alerte « bientôt fini »'));
 
+    // v3.22 : objectif de satisfaction d'une ville pleine (vin juste nécessaire)
+    var wineTarget = settings.choice(
+        'wine_target_full_city',
+        '10',
+        { 'Neutre (satisfaction ≥ 0)': '0', 'Neutre avec marge (≥ +10)': '10', 'Contente (≥ +50)': '50' },
+        IkaTools.Utils.fixedFunction('Vin : objectif pour une ville pleine'));
+
     // ============================================================
     // v2.20 : notifications de bureau via GM_notification (Tampermonkey)
     // remplace l ancienne API webkit, retirée des navigateurs.
@@ -10696,7 +10733,7 @@ line-height: normal !important; \
                                                   [localizedLanguage]),
              new IkaTools.UI.SettingsWindow.Group(localizer.localize('settings','overviews'),
                                                   [showResourceOverview, showBuildingsOverview, showMilitaryOverview,
-                                                   showEspionageOverview, blessSoonThreshold]),
+                                                   showEspionageOverview, blessSoonThreshold, wineTarget]),
              new IkaTools.UI.SettingsWindow.Group(localizer.localize('settings','tweaks'),
                                                   [autoAcceptDailyBonus, hideAds, hideFacebook, hideFriendsBar, hideChat,
                                                    transportButtons, donationButtons, showCityOwners,
@@ -12814,6 +12851,36 @@ line-height: normal !important; \
                     }, populationData);
                 }
 
+                // v3.22 : vin juste nécessaire pour l'objectif de satisfaction (réglage), ou null si la
+                // satisfaction sans vin de la ville n'est pas connue (Hôtel de ville ou taverne pas encore lus).
+                function impWinePlan(city) {
+                    var base = city.getSatisfactionNoWine ? city.getSatisfactionNoWine() : null;
+                    if (base == null || !isFinite(base)) return null;
+                    var T = IkaTools.Constants.BuildingData[IkaTools.Constants.Buildings.TAVERN];
+                    var bonus = function(l) { return l > 0 ? (T.maxBonus[l - 1] || 0) : 0; };
+                    var serve = function(l) { return T.wineServe[l] != null ? T.wineServe[l] : null; };
+                    var tavern = city.getBuildingByType(IkaTools.Constants.Buildings.TAVERN);
+                    var maxLevel = Math.min(tavern ? tavern.getLevel() : 0, T.wineServe.length - 1);
+                    var level = Math.max(0, Math.min(city.getTavernWineLevel ? (city.getTavernWineLevel() || 0) : 0, maxLevel));
+                    var target = parseInt(wineTarget && wineTarget.getValue ? wineTarget.getValue() : '10', 10) || 0;
+                    var need = maxLevel, reachable = false;
+                    for (var l = 0; l <= maxLevel; l++) {
+                        if (base + bonus(l) >= target) { need = l; reachable = true; break; }
+                    }
+                    return { base: base, level: level, need: need, reachable: reachable, target: target,
+                             sat: Math.round(base + bonus(level)), satNeed: Math.round(base + bonus(need)),
+                             amount: serve(level), needAmount: serve(need), maxAmount: serve(maxLevel),
+                             updated: city.getSatisfactionNoWineUpdated ? city.getSatisfactionNoWineUpdated() : 0 };
+                }
+                function impSigned(n) { n = Math.round(n); return (n >= 0 ? '+' : '') + IkaTools.Intl.formatInteger(n); }
+                function impAgo(t) {
+                    if (!t) return '?';
+                    var m = Math.max(0, Math.round((IkaTools.View.gameTimeNow() - t) / 60000));
+                    if (m < 60) return 'il y a ' + m + ' min';
+                    var h = Math.round(m / 60);
+                    return h < 48 ? 'il y a ' + h + ' h' : 'il y a ' + Math.round(h / 24) + ' j';
+                }
+
                 // v3.21 : ville pleine et croissance nulle -> « Plein » (couleur normale) au lieu de +0.00
                 function impGrowthDisplay(populationData) {
                     var full = populationData.max > 0 && populationData.population >= populationData.max - 0.5 &&
@@ -12923,13 +12990,27 @@ line-height: normal !important; \
                             : '/cdn/all/both/icons/growth_negative.png',
                             [makeResourceUseTableRowRaw(data.happiness >= 0 ? '+' : '-',
                                                         growthIn(1), growthIn(24), growthIn(168))]);
-                        // v3.21.1 : l'ancien avertissement rouge (ville pleine, satisfaction >= 60, vin servi),
-                        // gardé sous forme discrète dans l'infobulle.
+                        // v3.22 : vin juste nécessaire, d'après la satisfaction sans vin de la ville
+                        // (Hôtel de ville ou taverne) et l'objectif choisi dans les réglages.
                         try {
-                            if (getPopulationData(city).happinessClass === 'imperator_warning') {
-                                growthTip = '<div>' + growthTip + '<div class="imp_wine_excess">' +
-                                    __impH(localizer.localize('misc', 'wine_excess').format(
-                                        IkaTools.Intl.formatInteger(Math.round(data.happiness)))) + '</div></div>';
+                            var plan = impWinePlan(city);
+                            var pd = getPopulationData(city);
+                            var full = pd.max > 0 && pd.population >= pd.max - 0.5;
+                            var note = null;
+                            if (plan && full && plan.need < plan.level) {
+                                note = 'Vin servi : %s/h (satisfaction %s). %s/h suffisent pour l\'objectif ≥ %s (%s) : économie %s/h.'.format(
+                                    plan.amount, impSigned(plan.sat), plan.needAmount, impSigned(plan.target),
+                                    impSigned(plan.satNeed), plan.amount - plan.needAmount);
+                            } else if (plan && plan.sat < 0) {
+                                note = plan.reachable
+                                    ? 'Satisfaction %s : %s/h permettraient d\'atteindre ≥ %s (%s).'.format(
+                                        impSigned(plan.sat), plan.needAmount, impSigned(plan.target), impSigned(plan.satNeed))
+                                    : 'Satisfaction %s : même le service maximal de la taverne (%s/h) ne suffit pas.'.format(
+                                        impSigned(plan.sat), plan.maxAmount);
+                            }
+                            if (note) {
+                                growthTip = '<div>' + growthTip + '<div class="imp_wine_excess">' + __impH(note) +
+                                    ' <span class="imp_wine_age">(satisfaction lue ' + __impH(impAgo(plan.updated)) + ')</span></div></div>';
                             }
                         } catch (eWx) {}
                         return growthTip;

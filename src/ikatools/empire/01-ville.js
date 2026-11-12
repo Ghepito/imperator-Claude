@@ -95,13 +95,15 @@
 
                         // v2.20 : table maxWine (70 niveaux, maxWine[0] = niveau 1) au lieu de
                         // wineUse limitée à 48 entrées (niveaux > 47 jamais reconnus).
-                        var maxWine = Constants.BuildingData[Constants.Buildings.TAVERN].maxWine;
+                        // v3.22 : niveau servi retrouvé dans la liste du jeu (vin servi par niveau), et non
+                        // dans maxWine (capacité de la taverne), qui donnait un niveau faux.
+                        var wineServe = Constants.BuildingData[Constants.Buildings.TAVERN].wineServe;
                         if (isFinite(baseWineConsumption)) {
                             var wineLevel = 0;
                             if (baseWineConsumption > 0) {
-                                wineLevel = maxWine.length;
-                                for (var i = 0; i < maxWine.length; i++) {
-                                    if (maxWine[i] >= baseWineConsumption) { wineLevel = i + 1; break; }
+                                wineLevel = wineServe.length - 1;
+                                for (var i = 1; i < wineServe.length; i++) {
+                                    if (wineServe[i] >= baseWineConsumption - 0.5) { wineLevel = i; break; }
                                 }
                             }
                             this._updateTavernWineLevel(wineLevel, changes);
@@ -304,12 +306,26 @@
                 _updateHappinessScore: function updateHappinessScore(value, changedAccumulator) {
                     this.happinessScore = value;
                 },
+                // v3.22 : satisfaction de la ville SANS le bonus du vin (Hôtel de ville ou taverne)
+                _updateSatisfactionNoWine: function updateSatisfactionNoWine(value, changedAccumulator) {
+                    if (!isFinite(value)) return;
+                    this.satisfactionNoWine = value;
+                    this.satisfactionNoWineUpdated = View.gameTimeNow();
+                },
+                getSatisfactionNoWine: function getSatisfactionNoWine() {
+                    return this.satisfactionNoWine;
+                },
+                getSatisfactionNoWineUpdated: function getSatisfactionNoWineUpdated() {
+                    return this.satisfactionNoWineUpdated || 0;
+                },
 
                 // Niveau taverne
                 // v3.20 : lu à la taverne : niveau servi, vin servi par heure, économie de la Cave à vin.
                 _updateFromTavern: function updateFromTavern(level, amountPerHour, savedPerHour, changedAccumulator) {
                     this._updateTavernWineLevel(level, changedAccumulator);
-                    var net = Math.max(0, (amountPerHour || 0) - (savedPerHour || 0));
+                    // v3.22 : l'« économie du pressoir » affichée par la taverne ne baisse pas la consommation
+                    // (vérifié le 12 nov. 2026 : 150 servis, « économise 150 », le jeu compte 150).
+                    var net = Math.max(0, amountPerHour || 0);
                     this._tavernServed = { level: level, amount: amountPerHour, net: net, updated: View.gameTimeNow() };
                     var wine = this.resources[Constants.Resources.WINE];
                     if (wine) {

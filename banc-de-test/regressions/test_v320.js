@@ -11,7 +11,7 @@ const w = new JSDOM('<body></body>', { runScripts: 'outside-only' }).window;
 w.eval(fs.readFileSync(require.resolve('jquery1'), 'utf8'));
 const $ = w.jQuery;
 const maxWine = [4, 8, 13, 18, 24, 30, 37, 44, 51, 60, 68, 78, 88, 99, 110, 122, 136, 150, 165, 180, 197, 216, 235, 255, 277, 150, 175];
-const Constants = { Buildings: { WINE_PRESS: 'vineyard', TAVERN: 'tavern' }, BuildingData: { tavern: { maxWine } },
+const Constants = { Buildings: { WINE_PRESS: 'vineyard', TAVERN: 'tavern' }, BuildingData: { tavern: { maxWine, wineServe: [0,2,4,7,9,12,15,18,22,26,30,34,39,44,50,56,62,68,75,83,91,99,108,118,128,139,150,162,175] } },
                     Time: { SECONDS_PER_HOUR: 3600 }, Resources: { WINE: 'wine' } };
 // 1. Valeur du jeu : 150/h, Cave à vin niveau 50 -> 150 (avant : 75)
 const a = s.indexOf('_updateFromGlobalData: function _updateFromGlobalData('), b = s.indexOf('_updateFromBackgroundData:', a);

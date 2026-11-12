@@ -260,6 +260,11 @@
                 // Satisfaction libre reelle (surplus) -> pilote la croissance
                 var _sat = _impNumFR($('#js_TownHallHappinessLargeValue').text());
                 if (isFinite(_sat)) city._updateHappinessScore(_sat, changes);
+                // v3.22 : satisfaction sans vin = satisfaction - bonus du vin servi (lu juste au-dessus)
+                try {
+                    var _wb = _impReadTH('js_TownHallSatisfactionOverviewWineBoniServeBonusValue');
+                    if (isFinite(_sat)) city._updateSatisfactionNoWine(_sat - (isFinite(_wb) ? _wb : 0), changes);
+                } catch (e) {}
 
                 // Population reelle (l'onglet Hotel de Ville l'expose ; d'autres vues renvoient 0)
                 try {
@@ -325,7 +330,8 @@
                     }
                 }
                 var saved = parseFloat(String($h.find('#savedWine').text()).replace(/[\s\u00a0]/g, '').replace(',', '.'));
-                return { level: level, amount: amount || 0, saved: isFinite(saved) ? saved : 0 };
+                var start = params && params.startSatisfaction != null ? Number(params.startSatisfaction) : NaN; // v3.22
+                return { level: level, amount: amount || 0, saved: isFinite(saved) ? saved : 0, satisfactionNoWine: start };
             }
             function processTavernView(data, html) {
                 try {
@@ -334,9 +340,10 @@
                     if (!city || !t) return;
                     var changes = [];
                     city._updateFromTavern(t.level, t.amount, t.saved, changes);
+                    if (isFinite(t.satisfactionNoWine)) city._updateSatisfactionNoWine(t.satisfactionNoWine, changes); // v3.22
                     raiseResourcesChanged(changes);
                     console.log('[Imperator] Taverne (' + city.getName() + ') : niveau ' + t.level + ', ' + t.amount +
-                                ' vin/h servis, ' + t.saved + ' économisés -> ' + Math.max(0, t.amount - t.saved) + '/h');
+                                ' vin/h servis, satisfaction sans vin ' + t.satisfactionNoWine);
                 } catch (e) {
                     console.warn('[Imperator] Lecture de la taverne échouée', e);
                 }

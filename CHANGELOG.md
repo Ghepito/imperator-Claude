@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.22
+
+Vin juste necessaire : satisfaction sans vin lue a l'Hotel de ville ou a la taverne ; l'infobulle de la croissance indique le service suffisant pour l'objectif choisi (reglage : neutre, neutre +10, contente) et l'economie possible, ou le service a ajouter si la ville est triste. Consommation de la taverne : l'economie du pressoir n'est plus soustraite. Niveau servi retrouve dans la liste du jeu.
+
 ## 3.21.1
 
 Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
