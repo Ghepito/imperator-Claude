@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.21
-// @version        3.21
+// @name           Imperator v3.21.1
+// @version        3.21.1
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.21.1 Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
 // @history        3.21 Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.
 // @history        3.20 Vin : la consommation envoyee par le jeu est deja la consommation reelle ; la Cave a vin n'est plus retiree une seconde fois (-75 affiche pour 150 servis). La taverne est lue : niveau servi, vin servi et economie, consommation exacte de la ville.
 // @history        3.19 Transports : quand le serveur donne les ressources d'une ville, un transport (ou retour de pillage) dont l'heure d'arrivee est passee est deja compte : il est retire sans nouveau credit. Fini le transport encore affiche apres le credit, et le double credit qui pouvait suivre.

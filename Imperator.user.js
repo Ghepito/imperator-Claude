@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.21
-// @version        3.21
+// @name           Imperator v3.21.1
+// @version        3.21.1
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.21.1 Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
 // @history        3.21 Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.
 // @history        3.20 Vin : la consommation envoyee par le jeu est deja la consommation reelle ; la Cave a vin n'est plus retiree une seconde fois (-75 affiche pour 150 servis). La taverne est lue : niveau servi, vin servi et economie, consommation exacte de la ville.
 // @history        3.19 Transports : quand le serveur donne les ressources d'une ville, un transport (ou retour de pillage) dont l'heure d'arrivee est passee est deja compte : il est retire sans nouveau credit. Fini le transport encore affiche apres le credit, et le double credit qui pouvait suivre.
@@ -8456,6 +8457,7 @@ var Imperator = function Imperator() {
                 missing: 'Missing',
 
                 full: 'Full',
+                wine_excess: 'City full with +%s satisfaction and wine served: wine probably served in excess.', // v3.21.1
                 time_to_full: 'To Full',
                 time_to_empty: 'To Empty',
 
@@ -8733,6 +8735,7 @@ var Imperator = function Imperator() {
                 missing: 'Manquant',
 
                 full: 'Plein',
+                wine_excess: 'Ville pleine avec +%s de satisfaction et du vin servi : vin probablement servi en excès.', // v3.21.1
                 time_to_full: 'Jusqu\'au maximum',
                 time_to_empty: 'Jusqu\'au minimum',
 
@@ -9208,6 +9211,14 @@ border-left: none; \
 \
 table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
+} \
+\
+.imp_wine_excess { \
+margin-top: 4px; \
+max-width: 260px; \
+font-size: 11px; \
+font-style: italic; \
+color: #8A6D39; \
 } \
 \
 #ImperatorOverviewResourceTable .imp_growth_full_cell { \
@@ -12907,11 +12918,21 @@ line-height: normal !important; \
                                 localizer.localize('misc','full').toLowerCase() + ')</span>' : '');
                         }
 
-                        return makeResourceUseToolTip(
+                        var growthTip = makeResourceUseToolTip(
                             data.happiness >= 0 ? '/cdn/all/both/icons/growth_positive.png'
                             : '/cdn/all/both/icons/growth_negative.png',
                             [makeResourceUseTableRowRaw(data.happiness >= 0 ? '+' : '-',
                                                         growthIn(1), growthIn(24), growthIn(168))]);
+                        // v3.21.1 : l'ancien avertissement rouge (ville pleine, satisfaction >= 60, vin servi),
+                        // gardé sous forme discrète dans l'infobulle.
+                        try {
+                            if (getPopulationData(city).happinessClass === 'imperator_warning') {
+                                growthTip = '<div>' + growthTip + '<div class="imp_wine_excess">' +
+                                    __impH(localizer.localize('misc', 'wine_excess').format(
+                                        IkaTools.Intl.formatInteger(Math.round(data.happiness)))) + '</div></div>';
+                            }
+                        } catch (eWx) {}
+                        return growthTip;
                     });
 
                     toolTips.registerRefreshable(updateable.getId(1), function() {

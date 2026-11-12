@@ -232,6 +232,14 @@ table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
 } \
 \
+.imp_wine_excess { \
+margin-top: 4px; \
+max-width: 260px; \
+font-size: 11px; \
+font-style: italic; \
+color: #8A6D39; \
+} \
+\
 #ImperatorOverviewResourceTable .imp_growth_full_cell { \
 color: inherit; \
 } \

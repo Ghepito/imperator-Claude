@@ -720,11 +720,21 @@
                                 localizer.localize('misc','full').toLowerCase() + ')</span>' : '');
                         }
 
-                        return makeResourceUseToolTip(
+                        var growthTip = makeResourceUseToolTip(
                             data.happiness >= 0 ? '/cdn/all/both/icons/growth_positive.png'
                             : '/cdn/all/both/icons/growth_negative.png',
                             [makeResourceUseTableRowRaw(data.happiness >= 0 ? '+' : '-',
                                                         growthIn(1), growthIn(24), growthIn(168))]);
+                        // v3.21.1 : l'ancien avertissement rouge (ville pleine, satisfaction >= 60, vin servi),
+                        // gardé sous forme discrète dans l'infobulle.
+                        try {
+                            if (getPopulationData(city).happinessClass === 'imperator_warning') {
+                                growthTip = '<div>' + growthTip + '<div class="imp_wine_excess">' +
+                                    __impH(localizer.localize('misc', 'wine_excess').format(
+                                        IkaTools.Intl.formatInteger(Math.round(data.happiness)))) + '</div></div>';
+                            }
+                        } catch (eWx) {}
+                        return growthTip;
                     });
 
                     toolTips.registerRefreshable(updateable.getId(1), function() {

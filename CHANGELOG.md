@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.21.1
+
+Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
+
 ## 3.21
 
 Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.
