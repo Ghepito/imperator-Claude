@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.21
+
+Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.
+
 ## 3.20
 
 Vin : la consommation envoyee par le jeu est deja la consommation reelle ; la Cave a vin n'est plus retiree une seconde fois (-75 affiche pour 150 servis). La taverne est lue : niveau servi, vin servi et economie, consommation exacte de la ville.

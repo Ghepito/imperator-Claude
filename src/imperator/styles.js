@@ -232,6 +232,10 @@ table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
 } \
 \
+#ImperatorOverviewResourceTable .imp_growth_full_cell { \
+color: inherit; \
+} \
+\
 table.resource_use_tool_tip .imp_growth_full { \
 font-size: 10px; \
 font-style: italic; \

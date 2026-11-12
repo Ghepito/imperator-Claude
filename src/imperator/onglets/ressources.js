@@ -616,6 +616,15 @@
                     }, populationData);
                 }
 
+                // v3.21 : ville pleine et croissance nulle -> « Plein » (couleur normale) au lieu de +0.00
+                function impGrowthDisplay(populationData) {
+                    var full = populationData.max > 0 && populationData.population >= populationData.max - 0.5 &&
+                               Math.abs(populationData.growth) < 0.005;
+                    return full
+                        ? { html: localizer.localize('misc', 'full'), cls: 'imp_growth_full_cell' }
+                        : { html: IkaTools.Intl.formatDecimal(populationData.growth, 2, true), cls: populationData.happinessClass };
+                }
+
                 //   ICI
 
                // v2.18 : places libres dans le musée (0 si complet ou pas de musée)
@@ -656,10 +665,11 @@
                             icon.parent()
                                 .toggleClass('imp_museum_incomplete', museumGap > 0)
                                 .attr('data-imp-gap', museumGap > 0 ? museumGap : null);
-                            growth.removeClass('imperator_warning');
-                            growth.addClass(populationData.happinessClass);
-                            growth.html(
-                                IkaTools.Intl.formatDecimal(populationData.growth, 2, true));
+                            var gd = impGrowthDisplay(populationData);   // v3.21
+                            growth.removeClass('imperator_warning imp_growth_full_cell');
+                            growth.closest('td').removeClass('imperator_warning imp_growth_full_cell');
+                            growth.addClass(gd.cls);
+                            growth.html(gd.html);
                         });
 
                     toolTips.registerRefreshable(updateable.getId(3), function() {
@@ -700,6 +710,10 @@
                             var capped = growth + data.population > data.max;
                             if (capped) {
                                 growth = data.max - data.population;
+                            }
+                            if (capped && Math.abs(growth) < 0.005) {   // v3.21 : déjà pleine -> « plein » seul
+                                return '<span class="imp_growth_full">' +
+                                    localizer.localize('misc','full').toLowerCase() + '</span>';
                             }
                             return IkaTools.Intl.formatDecimal(growth, 2) + (capped ?
                                 ' <span class="imp_growth_full">(' +
@@ -760,9 +774,9 @@
                         populationData.percent,
                         updateable.getId(3),
                         populationData.icon,
-                        populationData.happinessClass,
+                        impGrowthDisplay(populationData).cls,   // v3.21
                         updateable.getId(4),
-                        IkaTools.Intl.formatDecimal(populationData.growth, 2, true));
+                        impGrowthDisplay(populationData).html);
                 }
 
                 function makeRow(movements, city) {

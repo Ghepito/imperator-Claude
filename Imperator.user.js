@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.20
-// @version        3.20
+// @name           Imperator v3.21
+// @version        3.21
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.21 Croissance : une ville pleine dont la croissance est nulle affiche Plein (couleur normale) au lieu d'un +0.00 rouge ; l'infobulle indique plein seul.
 // @history        3.20 Vin : la consommation envoyee par le jeu est deja la consommation reelle ; la Cave a vin n'est plus retiree une seconde fois (-75 affiche pour 150 servis). La taverne est lue : niveau servi, vin servi et economie, consommation exacte de la ville.
 // @history        3.19 Transports : quand le serveur donne les ressources d'une ville, un transport (ou retour de pillage) dont l'heure d'arrivee est passee est deja compte : il est retire sans nouveau credit. Fini le transport encore affiche apres le credit, et le double credit qui pouvait suivre.
 // @history        3.18 Experience : comptee (labo indisponible 4 h, +300 000 points) seulement si le serveur confirme le lancement ; sans retour du jeu, rien n'est compte.
@@ -9209,6 +9210,10 @@ table.resource_use_tool_tip col:last-of-type { \
 border-right: none; \
 } \
 \
+#ImperatorOverviewResourceTable .imp_growth_full_cell { \
+color: inherit; \
+} \
+\
 table.resource_use_tool_tip .imp_growth_full { \
 font-size: 10px; \
 font-style: italic; \
@@ -12798,6 +12803,15 @@ line-height: normal !important; \
                     }, populationData);
                 }
 
+                // v3.21 : ville pleine et croissance nulle -> « Plein » (couleur normale) au lieu de +0.00
+                function impGrowthDisplay(populationData) {
+                    var full = populationData.max > 0 && populationData.population >= populationData.max - 0.5 &&
+                               Math.abs(populationData.growth) < 0.005;
+                    return full
+                        ? { html: localizer.localize('misc', 'full'), cls: 'imp_growth_full_cell' }
+                        : { html: IkaTools.Intl.formatDecimal(populationData.growth, 2, true), cls: populationData.happinessClass };
+                }
+
                 //   ICI
 
                // v2.18 : places libres dans le musée (0 si complet ou pas de musée)
@@ -12838,10 +12852,11 @@ line-height: normal !important; \
                             icon.parent()
                                 .toggleClass('imp_museum_incomplete', museumGap > 0)
                                 .attr('data-imp-gap', museumGap > 0 ? museumGap : null);
-                            growth.removeClass('imperator_warning');
-                            growth.addClass(populationData.happinessClass);
-                            growth.html(
-                                IkaTools.Intl.formatDecimal(populationData.growth, 2, true));
+                            var gd = impGrowthDisplay(populationData);   // v3.21
+                            growth.removeClass('imperator_warning imp_growth_full_cell');
+                            growth.closest('td').removeClass('imperator_warning imp_growth_full_cell');
+                            growth.addClass(gd.cls);
+                            growth.html(gd.html);
                         });
 
                     toolTips.registerRefreshable(updateable.getId(3), function() {
@@ -12882,6 +12897,10 @@ line-height: normal !important; \
                             var capped = growth + data.population > data.max;
                             if (capped) {
                                 growth = data.max - data.population;
+                            }
+                            if (capped && Math.abs(growth) < 0.005) {   // v3.21 : déjà pleine -> « plein » seul
+                                return '<span class="imp_growth_full">' +
+                                    localizer.localize('misc','full').toLowerCase() + '</span>';
                             }
                             return IkaTools.Intl.formatDecimal(growth, 2) + (capped ?
                                 ' <span class="imp_growth_full">(' +
@@ -12942,9 +12961,9 @@ line-height: normal !important; \
                         populationData.percent,
                         updateable.getId(3),
                         populationData.icon,
-                        populationData.happinessClass,
+                        impGrowthDisplay(populationData).cls,   // v3.21
                         updateable.getId(4),
-                        IkaTools.Intl.formatDecimal(populationData.growth, 2, true));
+                        impGrowthDisplay(populationData).html);
                 }
 
                 function makeRow(movements, city) {
