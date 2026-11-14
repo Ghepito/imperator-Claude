@@ -35,4 +35,5 @@ label(bg); label(bg);
 t('pas de doublon à chaque mise à jour', txt(i0) === c0.name + ' (' + c0.ownerName + ')', txt(i0));
 island = false; const avant = txt(i0); label({ cities: [{ type: 'city', name: 'X', ownerName: 'Y' }] });
 t('hors vue île : rien n\'est touché', txt(i0) === avant);
+t('v3.24.1 : largeur au texte, plus de 175 px imposés', !/width: 175px/.test(s) && /\.center \{ width: auto !important; max-width: 230px; /.test(s));
 console.log(`\n${ok} réussis, ${ko} échoués`); process.exit(ko ? 1 : 0);

@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.24.1
+
+Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.
+
 ## 3.24
 
 Option Afficher le proprietaire (vue ile) : marche aussi en arrivant sur une ile depuis la ville, sur une ile de moins de 19 emplacements, sans doubler le nom a chaque mise a jour.

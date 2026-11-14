@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.24
-// @version        3.24
+// @name           Imperator v3.24.1
+// @version        3.24.1
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.24.1 Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.
 // @history        3.24 Option Afficher le proprietaire (vue ile) : marche aussi en arrivant sur une ile depuis la ville, sur une ile de moins de 19 emplacements, sans doubler le nom a chaque mise a jour.
 // @history        3.23 Taverne : un nouveau service valide (A la votre !) met a jour tout de suite, des que le serveur l'accepte, le niveau servi, la consommation, la satisfaction, l'humeur et le conseil de vin, sans repasser par l'Hotel de ville.
 // @history        3.22 Vin juste necessaire : satisfaction sans vin lue a l'Hotel de ville ou a la taverne ; l'infobulle de la croissance indique le service suffisant pour l'objectif choisi (reglage : neutre, neutre +10, contente) et l'economie possible, ou le service a ajouter si la ville est triste. Consommation de la taverne : l'economie du pressoir n'est plus soustraite. Niveau servi retrouve dans la liste du jeu.
@@ -16147,8 +16148,10 @@ line-height: normal !important; \
                 });
             };
 
-            addedStyles += '#island .city .scroll_img .center { overflow: hidden; width: 175px; } ' +
-                '#island .city .scroll_img .after { left: 175px; } ';
+            // v3.24.1 : largeur ajustée au texte (avant : 175 px imposés à toutes les étiquettes,
+            // trop larges pour les noms courts). Plafond pour les noms très longs.
+            addedStyles += '#island .city .scroll_img .center { width: auto !important; max-width: 230px; ' +
+                'white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } ';
 
             IkaTools.View.registerIkariamAjaxResponseCallback(
                 function labelCityOwners(response) {

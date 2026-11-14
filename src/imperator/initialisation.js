@@ -269,8 +269,10 @@
                 });
             };
 
-            addedStyles += '#island .city .scroll_img .center { overflow: hidden; width: 175px; } ' +
-                '#island .city .scroll_img .after { left: 175px; } ';
+            // v3.24.1 : largeur ajustée au texte (avant : 175 px imposés à toutes les étiquettes,
+            // trop larges pour les noms courts). Plafond pour les noms très longs.
+            addedStyles += '#island .city .scroll_img .center { width: auto !important; max-width: 230px; ' +
+                'white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } ';
 
             IkaTools.View.registerIkariamAjaxResponseCallback(
                 function labelCityOwners(response) {
