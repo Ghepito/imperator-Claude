@@ -252,28 +252,40 @@
 
         initBuildingDemolitionHandler();
 
-        if (showCityOwners.isEnabled() && IkaTools.View.viewIsIsland()) {
-            function doLabelCities(data) {
-                for (var i = 0; i < 19; i++) {
-                    var cityData = data.cities[i];
-                    if (cityData.type != 'buildplace') {
-                        $('#js_cityLocation' + i + 'TitleText').append(' (' + cityData.ownerName + ')');
-                    }
-                }
-            }
+        // v3.24 : propriétaire à côté du nom des villes (vue île). Avant, l'option ne marchait que si la
+        // page était chargée directement sur une île (pas en y allant depuis la ville), s'arrêtait sur une
+        // île de moins de 19 emplacements et ajoutait le nom une seconde fois à chaque réponse du jeu.
+        if (showCityOwners.isEnabled()) {
+            var doLabelCities = function doLabelCities(data) {
+                if (!data || !data.cities || !IkaTools.View.viewIsIsland()) return;
+                $.each(data.cities, function(i, cityData) {
+                    if (!cityData || cityData.type == 'buildplace' || !cityData.ownerName) return;
+                    var $t = $('#js_cityLocation' + i + 'TitleText');
+                    if (!$t.length) return;
+                    var label = String(cityData.name || $t.attr('data-imp-name') || $t.text()) +
+                                ' (' + cityData.ownerName + ')';
+                    $t.attr('data-imp-name', cityData.name || $t.attr('data-imp-name') || '');
+                    if ($t.text() !== label) $t.text(label);
+                });
+            };
 
             addedStyles += '#island .city .scroll_img .center { overflow: hidden; width: 175px; } ' +
                 '#island .city .scroll_img .after { left: 175px; } ';
 
             IkaTools.View.registerIkariamAjaxResponseCallback(
                 function labelCityOwners(response) {
+                    var bg = null;
                     IkaTools.Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
                         if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
-                            doLabelCities(data);
-                        } else if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA) {
-                            doLabelCities(data['backgroundData'] || data[11]);
+                            bg = data;
+                        } else if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA && data && !bg) {
+                            bg = data['backgroundData'] || data[11];
                         }
                     });
+                    if (!bg) return;
+                    try { doLabelCities(bg); } catch (e) {}
+                    // Le jeu peut redessiner les noms juste après : on repasse un peu plus tard.
+                    setTimeout(function() { try { doLabelCities(bg); } catch (e) {} }, 400);
                 }, true);
         }
 

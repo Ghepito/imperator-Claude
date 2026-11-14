@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.23
-// @version        3.23
+// @name           Imperator v3.24
+// @version        3.24
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.24 Option Afficher le proprietaire (vue ile) : marche aussi en arrivant sur une ile depuis la ville, sur une ile de moins de 19 emplacements, sans doubler le nom a chaque mise a jour.
 // @history        3.23 Taverne : un nouveau service valide (A la votre !) met a jour tout de suite, des que le serveur l'accepte, le niveau servi, la consommation, la satisfaction, l'humeur et le conseil de vin, sans repasser par l'Hotel de ville.
 // @history        3.22 Vin juste necessaire : satisfaction sans vin lue a l'Hotel de ville ou a la taverne ; l'infobulle de la croissance indique le service suffisant pour l'objectif choisi (reglage : neutre, neutre +10, contente) et l'economie possible, ou le service a ajouter si la ville est triste. Consommation de la taverne : l'economie du pressoir n'est plus soustraite. Niveau servi retrouve dans la liste du jeu.
 // @history        3.21.1 Croissance : l'avertissement de vin servi en exces (ville pleine, satisfaction >= 60, vin servi) est garde sous forme d'une ligne dans l'infobulle de la croissance.
@@ -16129,28 +16130,40 @@ line-height: normal !important; \
 
         initBuildingDemolitionHandler();
 
-        if (showCityOwners.isEnabled() && IkaTools.View.viewIsIsland()) {
-            function doLabelCities(data) {
-                for (var i = 0; i < 19; i++) {
-                    var cityData = data.cities[i];
-                    if (cityData.type != 'buildplace') {
-                        $('#js_cityLocation' + i + 'TitleText').append(' (' + cityData.ownerName + ')');
-                    }
-                }
-            }
+        // v3.24 : propriétaire à côté du nom des villes (vue île). Avant, l'option ne marchait que si la
+        // page était chargée directement sur une île (pas en y allant depuis la ville), s'arrêtait sur une
+        // île de moins de 19 emplacements et ajoutait le nom une seconde fois à chaque réponse du jeu.
+        if (showCityOwners.isEnabled()) {
+            var doLabelCities = function doLabelCities(data) {
+                if (!data || !data.cities || !IkaTools.View.viewIsIsland()) return;
+                $.each(data.cities, function(i, cityData) {
+                    if (!cityData || cityData.type == 'buildplace' || !cityData.ownerName) return;
+                    var $t = $('#js_cityLocation' + i + 'TitleText');
+                    if (!$t.length) return;
+                    var label = String(cityData.name || $t.attr('data-imp-name') || $t.text()) +
+                                ' (' + cityData.ownerName + ')';
+                    $t.attr('data-imp-name', cityData.name || $t.attr('data-imp-name') || '');
+                    if ($t.text() !== label) $t.text(label);
+                });
+            };
 
             addedStyles += '#island .city .scroll_img .center { overflow: hidden; width: 175px; } ' +
                 '#island .city .scroll_img .after { left: 175px; } ';
 
             IkaTools.View.registerIkariamAjaxResponseCallback(
                 function labelCityOwners(response) {
+                    var bg = null;
                     IkaTools.Utils.iterateIkariamAjaxResponse(response, function(index, name, data) {
                         if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_BACKGROUND_DATA) {
-                            doLabelCities(data);
-                        } else if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA) {
-                            doLabelCities(data['backgroundData'] || data[11]);
+                            bg = data;
+                        } else if (name == IkaTools.Constants.IkariamAjaxResponseType.UPDATE_GLOBAL_DATA && data && !bg) {
+                            bg = data['backgroundData'] || data[11];
                         }
                     });
+                    if (!bg) return;
+                    try { doLabelCities(bg); } catch (e) {}
+                    // Le jeu peut redessiner les noms juste après : on repasse un peu plus tard.
+                    setTimeout(function() { try { doLabelCities(bg); } catch (e) {} }, 400);
                 }, true);
         }
 
