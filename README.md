@@ -4,7 +4,7 @@ Script Tampermonkey qui ajoute à Ikariam des tableaux de synthèse de l'empire 
 ressources, bâtiments, armée, espionnage, tableau de bord financier, bénédictions divines,
 mouvements de troupes et de flottes.
 
-Version actuelle : **v3.23** (version stable depuis la v3.0) (testée sur le serveur français, jeu 17.6.1,
+Version actuelle : **v3.24** (version stable depuis la v3.0) (testée sur le serveur français, jeu 17.6.1,
 Chrome + Tampermonkey 5.5.1).
 
 ## Ce qu'apporte la v3.0 par rapport à l'Imperator d'origine
@@ -64,6 +64,7 @@ comme ci-dessus si Tampermonkey ne l'intercepte pas).
 
 | Version | Installer | Code |
 |---|---|---|
+| v3.24 | [installer](https://github.com/Ghepito/imperator-Claude/raw/414099b3def976c8194f7f9ccecbfecd207d9a3f/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/414099b3def976c8194f7f9ccecbfecd207d9a3f/Imperator.user.js) |
 | v3.23 | [installer](https://github.com/Ghepito/imperator-Claude/raw/3daa4da01e397376a5ab3c98165b7772c56eb85b/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/3daa4da01e397376a5ab3c98165b7772c56eb85b/Imperator.user.js) |
 | v3.22 | [installer](https://github.com/Ghepito/imperator-Claude/raw/8f84fbe6b06219b277813ee08ab66e5bd983165d/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/8f84fbe6b06219b277813ee08ab66e5bd983165d/Imperator.user.js) |
 | v3.21.1 | [installer](https://github.com/Ghepito/imperator-Claude/raw/5e74ad18c89d3d8225a8d52c6d111cd552622ab7/Imperator.user.js) | [voir le code](https://github.com/Ghepito/imperator-Claude/blob/5e74ad18c89d3d8225a8d52c6d111cd552622ab7/Imperator.user.js) |
