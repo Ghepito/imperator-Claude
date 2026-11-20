@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.27
-// @version        3.27
+// @name           Imperator v3.27.1
+// @version        3.27.1
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.27.1 Ligne Atelier de l'onglet Armee : bonus ecrits +65/+50 sur une seule ligne (plus de coupure en deux lignes dans les colonnes etroites du jeu), etiquette Atelier sur une ligne.
 // @history        3.27 Atelier controle a la Caserne et au Chantier naval : les infobulles des ameliorations (nom et niveau) confirment les niveaux lus, enregistrent une amelioration terminee dont le bonus est connu (fin de la pastille en cours) et signalent Atelier a relire si un niveau plus haut apparait. Fiche : la ligne Prochain n'est plus affichee pour l'amelioration deja en cours.
 // @history        3.26 Onglet Armee : ligne Atelier sous les en-tetes (bonus de dommage / armure, espace de chargement des navires, amelioration en cours avec temps restant et barre) et fiche de l'Atelier au survol de chaque unite (equipements et niveaux, amelioration en cours, prochain niveau avec cout et duree).
 // @history        3.25 Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.
@@ -9503,6 +9504,12 @@ padding: 2px 3px; \
 color: #8A6D39; \
 font-weight: bold; \
 text-align: left; \
+white-space: nowrap; \
+} \
+\
+.imp_ws_tr .imp_ws_val { \
+white-space: nowrap; \
+letter-spacing: -0.2px; \
 } \
 \
 .imp_ws_tr td.imp_ws_unknown { \
@@ -14797,7 +14804,8 @@ line-height: normal !important; \
                        'Onglet de l\'Atelier pas encore lu') + '">' + (known ? '-' : '?') + '</td>';
             }
             var parts = [];
-            if (w.off || w.def) parts.push('<b>' + (w.off ? '+' + w.offEffect : '-') + '</b> / <b>' + (w.def ? '+' + w.defEffect : '-') + '</b>');
+            // v3.27.1 : sur une seule ligne, sans espaces (les colonnes du jeu sont étroites)
+            if (w.off || w.def) parts.push('<span class="imp_ws_val"><b>' + (w.off ? '+' + w.offEffect : '-') + '</b>/<b>' + (w.def ? '+' + w.defEffect : '-') + '</b></span>');
             if (w.cargo) parts.push('📦 <b>+' + IkaTools.Intl.formatInteger(IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo')) + '</b>');
             if (!parts.length) parts.push('-');
             var stale = w.stale.length ? '<br><span class="imp_ws_stale" title="' + __impH($.map(w.stale, function(x) {

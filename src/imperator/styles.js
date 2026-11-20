@@ -256,6 +256,12 @@ padding: 2px 3px; \
 color: #8A6D39; \
 font-weight: bold; \
 text-align: left; \
+white-space: nowrap; \
+} \
+\
+.imp_ws_tr .imp_ws_val { \
+white-space: nowrap; \
+letter-spacing: -0.2px; \
 } \
 \
 .imp_ws_tr td.imp_ws_unknown { \

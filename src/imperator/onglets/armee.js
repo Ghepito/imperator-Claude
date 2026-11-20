@@ -86,7 +86,8 @@
                        'Onglet de l\'Atelier pas encore lu') + '">' + (known ? '-' : '?') + '</td>';
             }
             var parts = [];
-            if (w.off || w.def) parts.push('<b>' + (w.off ? '+' + w.offEffect : '-') + '</b> / <b>' + (w.def ? '+' + w.defEffect : '-') + '</b>');
+            // v3.27.1 : sur une seule ligne, sans espaces (les colonnes du jeu sont étroites)
+            if (w.off || w.def) parts.push('<span class="imp_ws_val"><b>' + (w.off ? '+' + w.offEffect : '-') + '</b>/<b>' + (w.def ? '+' + w.defEffect : '-') + '</b></span>');
             if (w.cargo) parts.push('📦 <b>+' + IkaTools.Intl.formatInteger(IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo')) + '</b>');
             if (!parts.length) parts.push('-');
             var stale = w.stale.length ? '<br><span class="imp_ws_stale" title="' + __impH($.map(w.stale, function(x) {
