@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.26
-// @version        3.26
+// @name           Imperator v3.27
+// @version        3.27
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.27 Atelier controle a la Caserne et au Chantier naval : les infobulles des ameliorations (nom et niveau) confirment les niveaux lus, enregistrent une amelioration terminee dont le bonus est connu (fin de la pastille en cours) et signalent Atelier a relire si un niveau plus haut apparait. Fiche : la ligne Prochain n'est plus affichee pour l'amelioration deja en cours.
 // @history        3.26 Onglet Armee : ligne Atelier sous les en-tetes (bonus de dommage / armure, espace de chargement des navires, amelioration en cours avec temps restant et barre) et fiche de l'Atelier au survol de chaque unite (equipements et niveaux, amelioration en cours, prochain niveau avec cout et duree).
 // @history        3.25 Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.
 // @history        3.24.1 Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.
@@ -5674,7 +5675,7 @@ if (typeof IkaTools == 'undefined') {
 
             // <li class="unit phalanx"> ... <div id="js_barracksUnitUnitsAvailable1">50</div>
             function _impReadUnitList($root) {
-                var res = { counts: {}, nb: 0 };
+                var res = { counts: {}, nb: 0, upgrades: {}, nbUp: 0 };
                 $root.find('li.unit').each(function() {
                     var cls = String(this.className || '').split(/\s+/), type = null;
                     for (var i = 0; i < cls.length; i++) {
@@ -5685,6 +5686,14 @@ if (typeof IkaTools == 'undefined') {
                     if (!$n.length) $n = $(this).find('.unitinfo .scroll_view').first();
                     var n = _impInt($n.text());
                     if (n !== null) { res.counts[type] = n; res.nb++; }
+                    // v3.27 : infobulles des améliorations de l'Atelier, « Cracheur infernal (3) »
+                    var up = {};
+                    $(this).find('img.att-icon, img.def-icon').each(function() {
+                        var m = /^(.*?)\s*\((\d+)\)\s*$/.exec(String($(this).attr('title') || ''));
+                        if (!m) return;
+                        up[$(this).hasClass('att-icon') ? 'offensive' : 'defensive'] = { name: m[1], level: parseInt(m[2], 10) };
+                    });
+                    if (up.offensive || up.defensive) { res.upgrades[type] = up; res.nbUp++; }
                 });
                 return res;
             }
@@ -5719,6 +5728,15 @@ if (typeof IkaTools == 'undefined') {
                         if (!r.nb) {
                             if (isLast) console.warn('[Imperator] ' + label + ' : aucun effectif lu (' + c.getName() + ')');
                             return;
+                        }
+
+                        // v3.27 : niveaux d'amélioration lus dans les infobulles -> contrôle de l'Atelier
+                        try {
+                            var ups = r.upgrades;
+                            if (!r.nbUp && viewHtmlText) ups = _impReadUnitList($('<div>').append($.parseHTML(String(viewHtmlText)))).upgrades;
+                            if (ups && Object.keys(ups).length) consolidateWorkshopLevels(ups, label);
+                        } catch (eU) {
+                            console.warn('[Imperator] ' + label + ' : contrôle des améliorations ignoré', eU);
                         }
 
                         var sig = JSON.stringify(r.counts) + '|' + $('#unitConstructionList').length;
@@ -6888,6 +6906,57 @@ if (typeof IkaTools == 'undefined') {
                 } catch (e) {
                     console.warn('[Imperator] Lecture de l\'atelier échouée', e);
                 }
+            }
+
+            // ============================================================
+            // v3.27 : contrôle par la Caserne et le Chantier naval. Leurs infobulles donnent le nom et
+            // le niveau de chaque amélioration (« Cracheur infernal (3) »), pas le bonus. On confronte ce
+            // niveau à l'Atelier lu :
+            //   - même niveau            -> confirmé ;
+            //   - niveau « suivant » lu  -> le bonus est connu : l'amélioration est enregistrée ;
+            //   - autre niveau plus haut -> bonus inconnu : « Atelier à relire ».
+            // ============================================================
+            function _impWsIdByType(type) {
+                var ids = Constants.UnitIds || {};
+                for (var id in ids) if (ids.hasOwnProperty(id) && ids[id] === type) return id;
+                return null;
+            }
+
+            function consolidateWorkshopLevels(upgrades, source) {
+                var store = workshopData.get();
+                if (!store.units || !Object.keys(store.units).length) return null; // Atelier jamais lu
+                var now = View.gameTimeNow(), res = { confirmed: 0, promoted: 0, stale: 0 }, changed = false;
+                $.each(upgrades, function(type, up) {
+                    var id = _impWsIdByType(type);
+                    var u = id && store.units[id];
+                    if (!u) return;
+                    $.each(up, function(kind, seen) {
+                        var e = u[kind];
+                        if (!e || !seen || !(seen.level >= 0)) return;
+                        if (seen.level === e.level) {
+                            res.confirmed++;
+                            if (e.stale) { delete e.stale; changed = true; }
+                        } else if (seen.level > e.level && e.next && seen.level === e.next.level) {
+                            u[kind] = { desc: e.desc, name: e.next.name || seen.name, level: e.next.level,
+                                        effect: e.next.effect, next: null, from: source, at: now };
+                            var p = store.inProgress;
+                            if (p && p.unitId == id && p.type === kind) store.inProgress = null;
+                            res.promoted++; changed = true;
+                        } else if (seen.level > e.level) {
+                            if (!e.stale || e.stale.level !== seen.level) {
+                                e.stale = { level: seen.level, name: seen.name, from: source, at: now };
+                                changed = true;
+                            }
+                            res.stale++;
+                        }
+                    });
+                });
+                store.checked = { from: source, at: now, confirmed: res.confirmed };
+                workshopData.saveAsync();
+                if (changed) raiseMilitaryChanged([]);
+                console.log('[Imperator] ' + source + ' : améliorations de l\'Atelier ' + res.confirmed + ' confirmées, ' +
+                            res.promoted + ' mises à jour, ' + res.stale + ' à relire');
+                return res;
             }
 
             function getWorkshopData() {
@@ -8502,6 +8571,7 @@ if (typeof IkaTools == 'undefined') {
                 getWorkshopData: getWorkshopData, // v3.25
                 getWorkshopEffect: getWorkshopEffect, // v3.25
                 getShipCapacity: getShipCapacity, // v3.25
+                consolidateWorkshopLevels: consolidateWorkshopLevels, // v3.27
 
                 Espionage:Espionage,
             };
@@ -9490,6 +9560,13 @@ font-size: 10.5px; \
 \
 .imp_ws_card .imp_ws_doing { \
 color: #ef6c00; \
+} \
+\
+.imp_ws_card .imp_ws_stale, .imp_ws_cell .imp_ws_stale { \
+color: #b23c17; \
+font-size: 10px; \
+font-weight: bold; \
+cursor: help; \
 } \
 \
 .imp_ws_card .imp_ws_bar { \
@@ -14692,9 +14769,13 @@ line-height: normal !important; \
             var u = data && data.units && id ? data.units[id] : null;
             if (!u) return null;
             var p = data.inProgress && data.inProgress.unitId == id ? data.inProgress : null;
+            var progType = p ? p.type : null;           // v3.27 : même terminée, son « niveau suivant » est déjà pris
             var now = IkaTools.View.gameTimeNow();
             if (p && p.end && p.end <= now) p = null;   // terminée : getWorkshopEffect en tient compte
+            var stale = [];                             // v3.27 : niveaux plus hauts vus à la Caserne / au Chantier naval
+            $.each(['offensive', 'defensive', 'cargo'], function(i, k) { if (u[k] && u[k].stale) stale.push({ type: k, e: u[k] }); });
             return { id: id, off: u.offensive || null, def: u.defensive || null, cargo: u.cargo || null, prog: p,
+                     progType: progType, stale: stale, checked: data.checked || null,
                      offEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'offensive'),
                      defEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'defensive'),
                      updated: data.updated || 0 };
@@ -14719,7 +14800,10 @@ line-height: normal !important; \
             if (w.off || w.def) parts.push('<b>' + (w.off ? '+' + w.offEffect : '-') + '</b> / <b>' + (w.def ? '+' + w.defEffect : '-') + '</b>');
             if (w.cargo) parts.push('📦 <b>+' + IkaTools.Intl.formatInteger(IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo')) + '</b>');
             if (!parts.length) parts.push('-');
-            return '<td class="imp_ws_cell">' + parts.join('<br>') + (w.prog ? '<br>' + impWsProgBadge(w.prog) : '') + '</td>';
+            var stale = w.stale.length ? '<br><span class="imp_ws_stale" title="' + __impH($.map(w.stale, function(x) {
+                    return x.e.stale.from + ' : ' + x.e.stale.name + ' niv. ' + x.e.stale.level + ' (Atelier : niv. ' + x.e.level + ')';
+                }).join(' ; ') + '. Ouvre l\'Atelier pour connaître le nouveau bonus.') + '">⟳ à relire</span>' : '';
+            return '<td class="imp_ws_cell">' + parts.join('<br>') + (w.prog ? '<br>' + impWsProgBadge(w.prog) : '') + stale + '</td>';
         }
         function impWsCard(type, displayName) {
             var w = impWsInfo(type);
@@ -14730,8 +14814,8 @@ line-height: normal !important; \
                 return '<div class="imp_ws_row"><span>' + icon + ' ' + h(e.name) + ' <span class="imp_ws_lv">niv. ' + e.level + '</span></span><b>+' +
                        IkaTools.Intl.formatInteger(effect) + '</b></div>';
             };
-            var next = function(icon, e) {
-                if (!e || !e.next) return '';
+            var next = function(icon, e, kind) {
+                if (!e || !e.next || w.progType === kind) return '';   // v3.27 : déjà en cours
                 return '<div class="imp_ws_row imp_ws_lv"><span>Prochain ' + icon + ' : niv. ' + e.next.level + ' (+' + IkaTools.Intl.formatInteger(e.next.effect) + ')</span><span>' +
                        (e.next.gold != null ? IkaTools.Intl.formatInteger(e.next.gold) + ' or · ' : '') +
                        (e.next.crystal != null ? IkaTools.Intl.formatInteger(e.next.crystal) + ' verre · ' : '') + h(e.next.duration) + '</span></div>';
@@ -14742,12 +14826,20 @@ line-height: normal !important; \
                 prog = '<div class="imp_ws_row imp_ws_doing"><span>↑ ' + icon + ' ' + h(p.name) + ' en cours (+' + p.from + ' → +' + p.to + ')</span><b>' +
                        impWsFmtLeft(p.end - IkaTools.View.gameTimeNow()) + '</b></div>' + impWsProgBadge(p).replace(/^[\s\S]*?<\/span><\/span>/, '');
             }
-            var ago = Math.round((IkaTools.View.gameTimeNow() - w.updated) / 3600000);
+            var agoTxt = function(t) {
+                var ago = Math.round((IkaTools.View.gameTimeNow() - t) / 3600000);
+                return ago < 1 ? 'il y a moins d\'une heure' : ago < 48 ? 'il y a ' + ago + ' h' : 'il y a ' + Math.round(ago / 24) + ' j';
+            };
             return '<div class="imp_ws_card"><h4>' + h(displayName) + ' — Atelier</h4>' +
                    line('⚔', w.off, w.offEffect) + line('🛡', w.def, w.defEffect) +
                    line('📦', w.cargo, w.cargo ? IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo') : 0) + prog +
-                   next('⚔', w.off) + next('🛡', w.def) + next('📦', w.cargo) +
-                   '<div class="imp_ws_lv">Atelier lu ' + (ago < 1 ? 'il y a moins d\'une heure' : ago < 48 ? 'il y a ' + ago + ' h' : 'il y a ' + Math.round(ago / 24) + ' j') + '</div></div>';
+                   next('⚔', w.off, 'offensive') + next('🛡', w.def, 'defensive') + next('📦', w.cargo, 'cargo') +
+                   $.map(w.stale, function(x) {
+                       return '<div class="imp_ws_row imp_ws_stale"><span>⟳ ' + h(x.e.stale.from) + ' : ' + h(x.e.stale.name) + ' niv. ' + x.e.stale.level +
+                              ' (Atelier : niv. ' + x.e.level + ')</span><span>Atelier à relire</span></div>';
+                   }).join('') +
+                   '<div class="imp_ws_lv">Atelier lu ' + agoTxt(w.updated) +
+                   (w.checked && w.checked.at > w.updated ? ' · niveaux contrôlés (' + h(w.checked.from) + ') ' + agoTxt(w.checked.at) : '') + '</div></div>';
         }
         var impWsTickerOn = false;
         function impWsInstallTicker() {

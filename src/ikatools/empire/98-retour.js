@@ -28,6 +28,7 @@
                 getWorkshopData: getWorkshopData, // v3.25
                 getWorkshopEffect: getWorkshopEffect, // v3.25
                 getShipCapacity: getShipCapacity, // v3.25
+                consolidateWorkshopLevels: consolidateWorkshopLevels, // v3.27
 
                 Espionage:Espionage,
             };

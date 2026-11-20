@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.26
-// @version        3.26
+// @name           Imperator v3.27
+// @version        3.27
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.27 Atelier controle a la Caserne et au Chantier naval : les infobulles des ameliorations (nom et niveau) confirment les niveaux lus, enregistrent une amelioration terminee dont le bonus est connu (fin de la pastille en cours) et signalent Atelier a relire si un niveau plus haut apparait. Fiche : la ligne Prochain n'est plus affichee pour l'amelioration deja en cours.
 // @history        3.26 Onglet Armee : ligne Atelier sous les en-tetes (bonus de dommage / armure, espace de chargement des navires, amelioration en cours avec temps restant et barre) et fiche de l'Atelier au survol de chaque unite (equipements et niveaux, amelioration en cours, prochain niveau avec cout et duree).
 // @history        3.25 Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.
 // @history        3.24.1 Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.

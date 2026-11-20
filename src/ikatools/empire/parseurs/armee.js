@@ -191,7 +191,7 @@
 
             // <li class="unit phalanx"> ... <div id="js_barracksUnitUnitsAvailable1">50</div>
             function _impReadUnitList($root) {
-                var res = { counts: {}, nb: 0 };
+                var res = { counts: {}, nb: 0, upgrades: {}, nbUp: 0 };
                 $root.find('li.unit').each(function() {
                     var cls = String(this.className || '').split(/\s+/), type = null;
                     for (var i = 0; i < cls.length; i++) {
@@ -202,6 +202,14 @@
                     if (!$n.length) $n = $(this).find('.unitinfo .scroll_view').first();
                     var n = _impInt($n.text());
                     if (n !== null) { res.counts[type] = n; res.nb++; }
+                    // v3.27 : infobulles des améliorations de l'Atelier, « Cracheur infernal (3) »
+                    var up = {};
+                    $(this).find('img.att-icon, img.def-icon').each(function() {
+                        var m = /^(.*?)\s*\((\d+)\)\s*$/.exec(String($(this).attr('title') || ''));
+                        if (!m) return;
+                        up[$(this).hasClass('att-icon') ? 'offensive' : 'defensive'] = { name: m[1], level: parseInt(m[2], 10) };
+                    });
+                    if (up.offensive || up.defensive) { res.upgrades[type] = up; res.nbUp++; }
                 });
                 return res;
             }
@@ -236,6 +244,15 @@
                         if (!r.nb) {
                             if (isLast) console.warn('[Imperator] ' + label + ' : aucun effectif lu (' + c.getName() + ')');
                             return;
+                        }
+
+                        // v3.27 : niveaux d'amélioration lus dans les infobulles -> contrôle de l'Atelier
+                        try {
+                            var ups = r.upgrades;
+                            if (!r.nbUp && viewHtmlText) ups = _impReadUnitList($('<div>').append($.parseHTML(String(viewHtmlText)))).upgrades;
+                            if (ups && Object.keys(ups).length) consolidateWorkshopLevels(ups, label);
+                        } catch (eU) {
+                            console.warn('[Imperator] ' + label + ' : contrôle des améliorations ignoré', eU);
                         }
 
                         var sig = JSON.stringify(r.counts) + '|' + $('#unitConstructionList').length;

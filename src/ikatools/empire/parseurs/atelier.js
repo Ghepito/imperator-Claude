@@ -90,6 +90,57 @@
                 }
             }
 
+            // ============================================================
+            // v3.27 : contrôle par la Caserne et le Chantier naval. Leurs infobulles donnent le nom et
+            // le niveau de chaque amélioration (« Cracheur infernal (3) »), pas le bonus. On confronte ce
+            // niveau à l'Atelier lu :
+            //   - même niveau            -> confirmé ;
+            //   - niveau « suivant » lu  -> le bonus est connu : l'amélioration est enregistrée ;
+            //   - autre niveau plus haut -> bonus inconnu : « Atelier à relire ».
+            // ============================================================
+            function _impWsIdByType(type) {
+                var ids = Constants.UnitIds || {};
+                for (var id in ids) if (ids.hasOwnProperty(id) && ids[id] === type) return id;
+                return null;
+            }
+
+            function consolidateWorkshopLevels(upgrades, source) {
+                var store = workshopData.get();
+                if (!store.units || !Object.keys(store.units).length) return null; // Atelier jamais lu
+                var now = View.gameTimeNow(), res = { confirmed: 0, promoted: 0, stale: 0 }, changed = false;
+                $.each(upgrades, function(type, up) {
+                    var id = _impWsIdByType(type);
+                    var u = id && store.units[id];
+                    if (!u) return;
+                    $.each(up, function(kind, seen) {
+                        var e = u[kind];
+                        if (!e || !seen || !(seen.level >= 0)) return;
+                        if (seen.level === e.level) {
+                            res.confirmed++;
+                            if (e.stale) { delete e.stale; changed = true; }
+                        } else if (seen.level > e.level && e.next && seen.level === e.next.level) {
+                            u[kind] = { desc: e.desc, name: e.next.name || seen.name, level: e.next.level,
+                                        effect: e.next.effect, next: null, from: source, at: now };
+                            var p = store.inProgress;
+                            if (p && p.unitId == id && p.type === kind) store.inProgress = null;
+                            res.promoted++; changed = true;
+                        } else if (seen.level > e.level) {
+                            if (!e.stale || e.stale.level !== seen.level) {
+                                e.stale = { level: seen.level, name: seen.name, from: source, at: now };
+                                changed = true;
+                            }
+                            res.stale++;
+                        }
+                    });
+                });
+                store.checked = { from: source, at: now, confirmed: res.confirmed };
+                workshopData.saveAsync();
+                if (changed) raiseMilitaryChanged([]);
+                console.log('[Imperator] ' + source + ' : améliorations de l\'Atelier ' + res.confirmed + ' confirmées, ' +
+                            res.promoted + ' mises à jour, ' + res.stale + ' à relire');
+                return res;
+            }
+
             function getWorkshopData() {
                 return workshopData.get();
             }

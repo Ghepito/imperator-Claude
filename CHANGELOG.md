@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.27
+- Caserne et Chantier naval : les infobulles des améliorations (« Cracheur infernal (3) ») sont lues et confrontées à l'Atelier. Même niveau : confirmé. Niveau suivant déjà lu à l'Atelier : l'amélioration est enregistrée avec son bonus et la pastille « en cours » disparaît. Autre niveau plus haut : « ⟳ à relire » dans la ligne Atelier et dans la fiche.
+- Fiche de l'Atelier : la ligne « Prochain » n'est plus affichée pour l'amélioration déjà en cours ; date du dernier contrôle des niveaux.
+
 ## 3.26
 
 Onglet Armee : ligne Atelier sous les en-tetes (bonus de dommage / armure, espace de chargement des navires, amelioration en cours avec temps restant et barre) et fiche de l'Atelier au survol de chaque unite (equipements et niveaux, amelioration en cours, prochain niveau avec cout et duree).

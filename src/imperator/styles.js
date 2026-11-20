@@ -315,6 +315,13 @@ font-size: 10.5px; \
 color: #ef6c00; \
 } \
 \
+.imp_ws_card .imp_ws_stale, .imp_ws_cell .imp_ws_stale { \
+color: #b23c17; \
+font-size: 10px; \
+font-weight: bold; \
+cursor: help; \
+} \
+\
 .imp_ws_card .imp_ws_bar { \
 max-width: none; \
 margin: 2px 0 5px; \

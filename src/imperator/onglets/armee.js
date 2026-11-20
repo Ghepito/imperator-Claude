@@ -58,9 +58,13 @@
             var u = data && data.units && id ? data.units[id] : null;
             if (!u) return null;
             var p = data.inProgress && data.inProgress.unitId == id ? data.inProgress : null;
+            var progType = p ? p.type : null;           // v3.27 : même terminée, son « niveau suivant » est déjà pris
             var now = IkaTools.View.gameTimeNow();
             if (p && p.end && p.end <= now) p = null;   // terminée : getWorkshopEffect en tient compte
+            var stale = [];                             // v3.27 : niveaux plus hauts vus à la Caserne / au Chantier naval
+            $.each(['offensive', 'defensive', 'cargo'], function(i, k) { if (u[k] && u[k].stale) stale.push({ type: k, e: u[k] }); });
             return { id: id, off: u.offensive || null, def: u.defensive || null, cargo: u.cargo || null, prog: p,
+                     progType: progType, stale: stale, checked: data.checked || null,
                      offEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'offensive'),
                      defEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'defensive'),
                      updated: data.updated || 0 };
@@ -85,7 +89,10 @@
             if (w.off || w.def) parts.push('<b>' + (w.off ? '+' + w.offEffect : '-') + '</b> / <b>' + (w.def ? '+' + w.defEffect : '-') + '</b>');
             if (w.cargo) parts.push('📦 <b>+' + IkaTools.Intl.formatInteger(IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo')) + '</b>');
             if (!parts.length) parts.push('-');
-            return '<td class="imp_ws_cell">' + parts.join('<br>') + (w.prog ? '<br>' + impWsProgBadge(w.prog) : '') + '</td>';
+            var stale = w.stale.length ? '<br><span class="imp_ws_stale" title="' + __impH($.map(w.stale, function(x) {
+                    return x.e.stale.from + ' : ' + x.e.stale.name + ' niv. ' + x.e.stale.level + ' (Atelier : niv. ' + x.e.level + ')';
+                }).join(' ; ') + '. Ouvre l\'Atelier pour connaître le nouveau bonus.') + '">⟳ à relire</span>' : '';
+            return '<td class="imp_ws_cell">' + parts.join('<br>') + (w.prog ? '<br>' + impWsProgBadge(w.prog) : '') + stale + '</td>';
         }
         function impWsCard(type, displayName) {
             var w = impWsInfo(type);
@@ -96,8 +103,8 @@
                 return '<div class="imp_ws_row"><span>' + icon + ' ' + h(e.name) + ' <span class="imp_ws_lv">niv. ' + e.level + '</span></span><b>+' +
                        IkaTools.Intl.formatInteger(effect) + '</b></div>';
             };
-            var next = function(icon, e) {
-                if (!e || !e.next) return '';
+            var next = function(icon, e, kind) {
+                if (!e || !e.next || w.progType === kind) return '';   // v3.27 : déjà en cours
                 return '<div class="imp_ws_row imp_ws_lv"><span>Prochain ' + icon + ' : niv. ' + e.next.level + ' (+' + IkaTools.Intl.formatInteger(e.next.effect) + ')</span><span>' +
                        (e.next.gold != null ? IkaTools.Intl.formatInteger(e.next.gold) + ' or · ' : '') +
                        (e.next.crystal != null ? IkaTools.Intl.formatInteger(e.next.crystal) + ' verre · ' : '') + h(e.next.duration) + '</span></div>';
@@ -108,12 +115,20 @@
                 prog = '<div class="imp_ws_row imp_ws_doing"><span>↑ ' + icon + ' ' + h(p.name) + ' en cours (+' + p.from + ' → +' + p.to + ')</span><b>' +
                        impWsFmtLeft(p.end - IkaTools.View.gameTimeNow()) + '</b></div>' + impWsProgBadge(p).replace(/^[\s\S]*?<\/span><\/span>/, '');
             }
-            var ago = Math.round((IkaTools.View.gameTimeNow() - w.updated) / 3600000);
+            var agoTxt = function(t) {
+                var ago = Math.round((IkaTools.View.gameTimeNow() - t) / 3600000);
+                return ago < 1 ? 'il y a moins d\'une heure' : ago < 48 ? 'il y a ' + ago + ' h' : 'il y a ' + Math.round(ago / 24) + ' j';
+            };
             return '<div class="imp_ws_card"><h4>' + h(displayName) + ' — Atelier</h4>' +
                    line('⚔', w.off, w.offEffect) + line('🛡', w.def, w.defEffect) +
                    line('📦', w.cargo, w.cargo ? IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo') : 0) + prog +
-                   next('⚔', w.off) + next('🛡', w.def) + next('📦', w.cargo) +
-                   '<div class="imp_ws_lv">Atelier lu ' + (ago < 1 ? 'il y a moins d\'une heure' : ago < 48 ? 'il y a ' + ago + ' h' : 'il y a ' + Math.round(ago / 24) + ' j') + '</div></div>';
+                   next('⚔', w.off, 'offensive') + next('🛡', w.def, 'defensive') + next('📦', w.cargo, 'cargo') +
+                   $.map(w.stale, function(x) {
+                       return '<div class="imp_ws_row imp_ws_stale"><span>⟳ ' + h(x.e.stale.from) + ' : ' + h(x.e.stale.name) + ' niv. ' + x.e.stale.level +
+                              ' (Atelier : niv. ' + x.e.level + ')</span><span>Atelier à relire</span></div>';
+                   }).join('') +
+                   '<div class="imp_ws_lv">Atelier lu ' + agoTxt(w.updated) +
+                   (w.checked && w.checked.at > w.updated ? ' · niveaux contrôlés (' + h(w.checked.from) + ') ' + agoTxt(w.checked.at) : '') + '</div></div>';
         }
         var impWsTickerOn = false;
         function impWsInstallTicker() {
