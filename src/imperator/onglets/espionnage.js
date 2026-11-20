@@ -373,7 +373,7 @@
                         (player && player.getState() == IkaTools.Constants.PlayerState.VACATION ?
                          localizer.localize('espionage', 'on_vacation') :
                          IkaTools.Intl.formatInteger(Math.ceil(
-                            lootableResources / IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT))),
+                            lootableResources / (IkaTools.EmpireData.getShipCapacity('merchant') || IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT)))),
                         target.getId(), combats.length ? IkaTools.Intl.formatInteger(combats.length) : '-',
                         target.getId(), IkaTools.Intl.formatInteger(player.getMilitaryScore()));
                 }

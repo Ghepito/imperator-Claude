@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.24.1
-// @version        3.24.1
+// @name           Imperator v3.25
+// @version        3.25
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.25 Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.
 // @history        3.24.1 Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.
 // @history        3.24 Option Afficher le proprietaire (vue ile) : marche aussi en arrivant sur une ile depuis la ville, sur une ile de moins de 19 emplacements, sans doubler le nom a chaque mise a jour.
 // @history        3.23 Taverne : un nouveau service valide (A la votre !) met a jour tout de suite, des que le serveur l'accepte, le niveau servi, la consommation, la satisfaction, l'humeur et le conseil de vin, sans repasser par l'Hotel de ville.

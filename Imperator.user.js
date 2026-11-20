@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.24.1
-// @version        3.24.1
+// @name           Imperator v3.25
+// @version        3.25
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.25 Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.
 // @history        3.24.1 Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.
 // @history        3.24 Option Afficher le proprietaire (vue ile) : marche aussi en arrivant sur une ile depuis la ville, sur une ile de moins de 19 emplacements, sans doubler le nom a chaque mise a jour.
 // @history        3.23 Taverne : un nouveau service valide (A la votre !) met a jour tout de suite, des que le serveur l'accepte, le niveau servi, la consommation, la satisfaction, l'humeur et le conseil de vin, sans repasser par l'Hotel de ville.
@@ -6798,6 +6799,120 @@ if (typeof IkaTools == 'undefined') {
             }
 
             // ============================================================
+            // v3.25 : Atelier (vue « workshop »). Les améliorations valent pour toutes les unités du
+            // joueur. Le jeu donne, par unité (id du jeu) et par type (offensive = dommage,
+            // defensive = armure, cargo = espace de chargement) le niveau et le bonus actuels,
+            // le niveau suivant (coût, durée) et l'amélioration en cours (début et fin, en secondes
+            // serveur). Un onglet à la fois (Unités ou Navires) : on fusionne les deux.
+            // ============================================================
+
+            // { units: { <id>: { offensive|defensive|cargo: { desc, name, level, effect, next } } },
+            //   names: { <id>: { name, image } }, inProgress: {...} | null, updated }
+            var workshopData = new Data.Value('workshopData', { units: {}, names: {}, inProgress: null }, { version: 1 });
+
+            // Capacités de base, sans atelier (vérifiées le 20 nov. 2026 : 620 = 500 + 120,
+            // 53 000 = 50 000 + 3 000, aide du jeu et atelier niveau 6).
+            var _IMP_SHIP_BASE = { merchant: { id: 201, base: 500 }, freighter: { id: 204, base: 50000 } };
+
+            function _impWsInt(v) {
+                var n = parseInt(String(v == null ? '' : v).replace(/[^0-9]/g, ''), 10);
+                return isFinite(n) ? n : null;
+            }
+
+            function readWorkshopTemplate(data) {
+                if (!data || !data.completeData) return null;
+                var units = {}, names = {};
+                $.each(data.completeData, function(id, types) {
+                    var u = units[id] = {};
+                    $.each(types || {}, function(type, t) {
+                        if (!t || !t.currentLevel) return;
+                        var n = t.nextLevel;
+                        u[type] = {
+                            desc: t.upgradeTypeDesc || '',
+                            name: t.currentLevel.upgradeName || '',
+                            level: parseInt(t.currentLevel.upgradeLevel, 10) || 0,
+                            effect: Number(t.currentLevel.upgradeEffect) || 0,
+                            next: n ? { name: n.upgradeName || '', level: parseInt(n.upgradeLevel, 10) || 0,
+                                        effect: Number(n.upgradeEffect) || 0, gold: _impWsInt(n.goldCosts),
+                                        crystal: _impWsInt(n.crystalCosts), duration: n.duration || '' } : null,
+                        };
+                    });
+                });
+                $.each(data.unitDetails || {}, function(id, d) {
+                    names[id] = { name: (d && d.unitName) || '', image: (d && d.unitImage) || '' };
+                });
+                return { tab: data.activeTab || '', units: units, names: names,
+                         inProgress: data.inProgress || null, hasInProgressField: 'inProgress' in data };
+            }
+
+            // Retrouve l'unité et le type de l'amélioration en cours (le jeu ne donne que nom, image,
+            // type lisible et bonus avant/après).
+            function _impWsLocateInProgress(p, store) {
+                if (!p) return null;
+                var unitId = null;
+                $.each(store.names, function(id, n) {
+                    if (unitId) return;
+                    if ((p.unitImage && n.image === p.unitImage) || (p.unitName && n.name === p.unitName)) unitId = id;
+                });
+                var type = null;
+                if (unitId && store.units[unitId]) {
+                    $.each(store.units[unitId], function(t, e) {
+                        if (!type && e.desc === p.upgradeTypeDesc) type = t;
+                    });
+                }
+                if (!type) type = /armure|armor/i.test(p.upgradeTypeDesc || '') ? 'defensive'
+                               : /charge|cargo/i.test(p.upgradeTypeDesc || '') ? 'cargo' : 'offensive';
+                return { unitId: unitId, unitName: p.unitName || '', type: type, name: p.upgradeName || '',
+                         from: Number(p.effectOldLevel) || 0, to: Number(p.effectNewLevel) || 0,
+                         start: (Number(p.startTime) || 0) * 1000, end: (Number(p.endTime) || 0) * 1000 };
+            }
+
+            function processWorkshopView(data) {
+                try {
+                    var r = readWorkshopTemplate(data);
+                    if (!r) return;
+                    var store = workshopData.get();
+                    store.units = store.units || {};
+                    store.names = store.names || {};
+                    $.each(r.units, function(id, u) { store.units[id] = $.extend(store.units[id] || {}, u); });
+                    $.extend(store.names, r.names);
+                    if (r.hasInProgressField) store.inProgress = _impWsLocateInProgress(r.inProgress, store);
+                    store.updated = View.gameTimeNow();
+                    workshopData.saveAsync();
+                    raiseMilitaryChanged([]);
+                    console.log('[Imperator] Atelier (' + r.tab + ') : ' + Object.keys(r.units).length + ' unités lues' +
+                                (store.inProgress ? ', amélioration en cours : ' + store.inProgress.unitName +
+                                 ' (' + store.inProgress.type + ' ' + store.inProgress.from + ' -> ' + store.inProgress.to + ')' : '') +
+                                ' ; marchand ' + getShipCapacity('merchant') + ', cargo ' + getShipCapacity('freighter'));
+                } catch (e) {
+                    console.warn('[Imperator] Lecture de l\'atelier échouée', e);
+                }
+            }
+
+            function getWorkshopData() {
+                return workshopData.get();
+            }
+
+            // Bonus actuel d'une unité pour un type, en comptant une amélioration terminée depuis la lecture.
+            function getWorkshopEffect(unitId, type) {
+                var store = workshopData.get();
+                var e = store.units && store.units[unitId] && store.units[unitId][type];
+                var effect = e ? e.effect : 0;
+                var p = store.inProgress;
+                if (p && p.unitId == unitId && p.type === type && p.end && p.end <= View.gameTimeNow()) {
+                    effect = Math.max(effect, p.to);
+                }
+                return effect;
+            }
+
+            // Capacité d'un navire : 'merchant' (navire marchand) ou 'freighter' (navire de charge).
+            function getShipCapacity(kind) {
+                var s = _IMP_SHIP_BASE[kind];
+                if (!s) return 0;
+                return s.base + getWorkshopEffect(s.id, 'cargo');
+            }
+
+            // ============================================================
             // v2.07 : Parser des mouvements de troupes/flottes (conseiller militaire).
             // Remplace la fonction manquante (qui provoquait un ReferenceError et
             // interrompait le dispatcher). Lit les VRAIS temps d'arrivée fournis par
@@ -7573,6 +7688,8 @@ if (typeof IkaTools == 'undefined') {
                             processPremiumView(templateData);
                         } else if (view == 'buildingDetail') {
                             processBuildingDetailView(viewHtml); // v2.31 : aide des bâtiments
+                        } else if (view == 'workshop') {
+                            processWorkshopView(templateData); // v3.25 : atelier
                         }
 
                         if (unsafeWindow.ikariam && unsafeWindow.ikariam.templateView) {
@@ -8381,6 +8498,9 @@ if (typeof IkaTools == 'undefined') {
                 registerShrineChangedHandler: registerShrineChangedHandler, // v2.12
                 refreshFinancesAndShrine: refreshFinancesAndShrine, // v2.07
                 getIslandMiracles: getIslandMiracles, // v3.14
+                getWorkshopData: getWorkshopData, // v3.25
+                getWorkshopEffect: getWorkshopEffect, // v3.25
+                getShipCapacity: getShipCapacity, // v3.25
 
                 Espionage:Espionage,
             };
@@ -11640,7 +11760,10 @@ line-height: normal !important; \
         //////////////////
 
              /* ===== IMPERATOR — Onglet Chantiers (natif) ===== */
-        var __IMP_CAP_FAST = 580; // capacité navire marchand (unité de la couche 2)
+        // v3.25 : capacités réelles (base + atelier), relues à chaque calcul ; 580 / 50 000 si l'atelier
+        // n'a jamais été lu.
+        function __impCapFast(){ try { return IkaTools.EmpireData.getShipCapacity('merchant') || 580; } catch(e){ return 580; } }
+        function __impCapCargo(){ try { return IkaTools.EmpireData.getShipCapacity('freighter') || 50000; } catch(e){ return 50000; } }
 
         function __impEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
         function __impFmt(n){ try { return IkaTools.Intl.formatInteger(Math.round(n)); } catch(e){ return String(Math.round(n)); } }
@@ -11794,7 +11917,7 @@ line-height: normal !important; \
 
         /* ---- Couche 2 : ROUTAGE ------------------------------------------- */
         function __impComputeRoutage(ch, bilan){
-            var CAP = __IMP_CAP_FAST;
+            var CAP = __impCapFast();
             var target = __impFindCity(ch.cityId);
             var targetCoords = target ? target.getIslandCoordinates() : null;
 
@@ -11837,7 +11960,7 @@ line-height: normal !important; \
             return result;
         }
 
-        var __IMP_CAP_CARGO = 50000, __IMP_SPEED_FAST = 75, __IMP_SPEED_CARGO = 4;
+        var __IMP_SPEED_FAST = 75, __IMP_SPEED_CARGO = 4;
         function __impFreeShips(sel){
             try { var t=$(sel).first().text(); var n=parseInt(String(t).replace(/[^0-9]/g,''),10); return isNaN(n)?0:n; } catch(e){ return 0; }
         }
@@ -11853,7 +11976,7 @@ line-height: normal !important; \
         /* ---- Couche 3b : FLOTTE + MAKESPAN + ARBITRAGE (estimation) ------- */
         // Makespan d'une livraison FAST d'une quantité q d'une ressource (navires pleins).
         function __impFastMakespan(target, targetCoords, resKey, q, F){
-            var CAP=__IMP_CAP_FAST;
+            var CAP=__impCapFast();
             if (q<=0) return { makespanMin:0, totalShips:0, fits:true, rotations:0, srcs:[], covered:true };
             var src=[]; var cities=IkaTools.EmpireData.getOwnCities();
             for (var i=0;i<cities.length;i++){
@@ -11878,7 +12001,7 @@ line-height: normal !important; \
         }
         // Makespan d'une livraison CARGO de k navires (pleins) depuis les sources cargo-eligibles.
         function __impCargoMakespan(target, targetCoords, resKey, k){
-            var CAPc=__IMP_CAP_CARGO, RATIO=__IMP_SPEED_FAST/__IMP_SPEED_CARGO;
+            var CAPc=__impCapCargo(), RATIO=__IMP_SPEED_FAST/__IMP_SPEED_CARGO;
             if (k<=0) return { makespanMin:0, ok:true, load:0, srcs:[] };
             var src=[]; var cities=IkaTools.EmpireData.getOwnCities();
             for (var i=0;i<cities.length;i++){
@@ -11900,7 +12023,7 @@ line-height: normal !important; \
         }
         // Arbitrage rapide vs mixte pour une matière.
         function __impArbitrage(ch, target, targetCoords, resKey, label, deficit, F, C){
-            var CAPf=__IMP_CAP_FAST, CAPc=__IMP_CAP_CARGO;
+            var CAPf=__impCapFast(), CAPc=__impCapCargo();
             var L=Math.ceil(deficit/CAPf)*CAPf;
             var fast=__impFastMakespan(target,targetCoords,resKey,L,F);
             var best={ fleet:'rapide', makespanMin:fast.makespanMin, fast:fast, cargo:null, cargoShips:0, gain:0,
@@ -15284,7 +15407,7 @@ line-height: normal !important; \
                         (player && player.getState() == IkaTools.Constants.PlayerState.VACATION ?
                          localizer.localize('espionage', 'on_vacation') :
                          IkaTools.Intl.formatInteger(Math.ceil(
-                            lootableResources / IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT))),
+                            lootableResources / (IkaTools.EmpireData.getShipCapacity('merchant') || IkaTools.Constants.GamePlay.RESOURCES_PER_TRANSPORT)))),
                         target.getId(), combats.length ? IkaTools.Intl.formatInteger(combats.length) : '-',
                         target.getId(), IkaTools.Intl.formatInteger(player.getMilitaryScore()));
                 }
@@ -15555,7 +15678,7 @@ line-height: normal !important; \
         }
 
         function __impWinePlan(g){
-            var R=IkaTools.Constants.Resources, CAP=__IMP_CAP_FAST;
+            var R=IkaTools.Constants.Resources, CAP=__impCapFast();
             var srcWine=0; try{ var rr=g.source.getResource(R.WINE); srcWine=(rr&&rr.getCurrent)?Math.floor(rr.getCurrent()):0; }catch(e){}
             var availShips=Math.max(0, Math.floor((srcWine-__IMP_WINE_SRC_FLOOR)/CAP));
             var TRIGGER=__impWineTrigger();

@@ -25,6 +25,9 @@
                 registerShrineChangedHandler: registerShrineChangedHandler, // v2.12
                 refreshFinancesAndShrine: refreshFinancesAndShrine, // v2.07
                 getIslandMiracles: getIslandMiracles, // v3.14
+                getWorkshopData: getWorkshopData, // v3.25
+                getWorkshopEffect: getWorkshopEffect, // v3.25
+                getShipCapacity: getShipCapacity, // v3.25
 
                 Espionage:Espionage,
             };

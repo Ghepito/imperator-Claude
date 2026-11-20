@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.25
+
+Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.
+
 ## 3.24.1
 
 Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.

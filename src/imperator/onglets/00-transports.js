@@ -10,7 +10,10 @@
         //////////////////
 
              /* ===== IMPERATOR — Onglet Chantiers (natif) ===== */
-        var __IMP_CAP_FAST = 580; // capacité navire marchand (unité de la couche 2)
+        // v3.25 : capacités réelles (base + atelier), relues à chaque calcul ; 580 / 50 000 si l'atelier
+        // n'a jamais été lu.
+        function __impCapFast(){ try { return IkaTools.EmpireData.getShipCapacity('merchant') || 580; } catch(e){ return 580; } }
+        function __impCapCargo(){ try { return IkaTools.EmpireData.getShipCapacity('freighter') || 50000; } catch(e){ return 50000; } }
 
         function __impEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
         function __impFmt(n){ try { return IkaTools.Intl.formatInteger(Math.round(n)); } catch(e){ return String(Math.round(n)); } }
@@ -164,7 +167,7 @@
 
         /* ---- Couche 2 : ROUTAGE ------------------------------------------- */
         function __impComputeRoutage(ch, bilan){
-            var CAP = __IMP_CAP_FAST;
+            var CAP = __impCapFast();
             var target = __impFindCity(ch.cityId);
             var targetCoords = target ? target.getIslandCoordinates() : null;
 
@@ -207,7 +210,7 @@
             return result;
         }
 
-        var __IMP_CAP_CARGO = 50000, __IMP_SPEED_FAST = 75, __IMP_SPEED_CARGO = 4;
+        var __IMP_SPEED_FAST = 75, __IMP_SPEED_CARGO = 4;
         function __impFreeShips(sel){
             try { var t=$(sel).first().text(); var n=parseInt(String(t).replace(/[^0-9]/g,''),10); return isNaN(n)?0:n; } catch(e){ return 0; }
         }
@@ -223,7 +226,7 @@
         /* ---- Couche 3b : FLOTTE + MAKESPAN + ARBITRAGE (estimation) ------- */
         // Makespan d'une livraison FAST d'une quantité q d'une ressource (navires pleins).
         function __impFastMakespan(target, targetCoords, resKey, q, F){
-            var CAP=__IMP_CAP_FAST;
+            var CAP=__impCapFast();
             if (q<=0) return { makespanMin:0, totalShips:0, fits:true, rotations:0, srcs:[], covered:true };
             var src=[]; var cities=IkaTools.EmpireData.getOwnCities();
             for (var i=0;i<cities.length;i++){
@@ -248,7 +251,7 @@
         }
         // Makespan d'une livraison CARGO de k navires (pleins) depuis les sources cargo-eligibles.
         function __impCargoMakespan(target, targetCoords, resKey, k){
-            var CAPc=__IMP_CAP_CARGO, RATIO=__IMP_SPEED_FAST/__IMP_SPEED_CARGO;
+            var CAPc=__impCapCargo(), RATIO=__IMP_SPEED_FAST/__IMP_SPEED_CARGO;
             if (k<=0) return { makespanMin:0, ok:true, load:0, srcs:[] };
             var src=[]; var cities=IkaTools.EmpireData.getOwnCities();
             for (var i=0;i<cities.length;i++){
@@ -270,7 +273,7 @@
         }
         // Arbitrage rapide vs mixte pour une matière.
         function __impArbitrage(ch, target, targetCoords, resKey, label, deficit, F, C){
-            var CAPf=__IMP_CAP_FAST, CAPc=__IMP_CAP_CARGO;
+            var CAPf=__impCapFast(), CAPc=__impCapCargo();
             var L=Math.ceil(deficit/CAPf)*CAPf;
             var fast=__impFastMakespan(target,targetCoords,resKey,L,F);
             var best={ fleet:'rapide', makespanMin:fast.makespanMin, fast:fast, cargo:null, cargoShips:0, gain:0,

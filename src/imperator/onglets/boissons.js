@@ -16,7 +16,7 @@
         }
 
         function __impWinePlan(g){
-            var R=IkaTools.Constants.Resources, CAP=__IMP_CAP_FAST;
+            var R=IkaTools.Constants.Resources, CAP=__impCapFast();
             var srcWine=0; try{ var rr=g.source.getResource(R.WINE); srcWine=(rr&&rr.getCurrent)?Math.floor(rr.getCurrent()):0; }catch(e){}
             var availShips=Math.max(0, Math.floor((srcWine-__IMP_WINE_SRC_FLOOR)/CAP));
             var TRIGGER=__impWineTrigger();

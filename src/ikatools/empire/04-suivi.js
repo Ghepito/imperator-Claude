@@ -538,6 +538,8 @@
                             processPremiumView(templateData);
                         } else if (view == 'buildingDetail') {
                             processBuildingDetailView(viewHtml); // v2.31 : aide des bâtiments
+                        } else if (view == 'workshop') {
+                            processWorkshopView(templateData); // v3.25 : atelier
                         }
 
                         if (unsafeWindow.ikariam && unsafeWindow.ikariam.templateView) {
