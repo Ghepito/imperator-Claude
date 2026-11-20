@@ -141,6 +141,24 @@
                 return res;
             }
 
+            // v3.28 : entretien de base par unité. Valeurs du jeu dans Constants.UnitData[type].upkeep,
+            // remplacées par celles lues à la Caserne / au Chantier naval si le jeu les change.
+            var unitUpkeepData = new Data.Value('unitUpkeep', {}, { version: 1 });
+            function recordUnitUpkeep(map) {
+                var st = unitUpkeepData.get(), changed = false;
+                $.each(map, function(type, v) {
+                    var def = Constants.UnitData[type] && Constants.UnitData[type].upkeep;
+                    if (v === def) { if (st[type] !== undefined) { delete st[type]; changed = true; } }
+                    else if (st[type] !== v) { st[type] = v; changed = true; }
+                });
+                if (changed) unitUpkeepData.saveAsync();
+            }
+            function getUnitUpkeep(type) {
+                var st = unitUpkeepData.get();
+                if (st[type] !== undefined) return st[type];
+                return (Constants.UnitData[type] && Constants.UnitData[type].upkeep) || 0;
+            }
+
             function getWorkshopData() {
                 return workshopData.get();
             }

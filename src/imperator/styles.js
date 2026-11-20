@@ -245,6 +245,32 @@ font-style: italic; \
 color: #8A6D39; \
 } \
 \
+.imp_upkeep { \
+font-size: 10px; \
+color: #9e3a1d; \
+white-space: nowrap; \
+cursor: help; \
+margin-top: 2px; \
+} \
+\
+.imp_upkeep img { \
+height: 10px; \
+vertical-align: -1px; \
+margin-right: 2px; \
+} \
+\
+.imp_upkeep.imp_upkeep_base { \
+color: #8A6D39; \
+font-style: italic; \
+} \
+\
+.imp_upkeep.imp_upkeep_total { \
+font-size: 11px; \
+font-weight: bold; \
+float: left; \
+margin: 2px 0 0 3px; \
+} \
+\
 .imp_ws_tr td { \
 background: #fff8e1; \
 font-size: 10.5px; \

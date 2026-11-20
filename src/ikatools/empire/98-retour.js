@@ -29,6 +29,7 @@
                 getWorkshopEffect: getWorkshopEffect, // v3.25
                 getShipCapacity: getShipCapacity, // v3.25
                 consolidateWorkshopLevels: consolidateWorkshopLevels, // v3.27
+                getUnitUpkeep: getUnitUpkeep, // v3.28
 
                 Espionage:Espionage,
             };

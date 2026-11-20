@@ -194,6 +194,7 @@
                     if (upd.net        !== undefined) gd.net        = upd.net;
                     if (upd.currentUpdated !== undefined) gd.currentUpdated = upd.currentUpdated;
                     if (upd.incomeUpdated  !== undefined) gd.incomeUpdated  = upd.incomeUpdated;
+                    if (upd.militaryUpkeep !== undefined) gd.militaryUpkeep = upd.militaryUpkeep;   // v3.28
                     // Recalculer net si non fourni mais composants disponibles
                     if (upd.net === undefined && gd.incomeUpdated > 0) {
                         gd.net = (gd.revenue||0)+(gd.gods||0)+(gd.scientists||0)+(gd.upkeep||0)+(gd.premium||0);

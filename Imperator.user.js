@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.27.1
-// @version        3.27.1
+// @name           Imperator v3.28
+// @version        3.28
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.28 Onglet Armee : cout horaire de l'armee et de la flotte de chaque ville sous son nom, total au pied de la colonne. Entretien de base de chaque unite (lu a la Caserne et au Chantier naval), reductions lues dans le Bilan (Couts basiques : Recherche, gouvernement) ; avant lecture du Bilan, cout de base signale par un signe environ.
 // @history        3.27.1 Ligne Atelier de l'onglet Armee : bonus ecrits +65/+50 sur une seule ligne (plus de coupure en deux lignes dans les colonnes etroites du jeu), etiquette Atelier sur une ligne.
 // @history        3.27 Atelier controle a la Caserne et au Chantier naval : les infobulles des ameliorations (nom et niveau) confirment les niveaux lus, enregistrent une amelioration terminee dont le bonus est connu (fin de la pastille en cours) et signalent Atelier a relire si un niveau plus haut apparait. Fiche : la ligne Prochain n'est plus affichee pour l'amelioration deja en cours.
 // @history        3.26 Onglet Armee : ligne Atelier sous les en-tetes (bonus de dommage / armure, espace de chargement des navires, amelioration en cours avec temps restant et barre) et fiche de l'Atelier au survol de chaque unite (equipements et niveaux, amelioration en cours, prochain niveau avec cout et duree).
@@ -3122,6 +3123,7 @@ if (typeof IkaTools == 'undefined') {
 
             UnitData: {
                 spearman: {
+                    upkeep: 1,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 1,
                     baseBuildTime: 60,
                     isArmy: true,
@@ -3129,6 +3131,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 3,
                 },
                 slinger: {
+                    upkeep: 2,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 2,
                     baseBuildTime: 90,
                     isArmy: true,
@@ -3136,6 +3139,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 3,
                 },
                 ram: {
+                    upkeep: 15,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 3,
                     baseBuildTime: 600,
                     isArmy: true,
@@ -3143,6 +3147,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 30,
                 },
                 phalanx: {
+                    upkeep: 3,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 4,
                     baseBuildTime: 300,
                     isArmy: true,
@@ -3150,6 +3155,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 5,
                 },
                 cook: {
+                    upkeep: 10,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 5,
                     baseBuildTime: 1200,
                     isArmy: true,
@@ -3157,6 +3163,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 20,
                 },
                 swordsman: {
+                    upkeep: 4,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 6,
                     baseBuildTime: 180,
                     isArmy: true,
@@ -3164,6 +3171,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 3,
                 },
                 archer: {
+                    upkeep: 4,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 7,
                     baseBuildTime: 240,
                     isArmy: true,
@@ -3171,6 +3179,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 5,
                 },
                 catapult: {
+                    upkeep: 25,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 8,
                     baseBuildTime: 1800,
                     isArmy: true,
@@ -3178,6 +3187,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 30,
                 },
                 medic: {
+                    upkeep: 20,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 9,
                     baseBuildTime: 1200,
 
@@ -3186,6 +3196,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 10,
                 },
                 gyrocopter: {
+                    upkeep: 15,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 10,
                     baseBuildTime: 900,
                     isArmy: true,
@@ -3193,6 +3204,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 15,
                 },
                 bombardier: {
+                    upkeep: 45,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 11,
                     baseBuildTime: 1800,
                     isArmy: true,
@@ -3200,6 +3212,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 30,
                 },
                 steamgiant: {
+                    upkeep: 12,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 12,
                     baseBuildTime: 900,
                     isArmy: true,
@@ -3207,6 +3220,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 15,
                 },
                 marksman: {
+                    upkeep: 3,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 13,
                     baseBuildTime: 600,
                     isArmy: true,
@@ -3214,6 +3228,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 5,
                 },
                 mortar: {
+                    upkeep: 30,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 14,
                     baseBuildTime: 2400,
                     isArmy: true,
@@ -3239,6 +3254,7 @@ if (typeof IkaTools == 'undefined') {
                 },
 
                 ship_ram: {
+                    upkeep: 15,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 1,
                     baseBuildTime: 2400,
                     isArmy: false,
@@ -3246,6 +3262,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_flamethrower: {
+                    upkeep: 25,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 4,
                     baseBuildTime: 1800,
                     isArmy: false,
@@ -3253,6 +3270,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_submarine: {
+                    upkeep: 50,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 19,
                     baseBuildTime: 3600,
                     isArmy: false,
@@ -3260,6 +3278,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_ballista: {
+                    upkeep: 20,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 3,
                     baseBuildTime: 3000,
                     isArmy: false,
@@ -3267,6 +3286,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_catapult: {
+                    upkeep: 35,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 3,
                     baseBuildTime: 3000,
                     isArmy: false,
@@ -3274,6 +3294,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_mortar: {
+                    upkeep: 50,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 17,
                     baseBuildTime: 3000,
                     isArmy: false,
@@ -3281,6 +3302,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_steamboat: {
+                    upkeep: 45,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 15,
                     baseBuildTime: 2400,
                     isArmy: false,
@@ -3288,6 +3310,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_rocketship: {
+                    upkeep: 55,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 11,
                     baseBuildTime: 3600,
                     isArmy: false,
@@ -3295,6 +3318,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_paddlespeedship: {
+                    upkeep: 5,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 13,
                     baseBuildTime: 1800,
                     isArmy: false,
@@ -3302,6 +3326,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_ballooncarrier: {
+                    upkeep: 100,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 7,
                     baseBuildTime: 3900,
                     isArmy: false,
@@ -3309,6 +3334,7 @@ if (typeof IkaTools == 'undefined') {
                     cargoSize: 0,
                 },
                 ship_tender: {
+                    upkeep: 100,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 9,
                     baseBuildTime: 2400,
                     isArmy: false,
@@ -4838,6 +4864,7 @@ if (typeof IkaTools == 'undefined') {
                     if (upd.net        !== undefined) gd.net        = upd.net;
                     if (upd.currentUpdated !== undefined) gd.currentUpdated = upd.currentUpdated;
                     if (upd.incomeUpdated  !== undefined) gd.incomeUpdated  = upd.incomeUpdated;
+                    if (upd.militaryUpkeep !== undefined) gd.militaryUpkeep = upd.militaryUpkeep;   // v3.28
                     // Recalculer net si non fourni mais composants disponibles
                     if (upd.net === undefined && gd.incomeUpdated > 0) {
                         gd.net = (gd.revenue||0)+(gd.gods||0)+(gd.scientists||0)+(gd.upkeep||0)+(gd.premium||0);
@@ -5688,6 +5715,9 @@ if (typeof IkaTools == 'undefined') {
                     var n = _impInt($n.text());
                     if (n !== null) { res.counts[type] = n; res.nb++; }
                     // v3.27 : infobulles des améliorations de l'Atelier, « Cracheur infernal (3) »
+                    // v3.28 : entretien par heure affiché pour l'unité (avant réductions)
+                    var upk = _impInt($(this).find('li.upkeep').first().clone().find('.accesshint').remove().end().text());
+                    if (upk !== null && upk > 0) { res.upkeep = res.upkeep || {}; res.upkeep[type] = upk; }
                     var up = {};
                     $(this).find('img.att-icon, img.def-icon').each(function() {
                         var m = /^(.*?)\s*\((\d+)\)\s*$/.exec(String($(this).attr('title') || ''));
@@ -5736,6 +5766,7 @@ if (typeof IkaTools == 'undefined') {
                             var ups = r.upgrades;
                             if (!r.nbUp && viewHtmlText) ups = _impReadUnitList($('<div>').append($.parseHTML(String(viewHtmlText)))).upgrades;
                             if (ups && Object.keys(ups).length) consolidateWorkshopLevels(ups, label);
+                            if (r.upkeep) recordUnitUpkeep(r.upkeep);   // v3.28
                         } catch (eU) {
                             console.warn('[Imperator] ' + label + ' : contrôle des améliorations ignoré', eU);
                         }
@@ -6404,6 +6435,34 @@ if (typeof IkaTools == 'undefined') {
                                 // le revenu est désormais la somme de la colonne Revenu des villes (comme ikariam.model).
                             });
 
+                            // v3.28 : réduction de l'entretien militaire (tableau « Coûts basiques ») :
+                            // Troupes 7 063 / - Recherche (64%) 2 542,68 / Flottes 28 725 / - Recherche (64%) 10 341.
+                            // Coefficient réel = dernier coût réduit / coût de base, pour chaque type.
+                            try {
+                                var exactVal = function($td) {
+                                    var x = $td.find('div.tooltip').first().text().replace(/[\u00a0\u202f\s]/g, '').replace(',', '.');
+                                    var v = parseFloat(x);
+                                    return isFinite(v) ? v : cellVal($td);
+                                };
+                                var upk = {}, kind = null, section = 0, cuts = [];
+                                $b.find('table.upkeepReductionTable tr').each(function() {
+                                    if ($(this).find('th').length) { section++; kind = null; return; }
+                                    if (section > 1) return false;          // « Frais supplémentaires » : ignorés
+                                    var reason = $(this).find('td.reason').first().text().replace(/\s+/g, ' ').trim();
+                                    var $v = $(this).find('td.costs, td.boldcosts').first();
+                                    if (!reason || !$v.length) return;
+                                    var val = exactVal($v);
+                                    if (isNaN(val)) return;
+                                    if (/^troupes/i.test(reason)) { kind = 'army'; upk.army = { base: val, real: val, cuts: [] }; }
+                                    else if (/^flottes?/i.test(reason)) { kind = 'navy'; upk.navy = { base: val, real: val, cuts: [] }; }
+                                    else if (kind && /^-/.test(reason)) { upk[kind].real = val; upk[kind].cuts.push(reason.replace(/^-\s*/, '')); }
+                                });
+                                $.each(['army', 'navy'], function(i, k) {
+                                    if (upk[k] && upk[k].base > 0) upk[k].factor = upk[k].real / upk[k].base;
+                                });
+                                if (upk.army || upk.navy) { upk.at = Date.now(); goldUpd.militaryUpkeep = upk; found++; }
+                            } catch (eUpk) {}
+
                             // v2.24 : revenu des villes (colonne 2) et coût des scientifiques (ligne Somme, colonne 3)
                             var cityRevenue = 0, cityRows = 0;
                             $b.find('td.city').each(function() {
@@ -6958,6 +7017,24 @@ if (typeof IkaTools == 'undefined') {
                 console.log('[Imperator] ' + source + ' : améliorations de l\'Atelier ' + res.confirmed + ' confirmées, ' +
                             res.promoted + ' mises à jour, ' + res.stale + ' à relire');
                 return res;
+            }
+
+            // v3.28 : entretien de base par unité. Valeurs du jeu dans Constants.UnitData[type].upkeep,
+            // remplacées par celles lues à la Caserne / au Chantier naval si le jeu les change.
+            var unitUpkeepData = new Data.Value('unitUpkeep', {}, { version: 1 });
+            function recordUnitUpkeep(map) {
+                var st = unitUpkeepData.get(), changed = false;
+                $.each(map, function(type, v) {
+                    var def = Constants.UnitData[type] && Constants.UnitData[type].upkeep;
+                    if (v === def) { if (st[type] !== undefined) { delete st[type]; changed = true; } }
+                    else if (st[type] !== v) { st[type] = v; changed = true; }
+                });
+                if (changed) unitUpkeepData.saveAsync();
+            }
+            function getUnitUpkeep(type) {
+                var st = unitUpkeepData.get();
+                if (st[type] !== undefined) return st[type];
+                return (Constants.UnitData[type] && Constants.UnitData[type].upkeep) || 0;
             }
 
             function getWorkshopData() {
@@ -8573,6 +8650,7 @@ if (typeof IkaTools == 'undefined') {
                 getWorkshopEffect: getWorkshopEffect, // v3.25
                 getShipCapacity: getShipCapacity, // v3.25
                 consolidateWorkshopLevels: consolidateWorkshopLevels, // v3.27
+                getUnitUpkeep: getUnitUpkeep, // v3.28
 
                 Espionage:Espionage,
             };
@@ -9491,6 +9569,32 @@ max-width: 260px; \
 font-size: 11px; \
 font-style: italic; \
 color: #8A6D39; \
+} \
+\
+.imp_upkeep { \
+font-size: 10px; \
+color: #9e3a1d; \
+white-space: nowrap; \
+cursor: help; \
+margin-top: 2px; \
+} \
+\
+.imp_upkeep img { \
+height: 10px; \
+vertical-align: -1px; \
+margin-right: 2px; \
+} \
+\
+.imp_upkeep.imp_upkeep_base { \
+color: #8A6D39; \
+font-style: italic; \
+} \
+\
+.imp_upkeep.imp_upkeep_total { \
+font-size: 11px; \
+font-weight: bold; \
+float: left; \
+margin: 2px 0 0 3px; \
 } \
 \
 .imp_ws_tr td { \
@@ -14871,6 +14975,7 @@ line-height: normal !important; \
 
                 var updateables = this.updateables;
                 var empireHasTroopType = {};
+                var impUpkeepByCity = {};   // v3.28 : entretien de base par ville { army, navy }
 
                 $.each(cities, function(index, city) {
                     $.each(city.getMilitary().getPresent().getCounts(), function(unit, count) {
@@ -15003,6 +15108,14 @@ line-height: normal !important; \
                             plunderingCount += movement.getUnits().getCount(type) || 0;
                         }
                     });
+
+                    // v3.28 : entretien des unités de la ville (présentes + en mouvement, comme les cases)
+                    var upkeepUnits = (count || 0) + deployingCount + plunderingCount;
+                    if (upkeepUnits) {
+                        var acc = impUpkeepByCity[cityId] || (impUpkeepByCity[cityId] = { army: 0, navy: 0 });
+                        acc[IkaTools.Constants.UnitData[type] && IkaTools.Constants.UnitData[type].isArmy ? 'army' : 'navy'] +=
+                            upkeepUnits * IkaTools.EmpireData.getUnitUpkeep(type);
+                    }
 
                     var trainingDivId = 'MilitaryTraining_%s_%s'.format(city.getId(), type);
                     if (trainingCount) {
@@ -15203,7 +15316,40 @@ line-height: normal !important; \
                         shipyardLinkHtml);
                 }
 
+                // v3.28 : coût horaire de l'armée et de la flotte, sous le nom de la ville
+                function impUpkeepCost(acc) {
+                    var mu = IkaTools.EmpireData.getCivilizationData().getGoldData().militaryUpkeep || {};
+                    var fa = mu.army && mu.army.factor, fn = mu.navy && mu.navy.factor;
+                    var known = (!acc.army || fa >= 0) && (!acc.navy || fn >= 0);
+                    return { known: known, army: acc.army * (fa >= 0 ? fa : 1), navy: acc.navy * (fn >= 0 ? fn : 1), mu: mu };
+                }
+                function impUpkeepTitle(acc, c, extra) {
+                    var f = IkaTools.Intl.formatInteger;
+                    var line = function(lbl, base, real, k) {
+                        if (!base) return '';
+                        var cuts = c.mu[k] && c.mu[k].cuts && c.mu[k].cuts.length ? ' − ' + c.mu[k].cuts.join(', ') : '';
+                        return lbl + ' : ' + f(Math.round(base)) + cuts + (c.known ? ' = ' + f(Math.round(real)) : '') + ' or/h\n';
+                    };
+                    return 'Entretien militaire par heure\n' + line('Troupes', acc.army, c.army, 'army') + line('Flotte', acc.navy, c.navy, 'navy') +
+                           (c.known ? '' : 'Ouvre le Bilan (Finances) pour connaître les réductions : coût avant réductions.\n') +
+                           (extra || '') + 'Unités présentes et en mouvement ; unités en formation non comptées.';
+                }
+                function impUpkeepNameCell(city, unitCells) {
+                    var cell = makeCityNameCells('military', city, true);
+                    var acc = impUpkeepByCity[city.getId()];
+                    if (!acc || !(acc.army + acc.navy)) return cell;
+                    var c = impUpkeepCost(acc);
+                    var html = '<div class="imp_upkeep' + (c.known ? '' : ' imp_upkeep_base') + '" title="' + __impH(impUpkeepTitle(acc, c)) + '">' +
+                               '<img src="/cdn/all/both/resources/icon_gold.png">' + (c.known ? '' : '≈ ') +
+                               '-' + IkaTools.Intl.formatInteger(Math.round(c.army + c.navy)) + '/h</div>';
+                    var i = cell.lastIndexOf('</td>');
+                    return cell.slice(0, i) + html + cell.slice(i);
+                }
+
                 function makeRow(movements, city) {
+                    var unitCells = $.map(UNIT_ORDER, function(info) {   // v3.28 : d'abord, pour le coût
+                        return $.map(info.units, makeTableCell.bind(null, city, city.getMilitary(), movements));
+                    }).join('');
                     var rowUpdateable = updateables.create('MilitaryTableRow_%s'.format(city.getId()))
                     .registerUpdate('cityChanged',
                                     function(element) {
@@ -15224,13 +15370,10 @@ line-height: normal !important; \
                         .format(
                         rowUpdateable.getId(0),
                         (IkaTools.View.isActiveCity(city) ? 'current' : ''),
-                        makeCityNameCells('military', city, true),
+                        impUpkeepNameCell(city, unitCells),
                         IkaTools.Intl.formatInteger(city.getActionPoints()),
                         makeActionsCell(city),
-                        $.map(UNIT_ORDER, function(info) {
-                            return $.map(info.units, makeTableCell.bind(
-                                null, city, city.getMilitary(), movements));
-                        }).join(''));
+                        unitCells);
                 }
 
                 function makeSummaryCell(type) {
@@ -15256,7 +15399,17 @@ line-height: normal !important; \
                 }
 
                 function makeSummaryRow(cities) {
-                    return '<tr><td colspan="3" class="totals_sigma_cell"/>%s</tr>'.format(
+                    // v3.28 : coût total de l'armée et de la flotte, au pied de la colonne des villes
+                    var tot = { army: 0, navy: 0 }, sumHtml = '';
+                    $.each(impUpkeepByCity, function(id, a) { tot.army += a.army; tot.navy += a.navy; });
+                    if (tot.army + tot.navy) {
+                        var c = impUpkeepCost(tot), gd = IkaTools.EmpireData.getCivilizationData().getGoldData();
+                        var bilan = gd.upkeep && gd.incomeUpdated ? 'Bilan : ' + IkaTools.Intl.formatInteger(Math.abs(gd.upkeep)) + ' or/h\n' : '';
+                        sumHtml = '<span class="imp_upkeep imp_upkeep_total' + (c.known ? '' : ' imp_upkeep_base') + '" title="' +
+                                  __impH(impUpkeepTitle(tot, c, bilan)) + '"><img src="/cdn/all/both/resources/icon_gold.png">' +
+                                  (c.known ? '' : '≈ ') + '-' + IkaTools.Intl.formatInteger(Math.round(c.army + c.navy)) + '/h</span>';
+                    }
+                    return ('<tr><td colspan="3" class="totals_sigma_cell">' + sumHtml + '</td>%s</tr>').format(
                         $.map(UNIT_ORDER, function(info) {
                             return $.map(info.units, makeSummaryCell);
                         }).join(''));

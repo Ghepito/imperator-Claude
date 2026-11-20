@@ -203,6 +203,9 @@
                     var n = _impInt($n.text());
                     if (n !== null) { res.counts[type] = n; res.nb++; }
                     // v3.27 : infobulles des améliorations de l'Atelier, « Cracheur infernal (3) »
+                    // v3.28 : entretien par heure affiché pour l'unité (avant réductions)
+                    var upk = _impInt($(this).find('li.upkeep').first().clone().find('.accesshint').remove().end().text());
+                    if (upk !== null && upk > 0) { res.upkeep = res.upkeep || {}; res.upkeep[type] = upk; }
                     var up = {};
                     $(this).find('img.att-icon, img.def-icon').each(function() {
                         var m = /^(.*?)\s*\((\d+)\)\s*$/.exec(String($(this).attr('title') || ''));
@@ -251,6 +254,7 @@
                             var ups = r.upgrades;
                             if (!r.nbUp && viewHtmlText) ups = _impReadUnitList($('<div>').append($.parseHTML(String(viewHtmlText)))).upgrades;
                             if (ups && Object.keys(ups).length) consolidateWorkshopLevels(ups, label);
+                            if (r.upkeep) recordUnitUpkeep(r.upkeep);   // v3.28
                         } catch (eU) {
                             console.warn('[Imperator] ' + label + ' : contrôle des améliorations ignoré', eU);
                         }

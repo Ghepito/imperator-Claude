@@ -642,6 +642,7 @@
 
             UnitData: {
                 spearman: {
+                    upkeep: 1,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 1,
                     baseBuildTime: 60,
                     isArmy: true,
@@ -649,6 +650,7 @@
                     cargoSize: 3,
                 },
                 slinger: {
+                    upkeep: 2,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 2,
                     baseBuildTime: 90,
                     isArmy: true,
@@ -656,6 +658,7 @@
                     cargoSize: 3,
                 },
                 ram: {
+                    upkeep: 15,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 3,
                     baseBuildTime: 600,
                     isArmy: true,
@@ -663,6 +666,7 @@
                     cargoSize: 30,
                 },
                 phalanx: {
+                    upkeep: 3,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 4,
                     baseBuildTime: 300,
                     isArmy: true,
@@ -670,6 +674,7 @@
                     cargoSize: 5,
                 },
                 cook: {
+                    upkeep: 10,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 5,
                     baseBuildTime: 1200,
                     isArmy: true,
@@ -677,6 +682,7 @@
                     cargoSize: 20,
                 },
                 swordsman: {
+                    upkeep: 4,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 6,
                     baseBuildTime: 180,
                     isArmy: true,
@@ -684,6 +690,7 @@
                     cargoSize: 3,
                 },
                 archer: {
+                    upkeep: 4,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 7,
                     baseBuildTime: 240,
                     isArmy: true,
@@ -691,6 +698,7 @@
                     cargoSize: 5,
                 },
                 catapult: {
+                    upkeep: 25,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 8,
                     baseBuildTime: 1800,
                     isArmy: true,
@@ -698,6 +706,7 @@
                     cargoSize: 30,
                 },
                 medic: {
+                    upkeep: 20,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 9,
                     baseBuildTime: 1200,
 
@@ -706,6 +715,7 @@
                     cargoSize: 10,
                 },
                 gyrocopter: {
+                    upkeep: 15,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 10,
                     baseBuildTime: 900,
                     isArmy: true,
@@ -713,6 +723,7 @@
                     cargoSize: 15,
                 },
                 bombardier: {
+                    upkeep: 45,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 11,
                     baseBuildTime: 1800,
                     isArmy: true,
@@ -720,6 +731,7 @@
                     cargoSize: 30,
                 },
                 steamgiant: {
+                    upkeep: 12,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 12,
                     baseBuildTime: 900,
                     isArmy: true,
@@ -727,6 +739,7 @@
                     cargoSize: 15,
                 },
                 marksman: {
+                    upkeep: 3,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 13,
                     baseBuildTime: 600,
                     isArmy: true,
@@ -734,6 +747,7 @@
                     cargoSize: 5,
                 },
                 mortar: {
+                    upkeep: 30,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 14,
                     baseBuildTime: 2400,
                     isArmy: true,
@@ -759,6 +773,7 @@
                 },
 
                 ship_ram: {
+                    upkeep: 15,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 1,
                     baseBuildTime: 2400,
                     isArmy: false,
@@ -766,6 +781,7 @@
                     cargoSize: 0,
                 },
                 ship_flamethrower: {
+                    upkeep: 25,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 4,
                     baseBuildTime: 1800,
                     isArmy: false,
@@ -773,6 +789,7 @@
                     cargoSize: 0,
                 },
                 ship_submarine: {
+                    upkeep: 50,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 19,
                     baseBuildTime: 3600,
                     isArmy: false,
@@ -780,6 +797,7 @@
                     cargoSize: 0,
                 },
                 ship_ballista: {
+                    upkeep: 20,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 3,
                     baseBuildTime: 3000,
                     isArmy: false,
@@ -787,6 +805,7 @@
                     cargoSize: 0,
                 },
                 ship_catapult: {
+                    upkeep: 35,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 3,
                     baseBuildTime: 3000,
                     isArmy: false,
@@ -794,6 +813,7 @@
                     cargoSize: 0,
                 },
                 ship_mortar: {
+                    upkeep: 50,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 17,
                     baseBuildTime: 3000,
                     isArmy: false,
@@ -801,6 +821,7 @@
                     cargoSize: 0,
                 },
                 ship_steamboat: {
+                    upkeep: 45,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 15,
                     baseBuildTime: 2400,
                     isArmy: false,
@@ -808,6 +829,7 @@
                     cargoSize: 0,
                 },
                 ship_rocketship: {
+                    upkeep: 55,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 11,
                     baseBuildTime: 3600,
                     isArmy: false,
@@ -815,6 +837,7 @@
                     cargoSize: 0,
                 },
                 ship_paddlespeedship: {
+                    upkeep: 5,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 13,
                     baseBuildTime: 1800,
                     isArmy: false,
@@ -822,6 +845,7 @@
                     cargoSize: 0,
                 },
                 ship_ballooncarrier: {
+                    upkeep: 100,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 7,
                     baseBuildTime: 3900,
                     isArmy: false,
@@ -829,6 +853,7 @@
                     cargoSize: 0,
                 },
                 ship_tender: {
+                    upkeep: 100,   // v3.28 : or par heure, avant réductions (Caserne / Chantier naval)
                     minimumBuildingLevelToBuild: 9,
                     baseBuildTime: 2400,
                     isArmy: false,

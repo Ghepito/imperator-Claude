@@ -142,6 +142,34 @@
                                 // le revenu est désormais la somme de la colonne Revenu des villes (comme ikariam.model).
                             });
 
+                            // v3.28 : réduction de l'entretien militaire (tableau « Coûts basiques ») :
+                            // Troupes 7 063 / - Recherche (64%) 2 542,68 / Flottes 28 725 / - Recherche (64%) 10 341.
+                            // Coefficient réel = dernier coût réduit / coût de base, pour chaque type.
+                            try {
+                                var exactVal = function($td) {
+                                    var x = $td.find('div.tooltip').first().text().replace(/[\u00a0\u202f\s]/g, '').replace(',', '.');
+                                    var v = parseFloat(x);
+                                    return isFinite(v) ? v : cellVal($td);
+                                };
+                                var upk = {}, kind = null, section = 0, cuts = [];
+                                $b.find('table.upkeepReductionTable tr').each(function() {
+                                    if ($(this).find('th').length) { section++; kind = null; return; }
+                                    if (section > 1) return false;          // « Frais supplémentaires » : ignorés
+                                    var reason = $(this).find('td.reason').first().text().replace(/\s+/g, ' ').trim();
+                                    var $v = $(this).find('td.costs, td.boldcosts').first();
+                                    if (!reason || !$v.length) return;
+                                    var val = exactVal($v);
+                                    if (isNaN(val)) return;
+                                    if (/^troupes/i.test(reason)) { kind = 'army'; upk.army = { base: val, real: val, cuts: [] }; }
+                                    else if (/^flottes?/i.test(reason)) { kind = 'navy'; upk.navy = { base: val, real: val, cuts: [] }; }
+                                    else if (kind && /^-/.test(reason)) { upk[kind].real = val; upk[kind].cuts.push(reason.replace(/^-\s*/, '')); }
+                                });
+                                $.each(['army', 'navy'], function(i, k) {
+                                    if (upk[k] && upk[k].base > 0) upk[k].factor = upk[k].real / upk[k].base;
+                                });
+                                if (upk.army || upk.navy) { upk.at = Date.now(); goldUpd.militaryUpkeep = upk; found++; }
+                            } catch (eUpk) {}
+
                             // v2.24 : revenu des villes (colonne 2) et coût des scientifiques (ligne Somme, colonne 3)
                             var cityRevenue = 0, cityRows = 0;
                             $b.find('td.city').each(function() {

@@ -153,6 +153,7 @@
 
                 var updateables = this.updateables;
                 var empireHasTroopType = {};
+                var impUpkeepByCity = {};   // v3.28 : entretien de base par ville { army, navy }
 
                 $.each(cities, function(index, city) {
                     $.each(city.getMilitary().getPresent().getCounts(), function(unit, count) {
@@ -285,6 +286,14 @@
                             plunderingCount += movement.getUnits().getCount(type) || 0;
                         }
                     });
+
+                    // v3.28 : entretien des unités de la ville (présentes + en mouvement, comme les cases)
+                    var upkeepUnits = (count || 0) + deployingCount + plunderingCount;
+                    if (upkeepUnits) {
+                        var acc = impUpkeepByCity[cityId] || (impUpkeepByCity[cityId] = { army: 0, navy: 0 });
+                        acc[IkaTools.Constants.UnitData[type] && IkaTools.Constants.UnitData[type].isArmy ? 'army' : 'navy'] +=
+                            upkeepUnits * IkaTools.EmpireData.getUnitUpkeep(type);
+                    }
 
                     var trainingDivId = 'MilitaryTraining_%s_%s'.format(city.getId(), type);
                     if (trainingCount) {
@@ -485,7 +494,40 @@
                         shipyardLinkHtml);
                 }
 
+                // v3.28 : coût horaire de l'armée et de la flotte, sous le nom de la ville
+                function impUpkeepCost(acc) {
+                    var mu = IkaTools.EmpireData.getCivilizationData().getGoldData().militaryUpkeep || {};
+                    var fa = mu.army && mu.army.factor, fn = mu.navy && mu.navy.factor;
+                    var known = (!acc.army || fa >= 0) && (!acc.navy || fn >= 0);
+                    return { known: known, army: acc.army * (fa >= 0 ? fa : 1), navy: acc.navy * (fn >= 0 ? fn : 1), mu: mu };
+                }
+                function impUpkeepTitle(acc, c, extra) {
+                    var f = IkaTools.Intl.formatInteger;
+                    var line = function(lbl, base, real, k) {
+                        if (!base) return '';
+                        var cuts = c.mu[k] && c.mu[k].cuts && c.mu[k].cuts.length ? ' − ' + c.mu[k].cuts.join(', ') : '';
+                        return lbl + ' : ' + f(Math.round(base)) + cuts + (c.known ? ' = ' + f(Math.round(real)) : '') + ' or/h\n';
+                    };
+                    return 'Entretien militaire par heure\n' + line('Troupes', acc.army, c.army, 'army') + line('Flotte', acc.navy, c.navy, 'navy') +
+                           (c.known ? '' : 'Ouvre le Bilan (Finances) pour connaître les réductions : coût avant réductions.\n') +
+                           (extra || '') + 'Unités présentes et en mouvement ; unités en formation non comptées.';
+                }
+                function impUpkeepNameCell(city, unitCells) {
+                    var cell = makeCityNameCells('military', city, true);
+                    var acc = impUpkeepByCity[city.getId()];
+                    if (!acc || !(acc.army + acc.navy)) return cell;
+                    var c = impUpkeepCost(acc);
+                    var html = '<div class="imp_upkeep' + (c.known ? '' : ' imp_upkeep_base') + '" title="' + __impH(impUpkeepTitle(acc, c)) + '">' +
+                               '<img src="/cdn/all/both/resources/icon_gold.png">' + (c.known ? '' : '≈ ') +
+                               '-' + IkaTools.Intl.formatInteger(Math.round(c.army + c.navy)) + '/h</div>';
+                    var i = cell.lastIndexOf('</td>');
+                    return cell.slice(0, i) + html + cell.slice(i);
+                }
+
                 function makeRow(movements, city) {
+                    var unitCells = $.map(UNIT_ORDER, function(info) {   // v3.28 : d'abord, pour le coût
+                        return $.map(info.units, makeTableCell.bind(null, city, city.getMilitary(), movements));
+                    }).join('');
                     var rowUpdateable = updateables.create('MilitaryTableRow_%s'.format(city.getId()))
                     .registerUpdate('cityChanged',
                                     function(element) {
@@ -506,13 +548,10 @@
                         .format(
                         rowUpdateable.getId(0),
                         (IkaTools.View.isActiveCity(city) ? 'current' : ''),
-                        makeCityNameCells('military', city, true),
+                        impUpkeepNameCell(city, unitCells),
                         IkaTools.Intl.formatInteger(city.getActionPoints()),
                         makeActionsCell(city),
-                        $.map(UNIT_ORDER, function(info) {
-                            return $.map(info.units, makeTableCell.bind(
-                                null, city, city.getMilitary(), movements));
-                        }).join(''));
+                        unitCells);
                 }
 
                 function makeSummaryCell(type) {
@@ -538,7 +577,17 @@
                 }
 
                 function makeSummaryRow(cities) {
-                    return '<tr><td colspan="3" class="totals_sigma_cell"/>%s</tr>'.format(
+                    // v3.28 : coût total de l'armée et de la flotte, au pied de la colonne des villes
+                    var tot = { army: 0, navy: 0 }, sumHtml = '';
+                    $.each(impUpkeepByCity, function(id, a) { tot.army += a.army; tot.navy += a.navy; });
+                    if (tot.army + tot.navy) {
+                        var c = impUpkeepCost(tot), gd = IkaTools.EmpireData.getCivilizationData().getGoldData();
+                        var bilan = gd.upkeep && gd.incomeUpdated ? 'Bilan : ' + IkaTools.Intl.formatInteger(Math.abs(gd.upkeep)) + ' or/h\n' : '';
+                        sumHtml = '<span class="imp_upkeep imp_upkeep_total' + (c.known ? '' : ' imp_upkeep_base') + '" title="' +
+                                  __impH(impUpkeepTitle(tot, c, bilan)) + '"><img src="/cdn/all/both/resources/icon_gold.png">' +
+                                  (c.known ? '' : '≈ ') + '-' + IkaTools.Intl.formatInteger(Math.round(c.army + c.navy)) + '/h</span>';
+                    }
+                    return ('<tr><td colspan="3" class="totals_sigma_cell">' + sumHtml + '</td>%s</tr>').format(
                         $.map(UNIT_ORDER, function(info) {
                             return $.map(info.units, makeSummaryCell);
                         }).join(''));

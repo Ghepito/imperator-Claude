@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.28
+- Onglet Armée : sous le nom de chaque ville, coût horaire en or de son armée et de sa flotte (unités présentes et en mouvement) ; au pied de la colonne, le coût total. L'infobulle détaille troupes / flotte, les réductions et, pour le total, la valeur du Bilan.
+- Entretien de base de chaque unité connu d'office (valeurs de la Caserne et du Chantier naval) et relu à chaque passage ; réductions (recherche, forme de gouvernement) lues dans le tableau « Coûts basiques » du Bilan. Tant que le Bilan n'a pas été lu, le coût est affiché avant réductions, précédé de « ≈ ».
+
 ## 3.27.1
 - Ligne Atelier de l'onglet Armée : les bonus s'écrivent « +65/+50 » sur une seule ligne au lieu d'être coupés en deux dans les colonnes étroites du jeu ; l'étiquette « Atelier ⚔ / 🛡 » tient aussi sur une ligne.
 
