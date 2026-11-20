@@ -245,6 +245,81 @@ font-style: italic; \
 color: #8A6D39; \
 } \
 \
+.imp_ws_tr td { \
+background: #fff8e1; \
+font-size: 10.5px; \
+line-height: 14px; \
+padding: 2px 3px; \
+} \
+\
+.imp_ws_tr td.imp_ws_label { \
+color: #8A6D39; \
+font-weight: bold; \
+text-align: left; \
+} \
+\
+.imp_ws_tr td.imp_ws_unknown { \
+color: #a1978a; \
+} \
+\
+.imp_ws_prog { \
+display: inline-block; \
+padding: 0 4px; \
+border-radius: 7px; \
+border: 1px solid #ef6c00; \
+background: #fff1e0; \
+color: #ef6c00; \
+font-weight: bold; \
+white-space: nowrap; \
+} \
+\
+.imp_ws_bar { \
+height: 3px; \
+margin: 2px auto 0; \
+max-width: 60px; \
+background: #e8d8b0; \
+border-radius: 2px; \
+overflow: hidden; \
+} \
+\
+.imp_ws_bar i { \
+display: block; \
+height: 100%; \
+background: #ef6c00; \
+} \
+\
+.imp_ws_card { \
+min-width: 260px; \
+max-width: 340px; \
+text-align: left; \
+} \
+\
+.imp_ws_card h4 { \
+margin: 0 0 5px; \
+font-size: 12px; \
+} \
+\
+.imp_ws_card .imp_ws_row { \
+display: flex; \
+justify-content: space-between; \
+gap: 10px; \
+margin: 2px 0; \
+} \
+\
+.imp_ws_card .imp_ws_lv { \
+color: #8A6D39; \
+font-size: 10.5px; \
+} \
+\
+.imp_ws_card .imp_ws_doing { \
+color: #ef6c00; \
+} \
+\
+.imp_ws_card .imp_ws_bar { \
+max-width: none; \
+margin: 2px 0 5px; \
+} \
+\
 #ImperatorOverviewResourceTable .imp_growth_full_cell { \
 color: inherit; \
 } \

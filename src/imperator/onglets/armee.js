@@ -40,6 +40,97 @@
              units: [IkaTools.Constants.Military.TENDER]}
         ];
 
+        // v3.26 : Atelier dans l'onglet Armée (maquettes B + C validées le 20 nov. 2026) :
+        // ligne « Atelier ⚔ / 🛡 » sous les en-têtes, fiche complète au survol de l'en-tête.
+        var IMP_WS_ID_BY_TYPE = {};
+        $.each(IkaTools.Constants.UnitIds, function(id, type) { IMP_WS_ID_BY_TYPE[type] = id; });
+
+        function impWsFmtLeft(ms) {
+            var m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60), d = Math.floor(h / 24);
+            if (d > 0) return d + 'j ' + (h % 24) + 'h';
+            if (h > 0) return h + 'h ' + ('0' + (m % 60)).slice(-2) + 'm';
+            return m + 'm';
+        }
+        // Données d'atelier d'un type d'unité : { off, def, cargo, prog } ou null si jamais lu.
+        function impWsInfo(type) {
+            var data = IkaTools.EmpireData.getWorkshopData ? IkaTools.EmpireData.getWorkshopData() : null;
+            var id = IMP_WS_ID_BY_TYPE[type];
+            var u = data && data.units && id ? data.units[id] : null;
+            if (!u) return null;
+            var p = data.inProgress && data.inProgress.unitId == id ? data.inProgress : null;
+            var now = IkaTools.View.gameTimeNow();
+            if (p && p.end && p.end <= now) p = null;   // terminée : getWorkshopEffect en tient compte
+            return { id: id, off: u.offensive || null, def: u.defensive || null, cargo: u.cargo || null, prog: p,
+                     offEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'offensive'),
+                     defEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'defensive'),
+                     updated: data.updated || 0 };
+        }
+        function impWsProgBadge(p) {
+            var icon = p.type === 'defensive' ? '🛡' : p.type === 'cargo' ? '📦' : '⚔';
+            var pct = p.end > p.start ? Math.min(100, Math.max(0, (IkaTools.View.gameTimeNow() - p.start) * 100 / (p.end - p.start))) : 0;
+            return '<span class="imp_ws_prog" data-imp-ws-start="' + p.start + '" data-imp-ws-end="' + p.end + '" data-imp-ws-icon="' + icon + '">' +
+                   '↑' + icon + ' <span class="imp_ws_left">' + impWsFmtLeft(p.end - IkaTools.View.gameTimeNow()) + '</span></span>' +
+                   '<div class="imp_ws_bar"><i style="width:' + Math.round(pct) + '%"></i></div>';
+        }
+        function impWsCell(type) {
+            var w = impWsInfo(type);
+            if (!w) {
+                // Atelier lu mais unité absente : le jeu ne l'améliore pas (cuisinier, médecin, bateau de soutien)
+                var d = IkaTools.EmpireData.getWorkshopData ? IkaTools.EmpireData.getWorkshopData() : null;
+                var known = d && d.names && Object.keys(d.names).length >= 20;
+                return '<td class="imp_ws_cell imp_ws_unknown" title="' + (known ? 'Pas d\'amélioration à l\'Atelier' :
+                       'Onglet de l\'Atelier pas encore lu') + '">' + (known ? '-' : '?') + '</td>';
+            }
+            var parts = [];
+            if (w.off || w.def) parts.push('<b>' + (w.off ? '+' + w.offEffect : '-') + '</b> / <b>' + (w.def ? '+' + w.defEffect : '-') + '</b>');
+            if (w.cargo) parts.push('📦 <b>+' + IkaTools.Intl.formatInteger(IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo')) + '</b>');
+            if (!parts.length) parts.push('-');
+            return '<td class="imp_ws_cell">' + parts.join('<br>') + (w.prog ? '<br>' + impWsProgBadge(w.prog) : '') + '</td>';
+        }
+        function impWsCard(type, displayName) {
+            var w = impWsInfo(type);
+            var h = function(t) { return __impH(String(t == null ? '' : t)); };
+            if (!w) return '<div class="imp_ws_card"><h4>' + h(displayName) + '</h4><div class="imp_ws_lv">Atelier pas encore lu : ouvre l\'Atelier (onglets Unités et Navires).</div></div>';
+            var line = function(icon, e, effect) {
+                if (!e) return '';
+                return '<div class="imp_ws_row"><span>' + icon + ' ' + h(e.name) + ' <span class="imp_ws_lv">niv. ' + e.level + '</span></span><b>+' +
+                       IkaTools.Intl.formatInteger(effect) + '</b></div>';
+            };
+            var next = function(icon, e) {
+                if (!e || !e.next) return '';
+                return '<div class="imp_ws_row imp_ws_lv"><span>Prochain ' + icon + ' : niv. ' + e.next.level + ' (+' + IkaTools.Intl.formatInteger(e.next.effect) + ')</span><span>' +
+                       (e.next.gold != null ? IkaTools.Intl.formatInteger(e.next.gold) + ' or · ' : '') +
+                       (e.next.crystal != null ? IkaTools.Intl.formatInteger(e.next.crystal) + ' verre · ' : '') + h(e.next.duration) + '</span></div>';
+            };
+            var p = w.prog, prog = '';
+            if (p) {
+                var icon = p.type === 'defensive' ? '🛡' : p.type === 'cargo' ? '📦' : '⚔';
+                prog = '<div class="imp_ws_row imp_ws_doing"><span>↑ ' + icon + ' ' + h(p.name) + ' en cours (+' + p.from + ' → +' + p.to + ')</span><b>' +
+                       impWsFmtLeft(p.end - IkaTools.View.gameTimeNow()) + '</b></div>' + impWsProgBadge(p).replace(/^[\s\S]*?<\/span><\/span>/, '');
+            }
+            var ago = Math.round((IkaTools.View.gameTimeNow() - w.updated) / 3600000);
+            return '<div class="imp_ws_card"><h4>' + h(displayName) + ' — Atelier</h4>' +
+                   line('⚔', w.off, w.offEffect) + line('🛡', w.def, w.defEffect) +
+                   line('📦', w.cargo, w.cargo ? IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo') : 0) + prog +
+                   next('⚔', w.off) + next('🛡', w.def) + next('📦', w.cargo) +
+                   '<div class="imp_ws_lv">Atelier lu ' + (ago < 1 ? 'il y a moins d\'une heure' : ago < 48 ? 'il y a ' + ago + ' h' : 'il y a ' + Math.round(ago / 24) + ' j') + '</div></div>';
+        }
+        var impWsTickerOn = false;
+        function impWsInstallTicker() {
+            if (impWsTickerOn) return;
+            impWsTickerOn = true;
+            setInterval(function() {
+                try {
+                    var now = IkaTools.View.gameTimeNow();
+                    $('#ImperatorOverviewMilitaryTable .imp_ws_prog').each(function() {
+                        var $e = $(this), start = +$e.attr('data-imp-ws-start'), end = +$e.attr('data-imp-ws-end');
+                        $e.find('.imp_ws_left').text(end > now ? impWsFmtLeft(end - now) : 'terminé');
+                        if (end > start) $e.next('.imp_ws_bar').find('i').css('width', Math.min(100, Math.max(0, (now - start) * 100 / (end - start))) + '%');
+                    });
+                } catch (e) {}
+            }, 30000);
+        }
+
         function makeMilitaryTab() {
             function makeTableContent() {
                 var cities = IkaTools.EmpireData.getCities();
@@ -84,8 +175,11 @@
 
                 function makeTableHeaderCell(type) {
                     var displayName = localizer.localize('units', type);
-                    var toolTip = toolTips.registerSimple('ImperatorMilitaryHeader_' + type,
-                                                          '<div class="nowrap">%s</div>'.format(displayName));
+                    // v3.26 : fiche de l'Atelier au survol (C), à jour à chaque ouverture
+                    var toolTip = toolTips.registerRefreshable('ImperatorMilitaryHeader_' + type, function() {
+                        try { return impWsCard(type, displayName); }
+                        catch (e) { return '<div class="nowrap">' + __impH(displayName) + '</div>'; }
+                    });
                     return !empireHasTroopType[type] ? '' :
                     ('<th class="military military_%s imperator_tool_tip" ' +
                      'id="ImperatorMilitaryHeader_%s">%s</td>').format(
@@ -416,6 +510,17 @@
                     return '<td>%s</td>'.format(IkaTools.Intl.formatInteger(count));
                 }
 
+                // v3.26 : ligne « Atelier ⚔ / 🛡 » (B), seulement si l'Atelier a été lu
+                function makeWorkshopRow() {
+                    var data = IkaTools.EmpireData.getWorkshopData ? IkaTools.EmpireData.getWorkshopData() : null;
+                    if (!data || !data.units || !Object.keys(data.units).length) return '';
+                    impWsInstallTicker();
+                    return '<tr class="imp_ws_tr"><td colspan="3" class="imp_ws_label">Atelier ⚔ / 🛡</td>%s</tr>'.format(
+                        $.map(UNIT_ORDER, function(info) {
+                            return $.map(info.units, function(type) { return empireHasTroopType[type] ? impWsCell(type) : ''; });
+                        }).join(''));
+                }
+
                 function makeSummaryRow(cities) {
                     return '<tr><td colspan="3" class="totals_sigma_cell"/>%s</tr>'.format(
                         $.map(UNIT_ORDER, function(info) {
@@ -429,7 +534,7 @@
                     makeCityNameColGroup('<col class="action_points">', true),
                     '<colgroup class="actions"><col class="actions"/></colgroup>',
                     $.map(UNIT_ORDER, makeColGroup).join(''),
-                    makeTableHeadContent(),
+                    '<tr>' + makeTableHeadContent() + '</tr>' + makeWorkshopRow(),   // v3.26
                     $.map(cities, makeRow.bind(
                         null, IkaTools.EmpireData.getCivilizationData().getMovements())).join(''),
                     makeSummaryRow(cities));

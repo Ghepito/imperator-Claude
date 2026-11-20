@@ -2,6 +2,10 @@
 
 Tiré des lignes `@history` du script. Les liens d'installation de chaque version sont dans le README.
 
+## 3.26
+
+Onglet Armee : ligne Atelier sous les en-tetes (bonus de dommage / armure, espace de chargement des navires, amelioration en cours avec temps restant et barre) et fiche de l'Atelier au survol de chaque unite (equipements et niveaux, amelioration en cours, prochain niveau avec cout et duree).
+
 ## 3.25
 
 Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.

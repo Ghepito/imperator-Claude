@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name           Imperator v3.25
-// @version        3.25
+// @name           Imperator v3.26
+// @version        3.26
 // @namespace      Laurent / aubergineanodyne
 // @description    Overview tables for Ikariam 0.5.0+ desktop versions in the style of Ikariam Empire Board or Ikariam ExMachina.  Rule your empire with ease!
 // @author         AubergineAnodyne (Turkish translation edit by tuncayerguden)
@@ -19,6 +19,7 @@
 // @include        https://s*.ikariam.gameforge.com/*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
 //
+// @history        3.26 Onglet Armee : ligne Atelier sous les en-tetes (bonus de dommage / armure, espace de chargement des navires, amelioration en cours avec temps restant et barre) et fiche de l'Atelier au survol de chaque unite (equipements et niveaux, amelioration en cours, prochain niveau avec cout et duree).
 // @history        3.25 Atelier lu (onglets Unites et Navires) : bonus de dommage, d'armure et d'espace de chargement de chaque unite, amelioration en cours. Capacite reelle des navires (base + atelier : marchand 500 + 120, cargo 50 000 + 3 000) utilisee partout : Chantiers, Boissons, transports, pillage.
 // @history        3.24.1 Vue ile : l'etiquette nom (proprietaire) prend la largeur de son texte au lieu de 175 px imposes.
 // @history        3.24 Option Afficher le proprietaire (vue ile) : marche aussi en arrivant sur une ile depuis la ville, sur une ile de moins de 19 emplacements, sans doubler le nom a chaque mise a jour.
@@ -9421,6 +9422,81 @@ font-style: italic; \
 color: #8A6D39; \
 } \
 \
+.imp_ws_tr td { \
+background: #fff8e1; \
+font-size: 10.5px; \
+line-height: 14px; \
+padding: 2px 3px; \
+} \
+\
+.imp_ws_tr td.imp_ws_label { \
+color: #8A6D39; \
+font-weight: bold; \
+text-align: left; \
+} \
+\
+.imp_ws_tr td.imp_ws_unknown { \
+color: #a1978a; \
+} \
+\
+.imp_ws_prog { \
+display: inline-block; \
+padding: 0 4px; \
+border-radius: 7px; \
+border: 1px solid #ef6c00; \
+background: #fff1e0; \
+color: #ef6c00; \
+font-weight: bold; \
+white-space: nowrap; \
+} \
+\
+.imp_ws_bar { \
+height: 3px; \
+margin: 2px auto 0; \
+max-width: 60px; \
+background: #e8d8b0; \
+border-radius: 2px; \
+overflow: hidden; \
+} \
+\
+.imp_ws_bar i { \
+display: block; \
+height: 100%; \
+background: #ef6c00; \
+} \
+\
+.imp_ws_card { \
+min-width: 260px; \
+max-width: 340px; \
+text-align: left; \
+} \
+\
+.imp_ws_card h4 { \
+margin: 0 0 5px; \
+font-size: 12px; \
+} \
+\
+.imp_ws_card .imp_ws_row { \
+display: flex; \
+justify-content: space-between; \
+gap: 10px; \
+margin: 2px 0; \
+} \
+\
+.imp_ws_card .imp_ws_lv { \
+color: #8A6D39; \
+font-size: 10.5px; \
+} \
+\
+.imp_ws_card .imp_ws_doing { \
+color: #ef6c00; \
+} \
+\
+.imp_ws_card .imp_ws_bar { \
+max-width: none; \
+margin: 2px 0 5px; \
+} \
+\
 #ImperatorOverviewResourceTable .imp_growth_full_cell { \
 color: inherit; \
 } \
@@ -14598,6 +14674,97 @@ line-height: normal !important; \
              units: [IkaTools.Constants.Military.TENDER]}
         ];
 
+        // v3.26 : Atelier dans l'onglet Armée (maquettes B + C validées le 20 nov. 2026) :
+        // ligne « Atelier ⚔ / 🛡 » sous les en-têtes, fiche complète au survol de l'en-tête.
+        var IMP_WS_ID_BY_TYPE = {};
+        $.each(IkaTools.Constants.UnitIds, function(id, type) { IMP_WS_ID_BY_TYPE[type] = id; });
+
+        function impWsFmtLeft(ms) {
+            var m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60), d = Math.floor(h / 24);
+            if (d > 0) return d + 'j ' + (h % 24) + 'h';
+            if (h > 0) return h + 'h ' + ('0' + (m % 60)).slice(-2) + 'm';
+            return m + 'm';
+        }
+        // Données d'atelier d'un type d'unité : { off, def, cargo, prog } ou null si jamais lu.
+        function impWsInfo(type) {
+            var data = IkaTools.EmpireData.getWorkshopData ? IkaTools.EmpireData.getWorkshopData() : null;
+            var id = IMP_WS_ID_BY_TYPE[type];
+            var u = data && data.units && id ? data.units[id] : null;
+            if (!u) return null;
+            var p = data.inProgress && data.inProgress.unitId == id ? data.inProgress : null;
+            var now = IkaTools.View.gameTimeNow();
+            if (p && p.end && p.end <= now) p = null;   // terminée : getWorkshopEffect en tient compte
+            return { id: id, off: u.offensive || null, def: u.defensive || null, cargo: u.cargo || null, prog: p,
+                     offEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'offensive'),
+                     defEffect: IkaTools.EmpireData.getWorkshopEffect(id, 'defensive'),
+                     updated: data.updated || 0 };
+        }
+        function impWsProgBadge(p) {
+            var icon = p.type === 'defensive' ? '🛡' : p.type === 'cargo' ? '📦' : '⚔';
+            var pct = p.end > p.start ? Math.min(100, Math.max(0, (IkaTools.View.gameTimeNow() - p.start) * 100 / (p.end - p.start))) : 0;
+            return '<span class="imp_ws_prog" data-imp-ws-start="' + p.start + '" data-imp-ws-end="' + p.end + '" data-imp-ws-icon="' + icon + '">' +
+                   '↑' + icon + ' <span class="imp_ws_left">' + impWsFmtLeft(p.end - IkaTools.View.gameTimeNow()) + '</span></span>' +
+                   '<div class="imp_ws_bar"><i style="width:' + Math.round(pct) + '%"></i></div>';
+        }
+        function impWsCell(type) {
+            var w = impWsInfo(type);
+            if (!w) {
+                // Atelier lu mais unité absente : le jeu ne l'améliore pas (cuisinier, médecin, bateau de soutien)
+                var d = IkaTools.EmpireData.getWorkshopData ? IkaTools.EmpireData.getWorkshopData() : null;
+                var known = d && d.names && Object.keys(d.names).length >= 20;
+                return '<td class="imp_ws_cell imp_ws_unknown" title="' + (known ? 'Pas d\'amélioration à l\'Atelier' :
+                       'Onglet de l\'Atelier pas encore lu') + '">' + (known ? '-' : '?') + '</td>';
+            }
+            var parts = [];
+            if (w.off || w.def) parts.push('<b>' + (w.off ? '+' + w.offEffect : '-') + '</b> / <b>' + (w.def ? '+' + w.defEffect : '-') + '</b>');
+            if (w.cargo) parts.push('📦 <b>+' + IkaTools.Intl.formatInteger(IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo')) + '</b>');
+            if (!parts.length) parts.push('-');
+            return '<td class="imp_ws_cell">' + parts.join('<br>') + (w.prog ? '<br>' + impWsProgBadge(w.prog) : '') + '</td>';
+        }
+        function impWsCard(type, displayName) {
+            var w = impWsInfo(type);
+            var h = function(t) { return __impH(String(t == null ? '' : t)); };
+            if (!w) return '<div class="imp_ws_card"><h4>' + h(displayName) + '</h4><div class="imp_ws_lv">Atelier pas encore lu : ouvre l\'Atelier (onglets Unités et Navires).</div></div>';
+            var line = function(icon, e, effect) {
+                if (!e) return '';
+                return '<div class="imp_ws_row"><span>' + icon + ' ' + h(e.name) + ' <span class="imp_ws_lv">niv. ' + e.level + '</span></span><b>+' +
+                       IkaTools.Intl.formatInteger(effect) + '</b></div>';
+            };
+            var next = function(icon, e) {
+                if (!e || !e.next) return '';
+                return '<div class="imp_ws_row imp_ws_lv"><span>Prochain ' + icon + ' : niv. ' + e.next.level + ' (+' + IkaTools.Intl.formatInteger(e.next.effect) + ')</span><span>' +
+                       (e.next.gold != null ? IkaTools.Intl.formatInteger(e.next.gold) + ' or · ' : '') +
+                       (e.next.crystal != null ? IkaTools.Intl.formatInteger(e.next.crystal) + ' verre · ' : '') + h(e.next.duration) + '</span></div>';
+            };
+            var p = w.prog, prog = '';
+            if (p) {
+                var icon = p.type === 'defensive' ? '🛡' : p.type === 'cargo' ? '📦' : '⚔';
+                prog = '<div class="imp_ws_row imp_ws_doing"><span>↑ ' + icon + ' ' + h(p.name) + ' en cours (+' + p.from + ' → +' + p.to + ')</span><b>' +
+                       impWsFmtLeft(p.end - IkaTools.View.gameTimeNow()) + '</b></div>' + impWsProgBadge(p).replace(/^[\s\S]*?<\/span><\/span>/, '');
+            }
+            var ago = Math.round((IkaTools.View.gameTimeNow() - w.updated) / 3600000);
+            return '<div class="imp_ws_card"><h4>' + h(displayName) + ' — Atelier</h4>' +
+                   line('⚔', w.off, w.offEffect) + line('🛡', w.def, w.defEffect) +
+                   line('📦', w.cargo, w.cargo ? IkaTools.EmpireData.getWorkshopEffect(w.id, 'cargo') : 0) + prog +
+                   next('⚔', w.off) + next('🛡', w.def) + next('📦', w.cargo) +
+                   '<div class="imp_ws_lv">Atelier lu ' + (ago < 1 ? 'il y a moins d\'une heure' : ago < 48 ? 'il y a ' + ago + ' h' : 'il y a ' + Math.round(ago / 24) + ' j') + '</div></div>';
+        }
+        var impWsTickerOn = false;
+        function impWsInstallTicker() {
+            if (impWsTickerOn) return;
+            impWsTickerOn = true;
+            setInterval(function() {
+                try {
+                    var now = IkaTools.View.gameTimeNow();
+                    $('#ImperatorOverviewMilitaryTable .imp_ws_prog').each(function() {
+                        var $e = $(this), start = +$e.attr('data-imp-ws-start'), end = +$e.attr('data-imp-ws-end');
+                        $e.find('.imp_ws_left').text(end > now ? impWsFmtLeft(end - now) : 'terminé');
+                        if (end > start) $e.next('.imp_ws_bar').find('i').css('width', Math.min(100, Math.max(0, (now - start) * 100 / (end - start))) + '%');
+                    });
+                } catch (e) {}
+            }, 30000);
+        }
+
         function makeMilitaryTab() {
             function makeTableContent() {
                 var cities = IkaTools.EmpireData.getCities();
@@ -14642,8 +14809,11 @@ line-height: normal !important; \
 
                 function makeTableHeaderCell(type) {
                     var displayName = localizer.localize('units', type);
-                    var toolTip = toolTips.registerSimple('ImperatorMilitaryHeader_' + type,
-                                                          '<div class="nowrap">%s</div>'.format(displayName));
+                    // v3.26 : fiche de l'Atelier au survol (C), à jour à chaque ouverture
+                    var toolTip = toolTips.registerRefreshable('ImperatorMilitaryHeader_' + type, function() {
+                        try { return impWsCard(type, displayName); }
+                        catch (e) { return '<div class="nowrap">' + __impH(displayName) + '</div>'; }
+                    });
                     return !empireHasTroopType[type] ? '' :
                     ('<th class="military military_%s imperator_tool_tip" ' +
                      'id="ImperatorMilitaryHeader_%s">%s</td>').format(
@@ -14974,6 +15144,17 @@ line-height: normal !important; \
                     return '<td>%s</td>'.format(IkaTools.Intl.formatInteger(count));
                 }
 
+                // v3.26 : ligne « Atelier ⚔ / 🛡 » (B), seulement si l'Atelier a été lu
+                function makeWorkshopRow() {
+                    var data = IkaTools.EmpireData.getWorkshopData ? IkaTools.EmpireData.getWorkshopData() : null;
+                    if (!data || !data.units || !Object.keys(data.units).length) return '';
+                    impWsInstallTicker();
+                    return '<tr class="imp_ws_tr"><td colspan="3" class="imp_ws_label">Atelier ⚔ / 🛡</td>%s</tr>'.format(
+                        $.map(UNIT_ORDER, function(info) {
+                            return $.map(info.units, function(type) { return empireHasTroopType[type] ? impWsCell(type) : ''; });
+                        }).join(''));
+                }
+
                 function makeSummaryRow(cities) {
                     return '<tr><td colspan="3" class="totals_sigma_cell"/>%s</tr>'.format(
                         $.map(UNIT_ORDER, function(info) {
@@ -14987,7 +15168,7 @@ line-height: normal !important; \
                     makeCityNameColGroup('<col class="action_points">', true),
                     '<colgroup class="actions"><col class="actions"/></colgroup>',
                     $.map(UNIT_ORDER, makeColGroup).join(''),
-                    makeTableHeadContent(),
+                    '<tr>' + makeTableHeadContent() + '</tr>' + makeWorkshopRow(),   // v3.26
                     $.map(cities, makeRow.bind(
                         null, IkaTools.EmpireData.getCivilizationData().getMovements())).join(''),
                     makeSummaryRow(cities));
